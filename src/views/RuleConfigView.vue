@@ -112,6 +112,20 @@
           
           <!-- 规则配置编辑器 -->
           <div v-else-if="previewFileContent">
+            <!-- 使用说明 -->
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 class="text-sm font-medium text-blue-800 mb-2">
+                <i class="fas fa-info-circle mr-1"></i>
+                配置保存说明
+              </h4>
+              <div class="text-sm text-blue-700 space-y-1">
+                <p>• <strong>真实配置</strong>：在下方编辑器中设置字段映射和规则，然后点击"保存配置"按钮</p>
+                <p>• <strong>测试功能</strong>：点击"测试配置保存"按钮可以验证存储功能是否正常</p>
+                <p>• <strong>配置持久化</strong>：配置会保存在浏览器的 localStorage 中，关闭浏览器后仍然有效</p>
+                <p>• <strong>gh-pages 兼容</strong>：支持在 GitHub Pages 等静态托管环境中使用</p>
+              </div>
+            </div>
+            
             <RuleConfigEditor
               :dataSource="selectedDataSource"
               :fileContent="previewFileContent"
@@ -127,13 +141,22 @@
               <i class="fas fa-arrow-left mr-2"></i>
               上一步
             </button>
-            <button 
-              @click="saveConfig"
-              class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
-            >
-              <i class="fas fa-save mr-2"></i>
-              保存配置
-            </button>
+            <div class="flex space-x-2">
+              <button 
+                @click="testConfigSave"
+                class="px-4 py-3 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
+              >
+                <i class="fas fa-flask mr-2"></i>
+                测试配置保存
+              </button>
+              <button 
+                @click="saveConfig"
+                class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                <i class="fas fa-save mr-2"></i>
+                保存配置
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -146,6 +169,7 @@ import { ref, computed } from 'vue';
 import DataSourceSelector from '../components/DataSourceSelector.vue';
 import RuleConfigEditor from '../components/RuleConfigEditor.vue';
 import type { DataSource } from '../types/data-source';
+import { ruleConfigManager } from '../utils/rule-config-manager';
 
 const currentStep = ref(0);
 const selectedDataSource = ref<DataSource | null>(null);
@@ -242,5 +266,66 @@ const handleConfigSaved = (config: any) => {
   
   // 显示保存成功的提示
   alert(`配置 "${config.name}" 保存成功！现在可以在账单处理页面使用此配置。`);
+};
+
+const testConfigSave = () => {
+  if (!selectedDataSource.value) {
+    alert('请先选择数据源');
+    return;
+  }
+  
+  console.log('测试配置保存功能');
+  
+  // 创建一个测试配置（使用不同的ID前缀，避免与真实配置冲突）
+  const testConfig = {
+    id: `test_config_${selectedDataSource.value.id}_${Date.now()}`,
+    dataSourceId: selectedDataSource.value.id,
+    name: `${selectedDataSource.value.name} 测试配置`,
+    encoding: 'utf-8',
+    delimiter: ',',
+    skipRows: 0,
+    currency: 'CNY',
+    minusAccount: 'Expenses:Test',
+    plusAccount: 'Assets:Bank:Test',
+    commissionAccount: 'Expenses:Commission',
+    dateField: '0',
+    amountField: '1',
+    descriptionField: '2',
+    payeeField: '3',
+    fieldMappings: {
+      date: '0',
+      amount: '1',
+      description: '2',
+      payee: '3'
+    },
+    rules: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  // 保存测试配置
+  try {
+    ruleConfigManager.saveConfig(testConfig);
+    console.log('测试配置已保存:', testConfig);
+    
+    // 立即读取配置验证
+    const loadedConfig = ruleConfigManager.getConfigByDataSourceId(selectedDataSource.value.id);
+    console.log('读取的配置:', loadedConfig);
+    
+    if (loadedConfig && loadedConfig.id === testConfig.id) {
+      alert(`✅ 测试配置保存成功！\n\n配置名称: ${loadedConfig.name}\n配置ID: ${loadedConfig.id}\n\n注意：这是测试配置，真实配置请在规则编辑器中设置并保存。`);
+      
+      // 清理测试配置，避免影响真实配置
+      setTimeout(() => {
+        ruleConfigManager.deleteConfig(testConfig.id);
+        console.log('测试配置已清理');
+      }, 2000);
+    } else {
+      alert('❌ 配置保存成功，但读取验证失败');
+    }
+  } catch (error) {
+    console.error('测试配置保存失败:', error);
+    alert('❌ 测试配置保存失败: ' + error);
+  }
 };
 </script> 

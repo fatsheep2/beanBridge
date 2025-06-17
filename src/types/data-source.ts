@@ -59,7 +59,7 @@ export const DATA_SOURCES: DataSource[] = [
     defaultMinusAccount: 'Expenses:Life:Food',
     defaultPlusAccount: 'Assets:Alipay',
     defaultCommissionAccount: 'Expenses:Commission',
-    skipLines: 22, // 支付宝文件前26行是说明信息
+    skipLines: 22, // 支付宝文件前22行是说明信息
     testFilePath: '/example/alipay/example-alipay-records.csv'
   },
   { 

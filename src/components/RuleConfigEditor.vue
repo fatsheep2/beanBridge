@@ -321,9 +321,12 @@ const removeFieldMapping = (index: number) => {
 const saveConfig = () => {
   if (!props.dataSource) return;
   
+  // 先检查是否已有该数据源的配置
+  const existingConfig = ruleConfigManager.getConfigByDataSourceId(props.dataSource.id);
+  
   // 创建规则配置对象
   const ruleConfig: RuleConfig = {
-    id: `config_${props.dataSource.id}_${Date.now()}`,
+    id: existingConfig ? existingConfig.id : `config_${props.dataSource.id}_${Date.now()}`,
     dataSourceId: props.dataSource.id,
     name: `${props.dataSource.name} 配置`,
     encoding: config.value.encoding,
@@ -344,7 +347,7 @@ const saveConfig = () => {
       payee: config.value.payeeField
     },
     rules: [],
-    createdAt: new Date().toISOString(),
+    createdAt: existingConfig ? existingConfig.createdAt : new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
   

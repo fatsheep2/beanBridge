@@ -132,9 +132,9 @@ export function useDataSourceConfig() {
   };
   
   // 计算属性
-  const hasConfig = computed(() => (id: string) => {
+  const hasConfig = (id: string) => {
     return configs.value.some(config => config.dataSourceId === id);
-  });
+  };
   
   const configList = computed(() => configs.value);
   
