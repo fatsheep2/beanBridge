@@ -1,0 +1,110 @@
+@import './base.css';
+
+#app {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+}
+
+body {
+  background: linear-gradient(120deg, #f8fafc 0%, #eef2ff 100%);
+  min-height: 100vh;
+}
+
+.card, .bg-white.rounded-lg.shadow {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px 0 rgba(60, 72, 88, 0.08), 0 1.5px 4px 0 rgba(60, 72, 88, 0.04);
+  padding: 2rem;
+  transition: box-shadow 0.2s;
+}
+.card:hover, .bg-white.rounded-lg.shadow:hover {
+  box-shadow: 0 8px 32px 0 rgba(60, 72, 88, 0.16), 0 3px 8px 0 rgba(60, 72, 88, 0.08);
+}
+
+input, select, textarea {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background: #f9fafb;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #6366f133;
+  background: #fff;
+}
+
+button {
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.sidebar-item {
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar-item.bg-indigo-50 {
+  font-weight: bold;
+  border-left: 4px solid #6366f1;
+  background: #eef2ff;
+}
+
+.transaction-item {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.transaction-item:hover {
+  box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.08);
+  transform: translateY(-2px) scale(1.01);
+}
+
+footer {
+  background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
+  color: #fff;
+}
+footer a {
+  color: #c7d2fe;
+  transition: color 0.2s;
+}
+footer a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
