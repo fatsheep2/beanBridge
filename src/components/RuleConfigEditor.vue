@@ -195,6 +195,7 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import Papa from 'papaparse';
 import type { DataSource } from '../types/data-source';
+import { ruleConfigManager, type RuleConfig } from '../utils/rule-config-manager';
 
 interface FieldMapping {
   targetField: string;
@@ -206,7 +207,7 @@ interface AmountConfig {
   removeThousandSeparator: boolean;
 }
 
-interface RuleConfig {
+interface RuleConfigLocal {
   encoding: string;
   delimiter: string;
   skipRows: number;
@@ -231,12 +232,13 @@ interface Props {
 interface Emits {
   'prev-step': [];
   'next-step': [];
+  'config-saved': [RuleConfig];
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-const config = ref<RuleConfig>({
+const config = ref<RuleConfigLocal>({
   encoding: 'utf-8',
   delimiter: ',',
   skipRows: 0,
@@ -264,7 +266,31 @@ onMounted(() => {
   if (props.fileContent) {
     parsePreviewData();
   }
+  
+  // 加载已保存的配置
+  if (props.dataSource) {
+    loadSavedConfig();
+  }
 });
+
+const loadSavedConfig = () => {
+  if (!props.dataSource) return;
+  
+  const savedConfig = ruleConfigManager.getConfigByDataSourceId(props.dataSource.id);
+  if (savedConfig) {
+    config.value.encoding = savedConfig.encoding;
+    config.value.delimiter = savedConfig.delimiter;
+    config.value.skipRows = savedConfig.skipRows;
+    config.value.currency = savedConfig.currency;
+    config.value.minusAccount = savedConfig.minusAccount;
+    config.value.plusAccount = savedConfig.plusAccount;
+    config.value.commissionAccount = savedConfig.commissionAccount;
+    config.value.dateField = savedConfig.dateField;
+    config.value.amountField = savedConfig.amountField;
+    config.value.descriptionField = savedConfig.descriptionField;
+    config.value.payeeField = savedConfig.payeeField;
+  }
+};
 
 const parsePreviewData = () => {
   if (!props.fileContent) return;
@@ -293,8 +319,43 @@ const removeFieldMapping = (index: number) => {
 };
 
 const saveConfig = () => {
-  // 保存配置逻辑
-  console.log('保存配置:', config.value);
+  if (!props.dataSource) return;
+  
+  // 创建规则配置对象
+  const ruleConfig: RuleConfig = {
+    id: `config_${props.dataSource.id}_${Date.now()}`,
+    dataSourceId: props.dataSource.id,
+    name: `${props.dataSource.name} 配置`,
+    encoding: config.value.encoding,
+    delimiter: config.value.delimiter,
+    skipRows: config.value.skipRows,
+    currency: config.value.currency,
+    minusAccount: config.value.minusAccount,
+    plusAccount: config.value.plusAccount,
+    commissionAccount: config.value.commissionAccount,
+    dateField: config.value.dateField,
+    amountField: config.value.amountField,
+    descriptionField: config.value.descriptionField,
+    payeeField: config.value.payeeField,
+    fieldMappings: {
+      date: config.value.dateField,
+      amount: config.value.amountField,
+      description: config.value.descriptionField,
+      payee: config.value.payeeField
+    },
+    rules: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  // 保存配置
+  ruleConfigManager.saveConfig(ruleConfig);
+  
+  // 触发事件
+  emit('config-saved', ruleConfig);
+  
+  console.log('配置已保存:', ruleConfig);
+  alert('配置保存成功！');
 };
 
 const testConfig = () => {
@@ -460,6 +521,9 @@ watch(() => props.dataSource, (newDataSource) => {
     config.value.plusAccount = newDataSource.defaultPlusAccount || 'Assets:Bank:Default';
     config.value.commissionAccount = newDataSource.defaultCommissionAccount || 'Expenses:Commission';
     config.value.skipRows = newDataSource.skipLines || 0;
+    
+    // 加载已保存的配置
+    loadSavedConfig();
   }
 }, { immediate: true });
 </script> 

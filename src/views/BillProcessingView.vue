@@ -157,6 +157,30 @@
                   <p class="font-medium">{{ fileData.rows?.length || 0 }}</p>
                 </div>
               </div>
+              
+              <!-- 配置状态 -->
+              <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                <div class="flex items-center">
+                  <i class="fas fa-cog mr-2 text-blue-600"></i>
+                  <span class="text-sm font-medium text-blue-800">规则配置状态</span>
+                </div>
+                <div class="mt-2">
+                  <span v-if="currentConfig" class="text-sm text-green-600">
+                    <i class="fas fa-check mr-1"></i>
+                    已使用保存的规则配置：{{ currentConfig.name }}
+                  </span>
+                  <span v-else class="text-sm text-orange-600">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    未找到规则配置，使用默认字段检测
+                    <button 
+                      @click="handleEditConfig(selectedDataSource?.id || '')"
+                      class="ml-2 text-blue-600 hover:text-blue-800 underline"
+                    >
+                      去配置规则
+                    </button>
+                  </span>
+                </div>
+              </div>
             </div>
 
             <!-- 字段映射 -->
@@ -242,10 +266,12 @@ import DataSourceSelector from '../components/DataSourceSelector.vue';
 import FileUpload from '../components/FileUpload.vue';
 import type { FileData } from '../utils/file-processor';
 import type { DataSource } from '../types/data-source';
+import { ruleConfigManager } from '../utils/rule-config-manager';
 
 const currentStep = ref(0);
 const selectedDataSource = ref<DataSource | null>(null);
 const fileData = ref<FileData | null>(null);
+const currentConfig = ref<any>(null);
 
 // 生成 Beancount 记录
 const beancountRecords = computed(() => {
@@ -256,31 +282,78 @@ const beancountRecords = computed(() => {
   const { headers, rows } = fileData.value;
   const records: string[] = [];
 
-  // 查找关键字段的索引
-  const dateIndex = headers.findIndex(h => h.includes('日期') || h.includes('时间') || h.includes('date') || h.includes('time'));
-  const amountIndex = headers.findIndex(h => h.includes('金额') || h.includes('amount') || h.includes('收/支'));
-  const descriptionIndex = headers.findIndex(h => h.includes('描述') || h.includes('摘要') || h.includes('商品') || h.includes('description'));
-  const payeeIndex = headers.findIndex(h => h.includes('对方') || h.includes('商家') || h.includes('payee'));
+  // 获取当前数据源的规则配置
+  const config = currentConfig.value || (selectedDataSource.value ? 
+    ruleConfigManager.getConfigByDataSourceId(selectedDataSource.value.id) : null);
 
-  rows.forEach((row, index) => {
-    if (!row[dateIndex] || !row[amountIndex]) return;
+  // 如果有关联的规则配置，使用配置中的字段映射
+  if (config) {
+    const getFieldIndex = (fieldName: string) => {
+      const field = config[fieldName];
+      if (field !== '' && field !== null && field !== undefined) {
+        return parseInt(field as string);
+      }
+      return -1;
+    };
 
-    const date = formatDate(row[dateIndex]);
-    const amount = parseFloat(row[amountIndex]) || 0;
-    const description = row[descriptionIndex] || row[payeeIndex] || '交易';
-    const payee = row[payeeIndex] || '';
+    const dateIndex = getFieldIndex('dateField') >= 0 ? getFieldIndex('dateField') : 
+      headers.findIndex(h => h.includes('日期') || h.includes('时间') || h.includes('date') || h.includes('time'));
+    
+    const amountIndex = getFieldIndex('amountField') >= 0 ? getFieldIndex('amountField') : 
+      headers.findIndex(h => h.includes('金额') || h.includes('amount') || h.includes('收/支'));
+    
+    const descriptionIndex = getFieldIndex('descriptionField') >= 0 ? getFieldIndex('descriptionField') : 
+      headers.findIndex(h => h.includes('描述') || h.includes('摘要') || h.includes('商品') || h.includes('description'));
+    
+    const payeeIndex = getFieldIndex('payeeField') >= 0 ? getFieldIndex('payeeField') : 
+      headers.findIndex(h => h.includes('对方') || h.includes('商家') || h.includes('payee'));
 
-    if (amount === 0) return;
+    rows.forEach((row, index) => {
+      if (!row[dateIndex] || !row[amountIndex]) return;
 
-    const account = selectedDataSource.value?.defaultPlusAccount || 'Assets:Bank:Default';
-    const expenseAccount = amount > 0 ? 'Income:Other' : 'Expenses:Other';
+      const date = formatDate(row[dateIndex]);
+      const amount = parseFloat(row[amountIndex]) || 0;
+      const description = row[descriptionIndex] || row[payeeIndex] || '交易';
+      const payee = row[payeeIndex] || '';
 
-    let record = `${date} * "${payee}" "${description}"\n`;
-    record += `  ${account}  ${amount > 0 ? '+' : ''}${amount.toFixed(2)} CNY\n`;
-    record += `  ${expenseAccount}  ${amount > 0 ? '-' : '+'}${Math.abs(amount).toFixed(2)} CNY\n`;
+      if (amount === 0) return;
 
-    records.push(record);
-  });
+      const account = config.plusAccount || selectedDataSource.value?.defaultPlusAccount || 'Assets:Bank:Default';
+      const expenseAccount = amount > 0 ? 'Income:Other' : (config.minusAccount || 'Expenses:Other');
+
+      let record = `${date} * "${payee}" "${description}"\n`;
+      record += `  ${account}  ${amount > 0 ? '+' : ''}${amount.toFixed(2)} ${config.currency || 'CNY'}\n`;
+      record += `  ${expenseAccount}  ${amount > 0 ? '-' : '+'}${Math.abs(amount).toFixed(2)} ${config.currency || 'CNY'}\n`;
+
+      records.push(record);
+    });
+  } else {
+    // 使用默认的字段检测逻辑
+    const dateIndex = headers.findIndex(h => h.includes('日期') || h.includes('时间') || h.includes('date') || h.includes('time'));
+    const amountIndex = headers.findIndex(h => h.includes('金额') || h.includes('amount') || h.includes('收/支'));
+    const descriptionIndex = headers.findIndex(h => h.includes('描述') || h.includes('摘要') || h.includes('商品') || h.includes('description'));
+    const payeeIndex = headers.findIndex(h => h.includes('对方') || h.includes('商家') || h.includes('payee'));
+
+    rows.forEach((row, index) => {
+      if (!row[dateIndex] || !row[amountIndex]) return;
+
+      const date = formatDate(row[dateIndex]);
+      const amount = parseFloat(row[amountIndex]) || 0;
+      const description = row[descriptionIndex] || row[payeeIndex] || '交易';
+      const payee = row[payeeIndex] || '';
+
+      if (amount === 0) return;
+
+      const account = selectedDataSource.value?.defaultPlusAccount || 'Assets:Bank:Default';
+      const expenseAccount = amount > 0 ? 'Income:Other' : 'Expenses:Other';
+
+      let record = `${date} * "${payee}" "${description}"\n`;
+      record += `  ${account}  ${amount > 0 ? '+' : ''}${amount.toFixed(2)} CNY\n`;
+      record += `  ${expenseAccount}  ${amount > 0 ? '-' : '+'}${Math.abs(amount).toFixed(2)} CNY\n`;
+
+      records.push(record);
+    });
+  }
 
   return records.join('\n') || '// 无法生成 Beancount 记录';
 });
@@ -301,11 +374,19 @@ const formatDate = (dateStr: string): string => {
 
 const handleDataSourceSelected = (source: DataSource) => {
   selectedDataSource.value = source;
+  
+  // 加载该数据源的规则配置
+  const config = ruleConfigManager.getConfigByDataSourceId(source.id);
+  currentConfig.value = config;
+  
   console.log('选中的数据源:', source);
+  console.log('加载的规则配置:', config);
 };
 
 const handleEditConfig = (sourceId: string) => {
   console.log('编辑配置:', sourceId);
+  // 跳转到规则配置页面
+  window.location.href = '/rule-config';
 };
 
 const handleFileUploaded = (data: FileData) => {
@@ -343,6 +424,7 @@ const finishProcess = () => {
   currentStep.value = 0;
   selectedDataSource.value = null;
   fileData.value = null;
+  currentConfig.value = null;
 };
 
 const goHome = () => {

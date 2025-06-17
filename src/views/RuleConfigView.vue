@@ -115,6 +115,7 @@
             <RuleConfigEditor
               :dataSource="selectedDataSource"
               :fileContent="previewFileContent"
+              @config-saved="handleConfigSaved"
             />
           </div>
           
@@ -198,12 +199,14 @@ const loadTestFile = async () => {
       throw new Error('该数据源暂无测试文件');
     }
     
+    // 从public目录读取文件
     const response = await fetch(source.testFilePath);
     
     if (!response.ok) {
       throw new Error(`文件加载失败: ${response.status} ${response.statusText}`);
     }
     
+    // 获取文件内容
     const content = await response.text();
     previewFileContent.value = content;
     
@@ -231,5 +234,13 @@ const saveConfig = () => {
 
 const goHome = () => {
   window.location.href = '/';
+};
+
+const handleConfigSaved = (config: any) => {
+  // 处理配置保存后的逻辑
+  console.log('配置保存后处理逻辑:', config);
+  
+  // 显示保存成功的提示
+  alert(`配置 "${config.name}" 保存成功！现在可以在账单处理页面使用此配置。`);
 };
 </script> 

@@ -59,8 +59,8 @@ export const DATA_SOURCES: DataSource[] = [
     defaultMinusAccount: 'Expenses:Life:Food',
     defaultPlusAccount: 'Assets:Alipay',
     defaultCommissionAccount: 'Expenses:Commission',
-    skipLines: 26, // 支付宝文件前26行是说明信息
-    testFilePath: '/src/example/alipay/example-alipay-records.csv'
+    skipLines: 22, // 支付宝文件前26行是说明信息
+    testFilePath: '/example/alipay/example-alipay-records.csv'
   },
   { 
     id: 'wechat', 
@@ -74,7 +74,7 @@ export const DATA_SOURCES: DataSource[] = [
     defaultPlusAccount: 'Assets:WeChat',
     defaultCommissionAccount: 'Expenses:Commission',
     skipLines: 19, // 微信文件前19行是说明信息
-    testFilePath: '/src/example/wechat/example-wechat-records.csv'
+    testFilePath: '/example/wechat/example-wechat-records.csv'
   },
   { 
     id: 'jd', 
@@ -88,7 +88,7 @@ export const DATA_SOURCES: DataSource[] = [
     defaultPlusAccount: 'Assets:JD',
     defaultCommissionAccount: 'Expenses:Commission',
     skipLines: 22, // 京东文件前22行是说明信息
-    testFilePath: '/src/example/jd/example-jd-records.csv'
+    testFilePath: '/example/jd/example-jd-records.csv'
   },
   
   // 银行
@@ -104,7 +104,7 @@ export const DATA_SOURCES: DataSource[] = [
     defaultPlusAccount: 'Assets:Bank:ICBC',
     defaultCommissionAccount: 'Expenses:Commission',
     skipLines: 7, // 工商银行文件前7行是说明信息
-    testFilePath: '/src/example/icbc/debit-v1/example-icbc-debit-v1-records.csv'
+    testFilePath: '/example/icbc/debit-v1/example-icbc-debit-v1-records.csv'
   },
   { 
     id: 'citic', 
@@ -118,7 +118,7 @@ export const DATA_SOURCES: DataSource[] = [
     defaultPlusAccount: 'Liabilities:CreditCard:CITIC',
     defaultCommissionAccount: 'Expenses:Commission',
     skipLines: 10, // 中信银行文件前10行是说明信息
-    testFilePath: '/src/example/citic/credit/example-citic-records.xls'
+    testFilePath: '/example/citic/credit/example-citic-records.xls'
   },
   { 
     id: 'hsbchk', 
@@ -132,7 +132,7 @@ export const DATA_SOURCES: DataSource[] = [
     defaultPlusAccount: 'Assets:Bank:HSBC',
     defaultCommissionAccount: 'Expenses:Commission',
     skipLines: 10, // 汇丰银行文件前10行是说明信息
-    testFilePath: '/src/example/hsbchk/debit/example-hsbchk-debit-records.csv'
+    testFilePath: '/example/hsbchk/debit/example-hsbchk-debit-records.csv'
   },
   { 
     id: 'td', 
@@ -146,7 +146,7 @@ export const DATA_SOURCES: DataSource[] = [
     defaultPlusAccount: 'Assets:Bank:TD',
     defaultCommissionAccount: 'Expenses:Commission',
     skipLines: 10, // TD银行文件前10行是说明信息
-    testFilePath: '/src/example/td/example-td-records.csv'
+    testFilePath: '/example/td/example-td-records.csv'
   },
   { 
     id: 'bmo', 
@@ -160,7 +160,7 @@ export const DATA_SOURCES: DataSource[] = [
     defaultPlusAccount: 'Assets:Bank:BMO',
     defaultCommissionAccount: 'Expenses:Commission',
     skipLines: 10, // BMO银行文件前10行是说明信息
-    testFilePath: '/src/example/bmo/debit/example-bmo-records.csv'
+    testFilePath: '/example/bmo/debit/example-bmo-records.csv'
   },
   
   // 证券
@@ -176,7 +176,7 @@ export const DATA_SOURCES: DataSource[] = [
     defaultPlusAccount: 'Assets:Securities:HT',
     defaultCommissionAccount: 'Expenses:Commission',
     skipLines: 5, // 海通证券文件前5行是说明信息
-    testFilePath: '/src/example/htsec/example-htsec-records.xlsx'
+    testFilePath: '/example/htsec/example-htsec-records.xlsx'
   },
   
   // 加密货币
@@ -192,6 +192,6 @@ export const DATA_SOURCES: DataSource[] = [
     defaultPlusAccount: 'Assets:Crypto:Huobi',
     defaultCommissionAccount: 'Expenses:Commission',
     skipLines: 0, // 火币文件没有前置说明信息
-    testFilePath: '/src/example/huobi/example-huobi-records.csv'
+    testFilePath: '/example/huobi/example-huobi-records.csv'
   }
 ]; 

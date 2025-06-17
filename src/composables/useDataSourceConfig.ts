@@ -1,32 +1,28 @@
 import { ref, computed } from 'vue';
-import type { DataSourceConfig, DataSource } from '../types/data-source';
+import type { DataSource } from '../types/data-source';
+import { ruleConfigManager, type RuleConfig } from '../utils/rule-config-manager';
 
 export function useDataSourceConfig() {
-  const STORAGE_KEY = 'beancount_datasource_configs';
-  
   // 响应式状态
-  const configs = ref<Record<string, DataSourceConfig>>({});
-  const currentConfig = ref<DataSourceConfig | null>(null);
+  const configs = ref<RuleConfig[]>([]);
+  const currentConfig = ref<RuleConfig | null>(null);
   const selectedDataSource = ref<string>('');
   
   // 加载所有配置
   const loadConfigs = () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        configs.value = JSON.parse(stored);
-      }
+      configs.value = ruleConfigManager.getAllConfigs();
     } catch (error) {
       console.error('加载配置失败:', error);
-      configs.value = {};
+      configs.value = [];
     }
   };
   
   // 保存配置
-  const saveConfig = (config: DataSourceConfig) => {
+  const saveConfig = (config: RuleConfig) => {
     try {
-      configs.value[config.id] = config;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(configs.value));
+      ruleConfigManager.saveConfig(config);
+      loadConfigs(); // 重新加载配置列表
       return true;
     } catch (error) {
       console.error('保存配置失败:', error);
@@ -35,15 +31,20 @@ export function useDataSourceConfig() {
   };
   
   // 获取配置
-  const getConfig = (id: string): DataSourceConfig | null => {
-    return configs.value[id] || null;
+  const getConfig = (id: string): RuleConfig | null => {
+    return configs.value.find(config => config.id === id) || null;
+  };
+
+  // 根据数据源ID获取配置
+  const getConfigByDataSourceId = (dataSourceId: string): RuleConfig | null => {
+    return ruleConfigManager.getConfigByDataSourceId(dataSourceId);
   };
   
   // 删除配置
   const deleteConfig = (id: string) => {
     try {
-      delete configs.value[id];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(configs.value));
+      ruleConfigManager.deleteConfig(id);
+      loadConfigs(); // 重新加载配置列表
       return true;
     } catch (error) {
       console.error('删除配置失败:', error);
@@ -54,11 +55,11 @@ export function useDataSourceConfig() {
   // 选择数据源
   const selectDataSource = (id: string) => {
     selectedDataSource.value = id;
-    currentConfig.value = getConfig(id);
+    currentConfig.value = getConfigByDataSourceId(id);
   };
   
   // 更新当前配置
-  const updateCurrentConfig = (config: Partial<DataSourceConfig>) => {
+  const updateCurrentConfig = (config: Partial<RuleConfig>) => {
     if (currentConfig.value) {
       currentConfig.value = { ...currentConfig.value, ...config };
       saveConfig(currentConfig.value);
@@ -66,17 +67,8 @@ export function useDataSourceConfig() {
   };
   
   // 创建默认配置
-  const createDefaultConfig = (dataSource: DataSource): DataSourceConfig => {
-    return {
-      id: dataSource.id,
-      name: dataSource.name,
-      defaultMinusAccount: `Assets:${dataSource.category}:${dataSource.name}`,
-      defaultPlusAccount: 'Expenses:FIXME',
-      defaultCommissionAccount: 'Expenses:Commission:手续费',
-      defaultCurrency: dataSource.category === 'crypto' ? 'USDT' : 'CNY',
-      rules: [],
-      fieldMapping: {}
-    };
+  const createDefaultConfig = (dataSource: DataSource): RuleConfig => {
+    return ruleConfigManager.createDefaultConfig(dataSource);
   };
   
   // 导出配置为JSON
@@ -93,11 +85,11 @@ export function useDataSourceConfig() {
   };
   
   // 导入配置从JSON
-  const importConfig = (jsonString: string): DataSourceConfig | null => {
+  const importConfig = (jsonString: string): RuleConfig | null => {
     try {
       const config = JSON.parse(jsonString);
       // 验证配置格式
-      if (config.id && config.name && config.rules) {
+      if (config.id && config.dataSourceId && config.name) {
         return config;
       }
       return null;
@@ -124,7 +116,7 @@ export function useDataSourceConfig() {
   };
   
   // 上传配置文件
-  const uploadConfig = async (file: File): Promise<DataSourceConfig | null> => {
+  const uploadConfig = async (file: File): Promise<RuleConfig | null> => {
     try {
       const text = await file.text();
       const config = importConfig(text);
@@ -140,8 +132,11 @@ export function useDataSourceConfig() {
   };
   
   // 计算属性
-  const hasConfig = computed(() => (id: string) => !!configs.value[id]);
-  const configList = computed(() => Object.values(configs.value));
+  const hasConfig = computed(() => (id: string) => {
+    return configs.value.some(config => config.dataSourceId === id);
+  });
+  
+  const configList = computed(() => configs.value);
   
   // 初始化时加载配置
   loadConfigs();
@@ -156,6 +151,7 @@ export function useDataSourceConfig() {
     loadConfigs,
     saveConfig,
     getConfig,
+    getConfigByDataSourceId,
     deleteConfig,
     selectDataSource,
     updateCurrentConfig,
