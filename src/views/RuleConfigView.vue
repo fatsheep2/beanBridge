@@ -1,205 +1,235 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- 返回首页按钮 -->
-    <div class="mb-6">
-      <button 
-        @click="goHome"
-        class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-      >
-        <i class="fas fa-arrow-left mr-2"></i>
-        返回首页
-      </button>
-    </div>
+  <div class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- 返回首页按钮 -->
+      <div class="mb-6">
+        <button 
+          @click="goHome"
+          class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>
+          返回首页
+        </button>
+      </div>
 
-    <div class="flex flex-col md:flex-row gap-6">
-      <!-- 侧边栏 -->
-      <AppSidebar
-        :currentStep="currentStep"
-        :steps="steps"
-        @step-change="goToStep"
-      />
+      <!-- 页面标题 -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">规则配置</h1>
+        <p class="mt-2 text-gray-600">配置数据源的处理规则和字段映射</p>
+      </div>
 
-      <!-- 主面板 -->
-      <div class="flex-1 bg-white rounded-lg shadow overflow-hidden">
-        <div class="p-6">
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <h2 class="text-2xl font-bold text-gray-800 mb-2">规则配置</h2>
-              <p class="text-gray-600">配置数据源的解析规则，支持导入导出和剪贴板操作</p>
-            </div>
-            <div class="flex space-x-2">
-              <button 
-                @click="exportToClipboard"
-                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              >
-                <i class="fas fa-copy mr-2"></i>导出到剪贴板
-              </button>
-              <button 
-                @click="importFromClipboard"
-                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                <i class="fas fa-paste mr-2"></i>从剪贴板导入
-              </button>
-              <button 
-                @click="addRule"
-                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
-                <i class="fas fa-plus mr-2"></i>添加规则
-              </button>
-            </div>
-          </div>
-
-          <!-- 规则列表 -->
-          <div class="space-y-4">
+      <!-- 步骤指示器 -->
+      <div class="mb-8">
+        <div class="flex items-center justify-center">
+          <div class="flex items-center space-x-4">
             <div 
-              v-for="(rule, index) in rules" 
-              :key="index"
-              class="border rounded-lg p-4 hover:shadow-md transition-shadow"
+              :class="[
+                'flex items-center justify-center w-10 h-10 rounded-full border-2',
+                currentStep >= 0 ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300 text-gray-500'
+              ]"
             >
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-medium text-gray-800">规则 {{ index + 1 }}</h3>
-                <div class="flex space-x-2">
-                  <button 
-                    @click="editRule(index)"
-                    class="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                  >
-                    <i class="fas fa-edit mr-1"></i>编辑
-                  </button>
-                  <button 
-                    @click="deleteRule(index)"
-                    class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                  >
-                    <i class="fas fa-trash mr-1"></i>删除
-                  </button>
-                </div>
-              </div>
-              
-              <!-- 规则内容预览 -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span class="font-medium text-gray-700">条件:</span>
-                  <div class="mt-1 space-y-1">
-                    <div v-for="(condition, cIndex) in rule.conditions" :key="cIndex" class="text-gray-600">
-                      {{ condition.field }} {{ condition.operator }} {{ Array.isArray(condition.value) ? condition.value.join(', ') : condition.value }}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <span class="font-medium text-gray-700">动作:</span>
-                  <div class="mt-1 space-y-1">
-                    <div v-if="rule.actions.targetAccount" class="text-gray-600">
-                      目标账户: {{ rule.actions.targetAccount }}
-                    </div>
-                    <div v-if="rule.actions.methodAccount" class="text-gray-600">
-                      方法账户: {{ rule.actions.methodAccount }}
-                    </div>
-                    <div v-if="rule.actions.ignore" class="text-gray-600">
-                      忽略: 是
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <span class="text-sm font-medium">1</span>
+            </div>
+            <div 
+              :class="[
+                'flex-1 h-1',
+                currentStep >= 1 ? 'bg-indigo-600' : 'bg-gray-300'
+              ]"
+            ></div>
+            <div 
+              :class="[
+                'flex items-center justify-center w-10 h-10 rounded-full border-2',
+                currentStep >= 1 ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300 text-gray-500'
+              ]"
+            >
+              <span class="text-sm font-medium">2</span>
             </div>
           </div>
+        </div>
+        <div class="flex justify-center mt-4 space-x-16">
+          <span :class="['text-sm', currentStep >= 0 ? 'text-indigo-600 font-medium' : 'text-gray-500']">选择数据源</span>
+          <span :class="['text-sm', currentStep >= 1 ? 'text-indigo-600 font-medium' : 'text-gray-500']">配置规则</span>
+        </div>
+      </div>
 
-          <!-- 空状态 -->
-          <div v-if="rules.length === 0" class="text-center py-12">
-            <i class="fas fa-cogs text-4xl text-gray-400 mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-600 mb-2">暂无规则</h3>
-            <p class="text-gray-500 mb-4">点击"添加规则"开始配置您的解析规则</p>
+      <!-- 步骤内容 -->
+      <div class="bg-white rounded-lg shadow">
+        <!-- 步骤1：数据源选择 -->
+        <div v-if="currentStep === 0" class="p-8">
+          <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">选择数据源</h2>
+            <p class="text-gray-600">请选择您要配置规则的数据源类型</p>
+          </div>
+          
+          <DataSourceSelector
+            :onDataSourceSelected="handleDataSourceSelected"
+            :onEditConfig="handleEditConfig"
+          />
+          
+          <div class="flex justify-end mt-8">
             <button 
-              @click="addRule"
+              @click="nextStep"
+              :disabled="!selectedDataSource"
+              class="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              下一步
+              <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 步骤2：规则配置 -->
+        <div v-if="currentStep === 1" class="p-8">
+          <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">配置规则</h2>
+            <p class="text-gray-600">配置数据源的处理规则和字段映射</p>
+            <div v-if="selectedDataSource" class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full">
+              <i class="fas fa-database mr-2"></i>
+              已选择：{{ selectedDataSource.name }}
+            </div>
+          </div>
+          
+          <!-- 加载状态 -->
+          <div v-if="isLoadingFile" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">正在加载测试文件...</p>
+          </div>
+          
+          <!-- 错误状态 -->
+          <div v-else-if="fileLoadError" class="text-center py-12">
+            <div class="text-red-500 mb-4">
+              <i class="fas fa-exclamation-triangle text-4xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">文件加载失败</h3>
+            <p class="text-gray-600 mb-4">{{ fileLoadError }}</p>
+            <button 
+              @click="loadTestFile"
               class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
             >
-              <i class="fas fa-plus mr-2"></i>添加第一个规则
+              重新加载
+            </button>
+          </div>
+          
+          <!-- 规则配置编辑器 -->
+          <div v-else-if="previewFileContent">
+            <RuleConfigEditor
+              :dataSource="selectedDataSource"
+              :fileContent="previewFileContent"
+            />
+          </div>
+          
+          <div class="flex justify-between mt-8">
+            <button 
+              @click="prevStep"
+              class="px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            >
+              <i class="fas fa-arrow-left mr-2"></i>
+              上一步
+            </button>
+            <button 
+              @click="saveConfig"
+              class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              <i class="fas fa-save mr-2"></i>
+              保存配置
             </button>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- 规则编辑对话框 -->
-    <RuleEditDialog
-      v-if="showRuleDialog"
-      :rule="editingRule"
-      :isEdit="isEditing"
-      @save="saveRule"
-      @cancel="closeRuleDialog"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import AppSidebar from '../components/AppSidebar.vue';
-import RuleEditDialog from '../components/RuleEditDialog.vue';
-import { useRuleManager } from '../composables/useRuleManager';
-import type { Rule } from '../types/data-source';
+import { ref, computed } from 'vue';
+import DataSourceSelector from '../components/DataSourceSelector.vue';
+import RuleConfigEditor from '../components/RuleConfigEditor.vue';
+import type { DataSource } from '../types/data-source';
 
 const currentStep = ref(0);
-const steps = [
-  { title: '规则配置', icon: 'fa-cogs' }
-];
+const selectedDataSource = ref<DataSource | null>(null);
+const previewFileContent = ref<string>('');
+const isLoadingFile = ref(false);
+const fileLoadError = ref<string>('');
 
-const { 
-  rules, 
-  addRule: addRuleToManager, 
-  updateRule: updateRuleInManager, 
-  deleteRule: deleteRuleFromManager,
-  exportToClipboard,
-  importFromClipboard
-} = useRuleManager();
-
-const showRuleDialog = ref(false);
-const editingRule = ref<Rule | null>(null);
-const isEditing = ref(false);
-
-function goHome() {
-  window.location.href = '/';
-}
-
-function goToStep(step: number) {
-  currentStep.value = step;
-}
-
-function addRule() {
-  editingRule.value = {
-    conditions: [],
-    actions: {}
-  };
-  isEditing.value = false;
-  showRuleDialog.value = true;
-}
-
-function editRule(index: number) {
-  editingRule.value = { ...rules.value[index] };
-  isEditing.value = true;
-  showRuleDialog.value = true;
-}
-
-function deleteRule(index: number) {
-  if (confirm('确定要删除这个规则吗？')) {
-    deleteRuleFromManager(index);
+const handleDataSourceSelected = async (source: DataSource) => {
+  selectedDataSource.value = source;
+  console.log('选中的数据源:', source);
+  
+  // 如果已经在步骤2，立即加载对应的测试文件
+  if (currentStep.value === 1) {
+    await loadTestFile();
   }
-}
+};
 
-function saveRule(rule: Rule) {
-  if (isEditing.value) {
-    // 编辑现有规则
-    const index = rules.value.findIndex(r => r === editingRule.value);
-    if (index !== -1) {
-      updateRuleInManager(index, rule);
+const handleEditConfig = (sourceId: string) => {
+  console.log('编辑配置:', sourceId);
+};
+
+const nextStep = async () => {
+  if (currentStep.value < 1) {
+    currentStep.value++;
+    // 进入步骤2时加载测试文件
+    if (selectedDataSource.value) {
+      await loadTestFile();
     }
-  } else {
-    // 添加新规则
-    addRuleToManager(rule);
   }
-  closeRuleDialog();
-}
+};
 
-function closeRuleDialog() {
-  showRuleDialog.value = false;
-  editingRule.value = null;
-  isEditing.value = false;
-}
+const prevStep = () => {
+  if (currentStep.value > 0) {
+    currentStep.value--;
+    // 清空文件内容
+    previewFileContent.value = '';
+    fileLoadError.value = '';
+  }
+};
+
+const loadTestFile = async () => {
+  if (!selectedDataSource.value) return;
+  
+  isLoadingFile.value = true;
+  fileLoadError.value = '';
+  
+  try {
+    const source = selectedDataSource.value;
+    
+    if (!source.testFilePath) {
+      throw new Error('该数据源暂无测试文件');
+    }
+    
+    const response = await fetch(source.testFilePath);
+    
+    if (!response.ok) {
+      throw new Error(`文件加载失败: ${response.status} ${response.statusText}`);
+    }
+    
+    const content = await response.text();
+    previewFileContent.value = content;
+    
+    console.log(`成功加载测试文件: ${source.testFilePath}`);
+  } catch (error) {
+    console.error('加载测试文件失败:', error);
+    fileLoadError.value = error instanceof Error ? error.message : '未知错误';
+    previewFileContent.value = '';
+  } finally {
+    isLoadingFile.value = false;
+  }
+};
+
+const saveConfig = () => {
+  // 这里可以添加保存配置的逻辑
+  console.log('保存配置');
+  alert('配置保存成功！');
+  
+  // 重置到第一步
+  currentStep.value = 0;
+  selectedDataSource.value = null;
+  previewFileContent.value = '';
+  fileLoadError.value = '';
+};
+
+const goHome = () => {
+  window.location.href = '/';
+};
 </script> 

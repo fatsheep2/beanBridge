@@ -9,6 +9,8 @@ export interface DataSource {
   defaultMinusAccount?: string;
   defaultPlusAccount?: string;
   defaultCommissionAccount?: string;
+  skipLines?: number; // 需要忽略的前置行数
+  testFilePath?: string; // 测试文件路径
 }
 
 export interface RuleCondition {
@@ -56,7 +58,9 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx'],
     defaultMinusAccount: 'Expenses:Life:Food',
     defaultPlusAccount: 'Assets:Alipay',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 26, // 支付宝文件前26行是说明信息
+    testFilePath: '/src/example/alipay/example-alipay-records.csv'
   },
   { 
     id: 'wechat', 
@@ -68,7 +72,9 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx'],
     defaultMinusAccount: 'Expenses:Life:Food',
     defaultPlusAccount: 'Assets:WeChat',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 19, // 微信文件前19行是说明信息
+    testFilePath: '/src/example/wechat/example-wechat-records.csv'
   },
   { 
     id: 'jd', 
@@ -80,7 +86,9 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx'],
     defaultMinusAccount: 'Expenses:Shopping',
     defaultPlusAccount: 'Assets:JD',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 22, // 京东文件前22行是说明信息
+    testFilePath: '/src/example/jd/example-jd-records.csv'
   },
   
   // 银行
@@ -94,31 +102,9 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx', 'txt'],
     defaultMinusAccount: 'Expenses:FIXME',
     defaultPlusAccount: 'Assets:Bank:ICBC',
-    defaultCommissionAccount: 'Expenses:Commission'
-  },
-  { 
-    id: 'cmb', 
-    name: '招商银行', 
-    icon: '/src/components/icons/招商银行.png', 
-    color: '#a50044',
-    description: '招商银行对账单导入',
-    category: 'bank',
-    supportedFormats: ['csv', 'xlsx', 'txt'],
-    defaultMinusAccount: 'Expenses:FIXME',
-    defaultPlusAccount: 'Assets:Bank:CMB',
-    defaultCommissionAccount: 'Expenses:Commission'
-  },
-  { 
-    id: 'ccb', 
-    name: '建设银行', 
-    icon: '/src/components/icons/建设银行.png', 
-    color: '#0039a6',
-    description: '建设银行对账单导入',
-    category: 'bank',
-    supportedFormats: ['csv', 'xlsx', 'txt'],
-    defaultMinusAccount: 'Expenses:FIXME',
-    defaultPlusAccount: 'Assets:Bank:CCB',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 7, // 工商银行文件前7行是说明信息
+    testFilePath: '/src/example/icbc/debit-v1/example-icbc-debit-v1-records.csv'
   },
   { 
     id: 'citic', 
@@ -130,7 +116,9 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx', 'txt'],
     defaultMinusAccount: 'Expenses:FIXME',
     defaultPlusAccount: 'Liabilities:CreditCard:CITIC',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 10, // 中信银行文件前10行是说明信息
+    testFilePath: '/src/example/citic/credit/example-citic-records.xls'
   },
   { 
     id: 'hsbchk', 
@@ -142,7 +130,9 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx', 'txt'],
     defaultMinusAccount: 'Expenses:FIXME',
     defaultPlusAccount: 'Assets:Bank:HSBC',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 10, // 汇丰银行文件前10行是说明信息
+    testFilePath: '/src/example/hsbchk/debit/example-hsbchk-debit-records.csv'
   },
   { 
     id: 'td', 
@@ -154,7 +144,9 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx', 'txt'],
     defaultMinusAccount: 'Expenses:FIXME',
     defaultPlusAccount: 'Assets:Bank:TD',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 10, // TD银行文件前10行是说明信息
+    testFilePath: '/src/example/td/example-td-records.csv'
   },
   { 
     id: 'bmo', 
@@ -166,7 +158,9 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx', 'txt'],
     defaultMinusAccount: 'Expenses:FIXME',
     defaultPlusAccount: 'Assets:Bank:BMO',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 10, // BMO银行文件前10行是说明信息
+    testFilePath: '/src/example/bmo/debit/example-bmo-records.csv'
   },
   
   // 证券
@@ -180,7 +174,9 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx'],
     defaultMinusAccount: 'Expenses:Investment',
     defaultPlusAccount: 'Assets:Securities:HT',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 5, // 海通证券文件前5行是说明信息
+    testFilePath: '/src/example/htsec/example-htsec-records.xlsx'
   },
   
   // 加密货币
@@ -194,6 +190,8 @@ export const DATA_SOURCES: DataSource[] = [
     supportedFormats: ['csv', 'xlsx'],
     defaultMinusAccount: 'Expenses:Crypto',
     defaultPlusAccount: 'Assets:Crypto:Huobi',
-    defaultCommissionAccount: 'Expenses:Commission'
+    defaultCommissionAccount: 'Expenses:Commission',
+    skipLines: 0, // 火币文件没有前置说明信息
+    testFilePath: '/src/example/huobi/example-huobi-records.csv'
   }
 ]; 

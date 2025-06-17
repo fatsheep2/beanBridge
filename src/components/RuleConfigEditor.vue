@@ -33,185 +33,158 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- 左侧：规则配置 -->
-      <div class="space-y-6">
-        <!-- 基础配置 -->
-        <div class="bg-white border rounded-lg p-4">
-          <h3 class="text-lg font-medium text-gray-800 mb-4">基础配置</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">编码格式</label>
-              <select v-model="config.encoding" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                <option value="utf-8">UTF-8</option>
-                <option value="gbk">GBK</option>
-                <option value="gb2312">GB2312</option>
-                <option value="big5">Big5</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">分隔符</label>
-              <select v-model="config.delimiter" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                <option value=",">逗号 (,)</option>
-                <option value=";">分号 (;)</option>
-                <option value="\t">制表符 (Tab)</option>
-                <option value="|">竖线 (|)</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">跳过行数</label>
-              <input 
-                v-model.number="config.skipRows" 
-                type="number" 
-                min="0"
-                class="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-            </div>
+    <div class="space-y-6">
+      <!-- 基础配置 -->
+      <div class="bg-white border rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-800 mb-4">基础配置</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">编码格式</label>
+            <select v-model="config.encoding" class="w-full border border-gray-300 rounded-md px-3 py-2">
+              <option value="utf-8">UTF-8</option>
+              <option value="gbk">GBK</option>
+              <option value="gb2312">GB2312</option>
+              <option value="big5">Big5</option>
+            </select>
           </div>
-        </div>
-
-        <!-- 字段映射 -->
-        <div class="bg-white border rounded-lg p-4">
-          <h3 class="text-lg font-medium text-gray-800 mb-4">字段映射</h3>
-          <div class="space-y-3">
-            <div 
-              v-for="(mapping, index) in config.fieldMappings" 
-              :key="index"
-              class="flex items-center space-x-2"
-            >
-              <select 
-                v-model="mapping.targetField" 
-                class="flex-1 border border-gray-300 rounded-md px-3 py-2"
-              >
-                <option value="">选择目标字段</option>
-                <option value="date">日期</option>
-                <option value="amount">金额</option>
-                <option value="description">描述</option>
-                <option value="category">分类</option>
-                <option value="account">账户</option>
-                <option value="type">类型</option>
-              </select>
-              <span class="text-gray-500">←</span>
-              <input 
-                v-model="mapping.sourceField" 
-                placeholder="源字段名或索引"
-                class="flex-1 border border-gray-300 rounded-md px-3 py-2"
-              />
-              <button 
-                @click="removeFieldMapping(index)"
-                class="px-2 py-2 text-red-600 hover:bg-red-50 rounded"
-              >
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-            <button 
-              @click="addFieldMapping"
-              class="w-full py-2 border-2 border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-700 rounded-md"
-            >
-              <i class="fas fa-plus mr-2"></i>添加字段映射
-            </button>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">分隔符</label>
+            <select v-model="config.delimiter" class="w-full border border-gray-300 rounded-md px-3 py-2">
+              <option value=",">逗号 (,)</option>
+              <option value=";">分号 (;)</option>
+              <option value="\t">制表符 (Tab)</option>
+              <option value="|">竖线 (|)</option>
+            </select>
           </div>
-        </div>
-
-        <!-- 数据转换规则 -->
-        <div class="bg-white border rounded-lg p-4">
-          <h3 class="text-lg font-medium text-gray-800 mb-4">数据转换规则</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">日期格式</label>
-              <input 
-                v-model="config.dateFormat" 
-                placeholder="如: YYYY-MM-DD"
-                class="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">金额处理</label>
-              <div class="space-y-2">
-                <label class="flex items-center">
-                  <input 
-                    v-model="config.amountConfig.removeCurrencySymbol" 
-                    type="checkbox" 
-                    class="mr-2"
-                  />
-                  移除货币符号
-                </label>
-                <label class="flex items-center">
-                  <input 
-                    v-model="config.amountConfig.removeThousandSeparator" 
-                    type="checkbox" 
-                    class="mr-2"
-                  />
-                  移除千位分隔符
-                </label>
-              </div>
-            </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">跳过行数</label>
+            <input 
+              v-model.number="config.skipRows" 
+              type="number" 
+              min="0"
+              class="w-full border border-gray-300 rounded-md px-3 py-2"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">默认货币</label>
+            <select v-model="config.currency" class="w-full border border-gray-300 rounded-md px-3 py-2">
+              <option value="CNY">人民币 (CNY)</option>
+              <option value="USD">美元 (USD)</option>
+              <option value="EUR">欧元 (EUR)</option>
+              <option value="JPY">日元 (JPY)</option>
+            </select>
           </div>
         </div>
       </div>
 
-      <!-- 右侧：预览和测试 -->
-      <div class="space-y-6">
-        <!-- 文件预览 -->
-        <div class="bg-white border rounded-lg p-4">
-          <h3 class="text-lg font-medium text-gray-800 mb-4">文件预览</h3>
-          <div v-if="previewData.length > 0" class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-              <thead>
-                <tr class="border-b">
-                  <th 
-                    v-for="(header, index) in previewHeaders" 
-                    :key="index"
-                    class="text-left py-2 px-2 font-medium text-gray-700"
-                  >
-                    {{ header }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr 
-                  v-for="(row, rowIndex) in previewData.slice(0, 5)" 
-                  :key="rowIndex"
-                  class="border-b hover:bg-gray-50"
-                >
-                  <td 
-                    v-for="(cell, cellIndex) in row" 
-                    :key="cellIndex"
-                    class="py-2 px-2"
-                  >
-                    {{ cell }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+      <!-- 账户配置 -->
+      <div class="bg-white border rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-800 mb-4">账户配置</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">支出账户</label>
+            <input 
+              v-model="config.minusAccount" 
+              type="text" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2"
+              placeholder="Expenses:Other"
+            />
           </div>
-          <div v-else class="text-center py-8 text-gray-500">
-            <i class="fas fa-file-alt text-4xl mb-2"></i>
-            <p>暂无预览数据</p>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">收入账户</label>
+            <input 
+              v-model="config.plusAccount" 
+              type="text" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2"
+              placeholder="Assets:Bank:Default"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">手续费账户</label>
+            <input 
+              v-model="config.commissionAccount" 
+              type="text" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2"
+              placeholder="Expenses:Commission"
+            />
           </div>
         </div>
+      </div>
 
-        <!-- 解析结果预览 -->
-        <div class="bg-white border rounded-lg p-4">
-          <h3 class="text-lg font-medium text-gray-800 mb-4">解析结果预览</h3>
-          <div v-if="parsedData.length > 0" class="space-y-2">
-            <div 
-              v-for="(transaction, index) in parsedData.slice(0, 3)" 
-              :key="index"
-              class="border rounded p-3"
-            >
-              <div class="grid grid-cols-2 gap-2 text-sm">
-                <div><span class="font-medium">日期:</span> {{ transaction.date }}</div>
-                <div><span class="font-medium">金额:</span> {{ transaction.amount }}</div>
-                <div><span class="font-medium">描述:</span> {{ transaction.description }}</div>
-                <div><span class="font-medium">分类:</span> {{ transaction.category }}</div>
-              </div>
-            </div>
+      <!-- 字段映射 -->
+      <div class="bg-white border rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-800 mb-4">字段映射</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">日期字段</label>
+            <select v-model="config.dateField" class="w-full border border-gray-300 rounded-md px-3 py-2">
+              <option value="">自动检测</option>
+              <option v-for="(header, index) in parsedHeaders" :key="index" :value="index">
+                {{ header }} (列{{ index + 1 }})
+              </option>
+            </select>
           </div>
-          <div v-else class="text-center py-8 text-gray-500">
-            <i class="fas fa-chart-line text-4xl mb-2"></i>
-            <p>暂无解析结果</p>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">金额字段</label>
+            <select v-model="config.amountField" class="w-full border border-gray-300 rounded-md px-3 py-2">
+              <option value="">自动检测</option>
+              <option v-for="(header, index) in parsedHeaders" :key="index" :value="index">
+                {{ header }} (列{{ index + 1 }})
+              </option>
+            </select>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">描述字段</label>
+            <select v-model="config.descriptionField" class="w-full border border-gray-300 rounded-md px-3 py-2">
+              <option value="">自动检测</option>
+              <option v-for="(header, index) in parsedHeaders" :key="index" :value="index">
+                {{ header }} (列{{ index + 1 }})
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">对方字段</label>
+            <select v-model="config.payeeField" class="w-full border border-gray-300 rounded-md px-3 py-2">
+              <option value="">自动检测</option>
+              <option v-for="(header, index) in parsedHeaders" :key="index" :value="index">
+                {{ header }} (列{{ index + 1 }})
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 文件预览 -->
+      <div class="bg-white border rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-800 mb-4">文件预览</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white rounded-lg shadow">
+            <thead>
+              <tr class="bg-gray-100">
+                <th v-for="(header, index) in parsedHeaders" :key="index" class="text-left py-3 px-4 font-medium text-gray-700 border-b">
+                  {{ header }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, rowIndex) in parsedRows.slice(0, 5)" :key="rowIndex" class="border-b hover:bg-gray-50">
+                <td v-for="(cell, cellIndex) in row" :key="cellIndex" class="py-3 px-4 text-gray-600">
+                  {{ cell }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="parsedRows.length > 5" class="text-center py-4 text-gray-500 text-sm">
+            显示前5条记录，共{{ parsedRows.length }}条
+          </div>
+        </div>
+      </div>
+
+      <!-- Beancount 预览 -->
+      <div class="bg-white border rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-800 mb-4">Beancount 预览</h3>
+        <div class="bg-gray-50 rounded border p-4">
+          <pre class="text-sm text-gray-800 whitespace-pre-wrap">{{ beancountPreview }}</pre>
         </div>
       </div>
     </div>
@@ -219,7 +192,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed, watch } from 'vue';
+import Papa from 'papaparse';
 import type { DataSource } from '../types/data-source';
 
 interface FieldMapping {
@@ -239,11 +213,19 @@ interface RuleConfig {
   fieldMappings: FieldMapping[];
   dateFormat: string;
   amountConfig: AmountConfig;
+  currency: string;
+  minusAccount: string;
+  plusAccount: string;
+  commissionAccount: string;
+  dateField: string;
+  amountField: string;
+  descriptionField: string;
+  payeeField: string;
 }
 
 interface Props {
   dataSource: DataSource | null;
-  fileContent?: string;
+  fileContent: string;
 }
 
 interface Emits {
@@ -254,7 +236,7 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-const config = reactive<RuleConfig>({
+const config = ref<RuleConfig>({
   encoding: 'utf-8',
   delimiter: ',',
   skipRows: 0,
@@ -263,12 +245,20 @@ const config = reactive<RuleConfig>({
   amountConfig: {
     removeCurrencySymbol: true,
     removeThousandSeparator: true
-  }
+  },
+  currency: 'CNY',
+  minusAccount: 'Expenses:Other',
+  plusAccount: 'Assets:Bank:Default',
+  commissionAccount: 'Expenses:Commission',
+  dateField: '',
+  amountField: '',
+  descriptionField: '',
+  payeeField: ''
 });
 
 const previewData = ref<string[][]>([]);
 const previewHeaders = ref<string[]>([]);
-const parsedData = ref<any[]>([]);
+const parsedDataRef = ref<any[]>([]);
 
 onMounted(() => {
   if (props.fileContent) {
@@ -280,10 +270,10 @@ const parsePreviewData = () => {
   if (!props.fileContent) return;
   
   const lines = props.fileContent.split('\n');
-  const dataLines = lines.slice(config.skipRows, config.skipRows + 6);
+  const dataLines = lines.slice(config.value.skipRows, config.value.skipRows + 6);
   
   previewData.value = dataLines.map(line => 
-    line.split(config.delimiter).map(cell => cell.trim())
+    line.split(config.value.delimiter).map(cell => cell.trim())
   );
   
   if (previewData.value.length > 0) {
@@ -292,24 +282,24 @@ const parsePreviewData = () => {
 };
 
 const addFieldMapping = () => {
-  config.fieldMappings.push({
+  config.value.fieldMappings.push({
     targetField: '',
     sourceField: ''
   });
 };
 
 const removeFieldMapping = (index: number) => {
-  config.fieldMappings.splice(index, 1);
+  config.value.fieldMappings.splice(index, 1);
 };
 
 const saveConfig = () => {
   // 保存配置逻辑
-  console.log('保存配置:', config);
+  console.log('保存配置:', config.value);
 };
 
 const testConfig = () => {
   // 测试解析逻辑
-  console.log('测试配置:', config);
+  console.log('测试配置:', config.value);
   parseData();
 };
 
@@ -317,10 +307,10 @@ const parseData = () => {
   if (!previewData.value.length) return;
   
   const dataRows = previewData.value.slice(1); // 跳过标题行
-  parsedData.value = dataRows.map(row => {
+  parsedDataRef.value = dataRows.map(row => {
     const transaction: any = {};
     
-    config.fieldMappings.forEach(mapping => {
+    config.value.fieldMappings.forEach(mapping => {
       if (mapping.targetField && mapping.sourceField) {
         const sourceIndex = parseInt(mapping.sourceField) || 
           previewHeaders.value.indexOf(mapping.sourceField);
@@ -347,11 +337,11 @@ const parseData = () => {
 const processAmount = (value: string): string => {
   let processed = value;
   
-  if (config.amountConfig.removeCurrencySymbol) {
+  if (config.value.amountConfig.removeCurrencySymbol) {
     processed = processed.replace(/[¥$€£]/g, '');
   }
   
-  if (config.amountConfig.removeThousandSeparator) {
+  if (config.value.amountConfig.removeThousandSeparator) {
     processed = processed.replace(/,/g, '');
   }
   
@@ -362,4 +352,114 @@ const processDate = (value: string): string => {
   // 简单的日期处理逻辑
   return value.trim();
 };
+
+// 解析文件内容
+const parsedData = computed(() => {
+  if (!props.fileContent) return { headers: [], rows: [] };
+  
+  try {
+    const result = Papa.parse(props.fileContent, {
+      header: false,
+      skipEmptyLines: true,
+      delimiter: config.value.delimiter
+    });
+    
+    if (result.errors.length > 0) {
+      console.error('解析错误:', result.errors);
+      return { headers: [], rows: [] };
+    }
+    
+    const allRows = result.data as string[][];
+    const skipRows = config.value.skipRows || 0;
+    
+    if (allRows.length <= skipRows) {
+      return { headers: [], rows: [] };
+    }
+    
+    const headers = allRows[skipRows] || [];
+    const rows = allRows.slice(skipRows + 1) || [];
+    
+    return { headers, rows };
+  } catch (error) {
+    console.error('解析失败:', error);
+    return { headers: [], rows: [] };
+  }
+});
+
+const parsedHeaders = computed(() => parsedData.value.headers);
+const parsedRows = computed(() => parsedData.value.rows);
+
+// 生成 Beancount 预览
+const beancountPreview = computed(() => {
+  if (!parsedHeaders.value.length || !parsedRows.value.length) {
+    return '// 暂无数据';
+  }
+
+  const records: string[] = [];
+  
+  // 获取字段索引
+  const getFieldIndex = (fieldName: string) => {
+    const field = config.value[fieldName as keyof typeof config.value];
+    if (field !== '' && field !== null && field !== undefined) {
+      return parseInt(field as string);
+    }
+    return -1;
+  };
+
+  const dateIndex = getFieldIndex('dateField') >= 0 ? getFieldIndex('dateField') : 
+    parsedHeaders.value.findIndex(h => h.includes('日期') || h.includes('时间') || h.includes('date') || h.includes('time'));
+  
+  const amountIndex = getFieldIndex('amountField') >= 0 ? getFieldIndex('amountField') : 
+    parsedHeaders.value.findIndex(h => h.includes('金额') || h.includes('amount') || h.includes('收/支'));
+  
+  const descriptionIndex = getFieldIndex('descriptionField') >= 0 ? getFieldIndex('descriptionField') : 
+    parsedHeaders.value.findIndex(h => h.includes('描述') || h.includes('摘要') || h.includes('商品') || h.includes('description'));
+  
+  const payeeIndex = getFieldIndex('payeeField') >= 0 ? getFieldIndex('payeeField') : 
+    parsedHeaders.value.findIndex(h => h.includes('对方') || h.includes('商家') || h.includes('payee'));
+
+  parsedRows.value.slice(0, 3).forEach((row, index) => {
+    if (!row[dateIndex] || !row[amountIndex]) return;
+
+    const date = formatDate(row[dateIndex]);
+    const amount = parseFloat(row[amountIndex]) || 0;
+    const description = row[descriptionIndex] || row[payeeIndex] || '交易';
+    const payee = row[payeeIndex] || '';
+
+    if (amount === 0) return;
+
+    const account = config.value.plusAccount;
+    const expenseAccount = amount > 0 ? 'Income:Other' : config.value.minusAccount;
+
+    let record = `${date} * "${payee}" "${description}"\n`;
+    record += `  ${account}  ${amount > 0 ? '+' : ''}${amount.toFixed(2)} ${config.value.currency}\n`;
+    record += `  ${expenseAccount}  ${amount > 0 ? '-' : '+'}${Math.abs(amount).toFixed(2)} ${config.value.currency}\n`;
+
+    records.push(record);
+  });
+
+  return records.join('\n') || '// 无法生成 Beancount 记录';
+});
+
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) {
+    const match = dateStr.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    if (match) {
+      return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+    }
+    return '2023-01-01';
+  }
+  return date.toISOString().split('T')[0];
+};
+
+// 监听数据源变化，更新默认配置
+watch(() => props.dataSource, (newDataSource) => {
+  if (newDataSource) {
+    config.value.minusAccount = newDataSource.defaultMinusAccount || 'Expenses:Other';
+    config.value.plusAccount = newDataSource.defaultPlusAccount || 'Assets:Bank:Default';
+    config.value.commissionAccount = newDataSource.defaultCommissionAccount || 'Expenses:Commission';
+    config.value.skipRows = newDataSource.skipLines || 0;
+  }
+}, { immediate: true });
 </script> 

@@ -1,25 +1,8 @@
 <template>
   <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">上传交易文件</h2>
-        <p class="text-gray-600">请上传您的银行对账单、CSV文件或Excel文件，我们将自动转换为Beancount格式</p>
-      </div>
-      <div class="flex space-x-2">
-        <button 
-          @click="$emit('prev-step')"
-          class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-        >
-          <i class="fas fa-arrow-left mr-2"></i>上一步
-        </button>
-        <button 
-          @click="startUpload"
-          :disabled="!uploadedFile"
-          class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <i class="fas fa-arrow-right mr-2"></i>下一步
-        </button>
-      </div>
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">上传交易文件</h2>
+      <p class="text-gray-600">请上传您的银行对账单、CSV文件或Excel文件，我们将自动转换为Beancount格式</p>
     </div>
     
     <div @dragover.prevent="dragOver = true" 
@@ -129,7 +112,6 @@
     </div>
 
     <div class="mt-8">
-      <!-- <h3 class="text-lg font-medium text-gray-800 mb-3">常见数据源</h3> -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div v-for="source in dataSources" :key="source.id" 
              @click="selectDataSource(source)"
@@ -156,13 +138,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { FileProcessor } from '../utils/file-processor';
-
-interface DataSource {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-}
+import type { DataSource } from '../types/data-source';
 
 interface ErrorInfo {
   title: string;
@@ -173,14 +149,10 @@ interface ErrorInfo {
 
 interface Props {
   onFileUploaded: (fileData: any) => void;
-}
-
-interface Emits {
-  'prev-step': [];
+  selectedDataSource?: DataSource | null;
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
 
 const dragOver = ref(false);
 const uploadedFile = ref<File | null>(null);
@@ -212,6 +184,8 @@ const handleDrop = (e: DragEvent) => {
   const files = e.dataTransfer?.files;
   if (files && files.length > 0) {
     uploadedFile.value = files[0];
+    // 自动开始解析
+    startUpload();
   }
 };
 
@@ -220,6 +194,8 @@ const handleFileSelect = (e: Event) => {
   const files = target.files;
   if (files && files.length > 0) {
     uploadedFile.value = files[0];
+    // 自动开始解析
+    startUpload();
   }
 };
 
@@ -234,7 +210,7 @@ const showErrorDialog = (error: any) => {
   let suggestions: string[] = [];
 
   // 根据错误类型提供具体的错误信息
-  if (error.message) {
+  if (error.message) {  
     if (error.message.includes('文件格式验证失败')) {
       title = '文件格式不匹配';
       message = '上传的文件格式与选择的数据源不匹配';
@@ -307,7 +283,8 @@ const startUpload = async () => {
   isReading.value = true;
   
   try {
-    const fileData = await fileProcessor.parseFile(uploadedFile.value);
+    // 传递选中的数据源配置给FileProcessor
+    const fileData = await fileProcessor.parseFile(uploadedFile.value, props.selectedDataSource || undefined);
     
     props.onFileUploaded(fileData);
   } catch (error) {
