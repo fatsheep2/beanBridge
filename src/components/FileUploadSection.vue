@@ -20,7 +20,7 @@
       </p>
     </div>
     
-    <div v-if="selectedFile" class="mt-4 p-4 bg-gray-50 rounded">
+    <div v-if="selectedFile" class="mt-4 p-4 bg-gray-50 rounded dark:bg-gray-800">
       <p><strong>文件名:</strong> {{ selectedFile.name }}</p>
       <p><strong>大小:</strong> {{ formatFileSize(selectedFile.size) }}</p>
       <p v-if="detectedProvider"><strong>检测到的解析器:</strong> {{ detectedProvider }}</p>

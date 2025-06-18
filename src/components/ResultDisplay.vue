@@ -1,25 +1,25 @@
 <template>
   <div v-if="processingResult" class="mb-6">
-    <h2 class="text-lg font-semibold mb-4">处理结果</h2>
+    <h2 class="text-lg font-semibold mb-4 dark:bg-gray-800">处理结果</h2>
     
     <!-- 统计信息 -->
-    <div v-if="processingResult.statistics" class="mb-4 p-4 bg-gray-50 rounded">
+    <div v-if="processingResult.statistics" class="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded">
       <h3 class="font-medium mb-2">统计信息</h3>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
         <div>
-          <span class="text-gray-600">解析项目:</span>
+          <span class="text-gray-600 dark:text-gray-300">解析项目:</span>
           <span class="font-medium">{{ processingResult.statistics.parsedItems }}</span>
         </div>
         <div>
-          <span class="text-gray-600">收入记录:</span>
+          <span class="text-gray-600 dark:text-gray-300">收入记录:</span>
           <span class="font-medium">{{ processingResult.statistics.totalInRecords }}</span>
         </div>
         <div>
-          <span class="text-gray-600">支出记录:</span>
+          <span class="text-gray-600 dark:text-gray-300">支出记录:</span>
           <span class="font-medium">{{ processingResult.statistics.totalOutRecords }}</span>
         </div>
         <div>
-          <span class="text-gray-600">解析器:</span>
+          <span class="text-gray-600 dark:text-gray-300">解析器:</span>
           <span class="font-medium">{{ processingResult.provider }}</span>
         </div>
       </div>
@@ -45,7 +45,7 @@
         </div>
       </div>
       <div class="relative">
-        <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto max-h-96 overflow-y-auto">{{ processingResult.data }}</pre>
+        <pre class="bg-gray-100 dark:bg-gray-900 p-4 rounded text-sm overflow-x-auto max-h-96 overflow-y-auto">{{ processingResult.data }}</pre>
         <div v-if="copySuccess" class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
           已复制！
         </div>
@@ -55,8 +55,8 @@
     <!-- 原始数据预览 -->
     <div v-if="processingResult.data && typeof processingResult.data === 'object' && processingResult.data.orders" class="mb-4">
       <h3 class="font-medium mb-2">原始数据预览</h3>
-      <div class="bg-gray-100 p-4 rounded text-sm overflow-x-auto max-h-96 overflow-y-auto">
-        <div v-for="(order, index) in processingResult.data.orders" :key="index" class="mb-2 p-2 bg-white rounded">
+      <div class="bg-gray-100 dark:bg-gray-900 p-4 rounded text-sm overflow-x-auto max-h-96 overflow-y-auto">
+        <div v-for="(order, index) in processingResult.data.orders" :key="index" class="mb-2 p-2 bg-white dark:bg-gray-800 rounded">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
             <div><strong>日期:</strong> {{ formatDate(order.payTime) }}</div>
             <div><strong>对方:</strong> {{ order.peer }}</div>

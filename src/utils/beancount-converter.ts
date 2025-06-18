@@ -104,48 +104,18 @@ export class BeancountConverter {
     const amount = Math.abs(order.money);
     const currency = order.currency || (config?.defaultCurrency || 'CNY');
     
-    // 确定主要账户
-    let mainAccount = config?.defaultMinusAccount || 'Assets:Unknown';
-    let targetAccount = config?.defaultPlusAccount || 'Expenses:Unknown';
+    let mainAccount = '';
+    let targetAccount = '';
     
     if (order.type === 'Send') {
-      // 支出交易
-      if (order.extraAccounts[Account.MinusAccount]) {
-        mainAccount = order.extraAccounts[Account.MinusAccount];
-      } else if (order.method) {
-        mainAccount = this.mapMethodToAccount(order.method);
-      }
-      
-      if (order.extraAccounts[Account.PlusAccount]) {
-        targetAccount = order.extraAccounts[Account.PlusAccount];
-      } else {
-        targetAccount = this.mapCategoryToAccount(order.category);
-      }
-      
-      // 主要账户（资产减少）
+      mainAccount = order.extraAccounts[Account.MinusAccount] || config?.defaultMinusAccount || 'Assets:Unknown';
+      targetAccount = order.extraAccounts[Account.PlusAccount] || config?.defaultPlusAccount || 'Expenses:Unknown';
       postings.push(`  ${mainAccount}  -${amount} ${currency}`);
-      
-      // 目标账户（费用增加）
       postings.push(`  ${targetAccount}  ${amount} ${currency}`);
-      
     } else if (order.type === 'Recv') {
-      // 收入交易
-      if (order.extraAccounts[Account.PlusAccount]) {
-        mainAccount = order.extraAccounts[Account.PlusAccount];
-      } else if (order.method) {
-        mainAccount = this.mapMethodToAccount(order.method);
-      }
-      
-      if (order.extraAccounts[Account.MinusAccount]) {
-        targetAccount = order.extraAccounts[Account.MinusAccount];
-      } else {
-        targetAccount = this.mapCategoryToAccount(order.category, true);
-      }
-      
-      // 主要账户（资产增加）
+      mainAccount = order.extraAccounts[Account.PlusAccount] || config?.defaultMinusAccount || 'Assets:Unknown';
+      targetAccount = order.extraAccounts[Account.MinusAccount] || 'Income:Other';
       postings.push(`  ${mainAccount}  ${amount} ${currency}`);
-      
-      // 目标账户（收入增加）
       postings.push(`  ${targetAccount}  -${amount} ${currency}`);
     }
     

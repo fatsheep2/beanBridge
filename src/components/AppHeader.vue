@@ -3,7 +3,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <div class="flex items-center">
-          <img src="./icons/beancount.png" class="w-8 h-8 mr-2" alt="BeanBridge Logo" />
+          <img src="../assets/icons/beancount.png" class="w-8 h-8 mr-2" alt="BeanBridge Logo" />
           <span class="text-xl font-bold">BeanBridge</span>
         </div>
         <div class="hidden md:block">
@@ -14,10 +14,12 @@
             <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500">关于</a>
           </div>
         </div>
-        <div class="md:hidden">
-          <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-md hover:bg-indigo-500 focus:outline-none">
-            <i class="fas fa-bars"></i>
-          </button>
+        <div class="flex items-center space-x-2">
+          <div class="md:hidden">
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-md hover:bg-indigo-500 focus:outline-none">
+              <i class="fas fa-bars"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -33,7 +35,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
 const mobileMenuOpen = ref(false);
+
+onMounted(() => {
+  // 初始化主题
+  const theme = localStorage.getItem('theme');
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+});
 </script> 

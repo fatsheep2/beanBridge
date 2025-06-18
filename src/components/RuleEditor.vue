@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white border rounded-lg p-6">
+  <div class="bg-white dark:bg-gray-800 border rounded-lg p-6 text-gray-900 dark:text-gray-100">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold">{{ isEditing ? '编辑规则' : '新增规则' }}</h3>
       <button
@@ -14,53 +14,53 @@
       <!-- 基本信息 -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">规则名称</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">规则名称</label>
           <input
             v-model="ruleForm.name"
             type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             placeholder="输入规则名称"
             required
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">描述</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">描述</label>
           <input
             v-model="ruleForm.description"
             type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             placeholder="规则描述（可选）"
           />
         </div>
       </div>
 
       <!-- 匹配条件 -->
-      <div class="border-t pt-4">
-        <h4 class="text-md font-medium text-gray-700 mb-3">匹配条件</h4>
+      <div class="border-t pt-4 border-gray-200 dark:border-gray-700">
+        <h4 class="text-md font-medium text-gray-700 dark:text-gray-200 mb-3">匹配条件</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">交易对方 (peer)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">交易对方 (peer)</label>
             <input
               v-model="ruleForm.peer"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="交易对方名称"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">商品说明 (item)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">商品说明 (item)</label>
             <input
               v-model="ruleForm.item"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="商品或交易说明"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">交易类型 (type)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">交易类型 (type)</label>
             <select
               v-model="ruleForm.type"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             >
               <option value="">选择类型</option>
               <option value="收入">收入</option>
@@ -69,58 +69,58 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">支付方式 (method)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">支付方式 (method)</label>
             <input
               v-model="ruleForm.method"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="支付方式"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">交易分类 (category)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">交易分类 (category)</label>
             <input
               v-model="ruleForm.category"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="交易分类"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">交易类型 (txType)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">交易类型 (txType)</label>
             <input
               v-model="ruleForm.txType"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="交易类型"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">时间范围 (time)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">时间范围 (time)</label>
             <input
               v-model="ruleForm.time"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="11:00-14:00"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">最小金额</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">最小金额</label>
             <input
               v-model.number="ruleForm.minPrice"
               type="number"
               step="0.01"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="最小金额"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">最大金额</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">最大金额</label>
             <input
               v-model.number="ruleForm.maxPrice"
               type="number"
               step="0.01"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="最大金额"
             />
           </div>
@@ -135,7 +135,7 @@
               id="fullMatch"
               class="mr-2"
             />
-            <label for="fullMatch" class="text-sm text-gray-700">精确匹配</label>
+            <label for="fullMatch" class="text-sm text-gray-700 dark:text-gray-200">精确匹配</label>
           </div>
           <div class="flex items-center">
             <input
@@ -144,75 +144,74 @@
               id="ignore"
               class="mr-2"
             />
-            <label for="ignore" class="text-sm text-gray-700">忽略此交易</label>
+            <label for="ignore" class="text-sm text-gray-700 dark:text-gray-200">忽略此交易</label>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">分隔符 (sep)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">分隔符 (sep)</label>
             <input
               v-model="ruleForm.sep"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder=","
-            />
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+              placeholder="," />
           </div>
         </div>
       </div>
 
       <!-- 账户配置 -->
-      <div class="border-t pt-4">
-        <h4 class="text-md font-medium text-gray-700 mb-3">账户配置</h4>
+      <div class="border-t pt-4 border-gray-200 dark:border-gray-700">
+        <h4 class="text-md font-medium text-gray-700 dark:text-gray-200 mb-3">账户配置</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">目标账户 (targetAccount)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">目标账户 (targetAccount)</label>
             <input
               v-model="ruleForm.targetAccount"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Expenses:Food"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">方法账户 (methodAccount)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">方法账户 (methodAccount)</label>
             <input
               v-model="ruleForm.methodAccount"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Assets:Alipay"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">现金账户 (cashAccount)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">现金账户 (cashAccount)</label>
             <input
               v-model="ruleForm.cashAccount"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Assets:Cash"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">持仓账户 (positionAccount)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">持仓账户 (positionAccount)</label>
             <input
               v-model="ruleForm.positionAccount"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Assets:Positions"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">手续费账户 (commissionAccount)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">手续费账户 (commissionAccount)</label>
             <input
               v-model="ruleForm.commissionAccount"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Expenses:Commission"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">损益账户 (pnlAccount)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">损益账户 (pnlAccount)</label>
             <input
               v-model="ruleForm.pnlAccount"
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Income:PnL"
             />
           </div>
@@ -221,13 +220,13 @@
 
       <!-- 标签 -->
       <div class="border-t pt-4">
-        <h4 class="text-md font-medium text-gray-700 mb-3">标签</h4>
+        <h4 class="text-md font-medium text-gray-700 dark:text-gray-200 mb-3">标签</h4>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">标签 (tags)</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">标签 (tags)</label>
           <input
             v-model="tagsInput"
             type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             placeholder="标签1,标签2,标签3"
             @input="updateTags"
           />
@@ -236,11 +235,11 @@
       </div>
 
       <!-- 操作按钮 -->
-      <div class="flex justify-end space-x-3 pt-4 border-t">
+      <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           @click="$emit('close')"
-          class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+          class="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
         >
           取消
         </button>

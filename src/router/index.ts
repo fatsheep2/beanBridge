@@ -16,11 +16,6 @@ const routes = [
     name: 'rule-config',
     component: () => import('../views/RuleConfigView.vue'),
   },
-  {
-    path: '/test',
-    name: 'test',
-    component: () => import('../views/TestPage.vue'),
-  },
   // {
   //   path: '/about',
   //   name: 'about',
