@@ -4,6 +4,7 @@ import type { ProviderConfig } from '../types/provider';
 import { ProviderType } from '../types/provider';
 import { useConfigStorage } from './useConfigStorage';
 import { mockAlipayFile, mockWechatFile } from '../utils/test-data';
+import { providers } from '../data/providers';
 
 export function useDataSourceConfig() {
   const fileProcessor = new FileProcessorV2();
@@ -16,7 +17,7 @@ export function useDataSourceConfig() {
   const error = ref<string | null>(null);
 
   const supportedProviders = computed(() => {
-    return fileProcessor.getSupportedProviders();
+    return providers;
   });
 
   const selectedProvider = computed(() => {

@@ -40,13 +40,13 @@
         <div class="flex items-center mb-3">
           <div 
             class="w-10 h-10 mr-3 flex items-center justify-center rounded-lg bg-white border"
-            :style="`background-color: ${getProviderColor(provider.type)}20; border: 2px solid ${getProviderColor(provider.type)}40;`"
+            :style="`background-color: ${provider.color}20; border: 2px solid ${provider.color}40;`"
           >
-            <img :src="getProviderIcon(provider.type)" :alt="provider.name" class="w-7 h-7 object-contain" @error="handleImageError" />
+            <img :src="provider.icon" :alt="provider.name" class="w-7 h-7 object-contain" @error="handleImageError" />
           </div>
           <div>
             <h4 class="font-medium text-gray-800">{{ provider.name }}</h4>
-            <p class="text-sm text-gray-500">{{ getProviderDescription(provider.type) }}</p>
+            <p class="text-sm text-gray-500">{{ provider.description }}</p>
           </div>
         </div>
         
@@ -79,11 +79,16 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { ProviderType } from '../types/provider';
+import { providers, categories, getProviderByType } from '../data/providers';
 
 interface ProviderInfo {
   type: ProviderType;
   name: string;
   formats: string[];
+  description: string;
+  category: string;
+  color: string;
+  icon: string;
 }
 
 interface Props {
@@ -100,19 +105,11 @@ const emit = defineEmits<Emits>();
 
 const selectedCategory = ref<string>('all');
 
-const categories = [
-  { value: 'all', label: '全部' },
-  { value: 'payment', label: '支付平台' },
-  { value: 'bank', label: '银行' },
-  { value: 'crypto', label: '加密货币' },
-  { value: 'securities', label: '证券' }
-];
-
 const filteredProviders = computed(() => {
   if (selectedCategory.value === 'all') {
     return props.supportedProviders;
   }
-  return props.supportedProviders.filter(provider => getProviderCategory(provider.type) === selectedCategory.value);
+  return props.supportedProviders.filter(provider => provider.category === selectedCategory.value);
 });
 
 const selectProvider = (providerType: ProviderType) => {
@@ -125,81 +122,8 @@ const getSelectedProviderName = (): string => {
 };
 
 const getSelectedProviderDesc = (): string => {
-  return getProviderDescription(props.selectedProvider as ProviderType);
-};
-
-const getProviderCategory = (type: ProviderType): string => {
-  const categoryMap: Record<ProviderType, string> = {
-    [ProviderType.Alipay]: 'payment',
-    [ProviderType.Wechat]: 'payment',
-    [ProviderType.Huobi]: 'crypto',
-    [ProviderType.Htsec]: 'securities',
-    [ProviderType.Icbc]: 'bank',
-    [ProviderType.Td]: 'bank',
-    [ProviderType.Bmo]: 'bank',
-    [ProviderType.Jd]: 'payment',
-    [ProviderType.Citic]: 'bank',
-    [ProviderType.HsbcHK]: 'bank',
-    [ProviderType.MT]: 'payment',
-    [ProviderType.Hxsec]: 'securities',
-  };
-  return categoryMap[type] || 'other';
-};
-
-const getProviderColor = (type: ProviderType): string => {
-  const colorMap: Record<ProviderType, string> = {
-    [ProviderType.Alipay]: '#1677FF',
-    [ProviderType.Bmo]: '#0074D9',
-    [ProviderType.Citic]: '#1E40AF',
-    [ProviderType.HsbcHK]: '#DB0011',
-    [ProviderType.Htsec]: '#1E40AF',
-    [ProviderType.Huobi]: '#F6851B',
-    [ProviderType.Hxsec]: '#DC2626',
-    [ProviderType.Icbc]: '#C7000B',
-    [ProviderType.Jd]: '#E1251B',
-    [ProviderType.MT]: '#059669',
-    [ProviderType.Td]: '#00A3E0',
-    [ProviderType.Wechat]: '#07C160',
-
-  };
-  return colorMap[type] || '#6B7280';
-};
-
-const getProviderIcon = (type: ProviderType): string => {
-  const iconMap: Record<ProviderType, string> = {
-    [ProviderType.Alipay]: '/src/components/icons/alipay.png',
-    [ProviderType.Wechat]: '/src/components/icons/weixin.png',
-    [ProviderType.Huobi]: '/src/components/icons/火币.png',
-    [ProviderType.Htsec]: '/src/components/icons/海通证券.png',
-    [ProviderType.Icbc]: '/src/components/icons/工商银行.png',
-    [ProviderType.Td]: '/src/components/icons/信用卡银行卡.png',
-    [ProviderType.Bmo]: '/src/components/icons/蒙特利尔银行.png',
-    [ProviderType.Jd]: '/src/components/icons/京东.png',
-    [ProviderType.Citic]: '/src/components/icons/中信银行.png',
-    [ProviderType.HsbcHK]: '/src/components/icons/汇丰银行.png',
-    [ProviderType.MT]: '/src/components/icons/美团.png',
-    [ProviderType.Hxsec]: '/src/components/icons/default.svg',
-
-  };
-  return iconMap[type] || '/src/components/icons/default.svg';
-};
-
-const getProviderDescription = (type: ProviderType): string => {
-  const descMap: Record<ProviderType, string> = {
-    [ProviderType.Alipay]: '支付宝交易记录解析器',
-    [ProviderType.Wechat]: '微信支付交易记录解析器',
-    [ProviderType.Huobi]: '火币交易记录解析器',
-    [ProviderType.Htsec]: '华泰证券交易记录解析器',
-    [ProviderType.Icbc]: '工商银行交易记录解析器',
-    [ProviderType.Td]: '多伦多道明银行 交易记录解析器',
-    [ProviderType.Bmo]: '蒙特利尔银行交易记录解析器',
-    [ProviderType.Jd]: '京东金融交易记录解析器',
-    [ProviderType.Citic]: '中信银行交易记录解析器',
-    [ProviderType.HsbcHK]: '汇丰香港交易记录解析器',
-    [ProviderType.MT]: '美团生活平台交易记录解析器',
-    [ProviderType.Hxsec]: '华鑫证券交易记录解析器',
-  };
-  return descMap[type] || '通用交易记录解析器';
+  const provider = props.supportedProviders.find(p => p.type === props.selectedProvider);
+  return provider?.description || '通用交易记录解析器';
 };
 
 const handleImageError = (event: Event) => {

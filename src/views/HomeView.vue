@@ -43,7 +43,7 @@
           </router-link>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
+        <!-- <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center mb-4">
             <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <i class="fas fa-flask text-purple-600 text-xl"></i>
@@ -58,42 +58,18 @@
             开始测试
             <i class="fas fa-arrow-right ml-2"></i>
           </router-link>
-        </div>
+        </div> -->
       </div>
 
       <!-- 支持的解析器 -->
       <div class="bg-white rounded-lg shadow p-6 mb-8">
         <h2 class="text-xl font-bold text-gray-900 mb-4">支持的解析器</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="text-center p-4 border rounded-lg">
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <i class="fas fa-mobile-alt text-blue-600"></i>
-            </div>
-            <p class="font-medium">支付宝</p>
-            <p class="text-sm text-gray-600">CSV格式</p>
-          </div>
-          <div class="text-center p-4 border rounded-lg">
-            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <i class="fab fa-weixin text-green-600"></i>
-            </div>
-            <p class="font-medium">微信支付</p>
-            <p class="text-sm text-gray-600">CSV格式</p>
-          </div>
-          <div class="text-center p-4 border rounded-lg">
-            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <i class="fas fa-university text-yellow-600"></i>
-            </div>
-            <p class="font-medium">银行对账单</p>
-            <p class="text-sm text-gray-600">CSV格式</p>
-          </div>
-          <div class="text-center p-4 border rounded-lg">
-            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <i class="fas fa-plus text-red-600"></i>
-            </div>
-            <p class="font-medium">更多支持</p>
-            <p class="text-sm text-gray-600">持续添加中</p>
-          </div>
-        </div>
+        <!-- 解析器选择组件 -->
+        <ProviderSelector
+          :supported-providers="supportedProviders"
+          :selected-provider="selectedProvider"
+          @provider-selected="setProvider"
+        />
       </div>
 
       <!-- 快速开始 -->
@@ -124,4 +100,17 @@
 
 <script setup lang="ts">
 // 简化的首页视图
+import { ref } from 'vue';
+import ProviderSelector from '../components/ProviderSelector.vue';
+import { providers } from '../data/providers';
+import { ProviderType } from '../types/provider';
+
+// 响应式数据
+const supportedProviders = ref(providers);
+const selectedProvider = ref<ProviderType | null>(null);
+
+// 方法
+const setProvider = (providerType: ProviderType) => {
+  selectedProvider.value = providerType;
+};
 </script> 
