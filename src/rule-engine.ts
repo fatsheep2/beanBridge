@@ -1,5 +1,6 @@
 import type { ConfigRule } from './types/provider';
 import type { IR, Order } from './types/provider';
+import { Account } from './types/provider';
 
 export class RuleEngine {
   private rules: ConfigRule[] = [];
@@ -28,27 +29,62 @@ export class RuleEngine {
     const matchedRule = this.findMatchingRule(order);
     
     if (matchedRule) {
-      return {
+      const updatedOrder = {
         ...order,
         tags: [...order.tags, ...(matchedRule.tags || [])],
         peer: matchedRule.payee || order.peer,
         category: matchedRule.category || order.category
       };
+
+      // 优先处理 methodAccount
+      if (matchedRule.methodAccount) {
+        updatedOrder.extraAccounts = {
+          ...updatedOrder.extraAccounts,
+          [Account.MinusAccount]: matchedRule.methodAccount
+        };
+      } else if (matchedRule.account) {
+        updatedOrder.extraAccounts = {
+          ...updatedOrder.extraAccounts,
+          ...(order.type === 'Send' 
+            ? { [Account.MinusAccount]: matchedRule.account } 
+            : { [Account.PlusAccount]: matchedRule.account }
+          )
+        };
+      }
+
+      return updatedOrder;
     }
     
     return order;
   }
   
   private findMatchingRule(order: Order): ConfigRule | null {
-    const text = `${order.note} ${order.peer || ''}`.toLowerCase();
+    // 构建用于匹配的文本
+    const matchText = `${order.note || ''} ${order.peer || ''} ${order.item || ''} ${order.type || ''} ${order.method || ''} ${order.category || ''}`.toLowerCase();
     
     for (const rule of this.rules) {
-      if (this.matchesPattern(text, rule.pattern)) {
+      if (this.matchesRule(order, rule)) {
         return rule;
       }
     }
     
     return null;
+  }
+  
+  private matchesRule(order: Order, rule: ConfigRule): boolean {
+    // 构建用于匹配的文本
+    const matchText = `${order.note || ''} ${order.peer || ''} ${order.item || ''} ${order.type || ''} ${order.method || ''} ${order.category || ''}`.toLowerCase();
+    
+    // 如果规则有多个模式（用|分隔），分别检查每个模式
+    const patterns = rule.pattern.split('|').map(p => p.trim()).filter(p => p.length > 0);
+    
+    for (const pattern of patterns) {
+      if (this.matchesPattern(matchText, pattern)) {
+        return true;
+      }
+    }
+    
+    return false;
   }
   
   private matchesPattern(text: string, pattern: string): boolean {
@@ -108,11 +144,11 @@ export class RuleEngine {
       const examples: string[] = [];
       
       ir.orders.forEach(order => {
-        const text = `${order.note} ${order.peer || ''}`;
-        if (this.matchesPattern(text.toLowerCase(), rule.pattern)) {
+        if (this.matchesRule(order, rule)) {
           count++;
           if (examples.length < 3) {
-            examples.push(text);
+            const text = `${order.note || ''} ${order.peer || ''}`.trim();
+            examples.push(text || '无描述');
           }
         }
       });
@@ -151,7 +187,7 @@ export class RuleEngine {
             extraAccounts: {
               ...order.extraAccounts,
               // 根据交易类型设置对应的账户
-              ...(order.type === 'Send' ? { minusAccount: mappedAccount } : { plusAccount: mappedAccount })
+              ...(order.type === 'Send' ? { [Account.MinusAccount]: mappedAccount } : { [Account.PlusAccount]: mappedAccount })
             }
           };
         }

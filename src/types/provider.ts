@@ -82,6 +82,7 @@ export interface ProviderConfig {
 export interface ConfigRule {
   pattern: string;
   account: string;
+  methodAccount?: string;
   tags?: string[];
   payee?: string;
   category?: string;
@@ -101,6 +102,12 @@ export enum ProviderType {
   HsbcHK = "hsbchk",
   MT = "mt",
   Hxsec = "hxsec",
+  Spdb = "spdb",
+  UnionPay = "unionpay",
+  Cib = "cib",
+  Cmb = "cmb",
+  Hxb = "hxb",
+  Pab = "pab",
 }
 
 // 文件处理结果

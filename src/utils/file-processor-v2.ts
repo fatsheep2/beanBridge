@@ -124,6 +124,7 @@ export class FileProcessorV2 {
     data?: IR;
     error?: string;
     statistics?: any;
+    provider?: string;
   }> {
     try {
       const provider = ProviderFactory.create(providerType);
@@ -133,7 +134,8 @@ export class FileProcessorV2 {
       return {
         success: true,
         data: ir,
-        statistics
+        statistics,
+        provider: provider.getProviderName()
       };
     } catch (error) {
       return {

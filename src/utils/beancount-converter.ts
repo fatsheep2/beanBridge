@@ -102,11 +102,11 @@ export class BeancountConverter {
   private buildPostings(order: Order, config?: any): string[] {
     const postings: string[] = [];
     const amount = Math.abs(order.money);
-    const currency = order.currency || 'CNY';
+    const currency = order.currency || (config?.defaultCurrency || 'CNY');
     
     // 确定主要账户
-    let mainAccount = 'Assets:Unknown';
-    let targetAccount = 'Expenses:Unknown';
+    let mainAccount = config?.defaultMinusAccount || 'Assets:Unknown';
+    let targetAccount = config?.defaultPlusAccount || 'Expenses:Unknown';
     
     if (order.type === 'Send') {
       // 支出交易

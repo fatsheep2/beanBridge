@@ -3,7 +3,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <div class="flex items-center">
-          <i class="fa-solid fa-coins text-2xl mr-2"></i>
+          <img src="./icons/beancount.png" class="w-8 h-8 mr-2" alt="BeanBridge Logo" />
           <span class="text-xl font-bold">BeanBridge</span>
         </div>
         <div class="hidden md:block">

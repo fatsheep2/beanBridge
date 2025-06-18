@@ -7,6 +7,29 @@
         <p class="mt-2 text-gray-600">一个简单易用的工具，帮助您将银行对账单转换为Beancount格式，轻松管理个人财务。</p>
       </div>
 
+            <!-- 快速开始 -->
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-8 text-white">
+        <h2 class="text-2xl font-bold mb-4">快速开始</h2>
+        <p class="mb-6">准备好开始了吗？选择您要处理的账单类型，上传文件即可开始转换。</p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <router-link 
+            to="/test"
+            class="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-600 rounded-md hover:bg-gray-100 font-medium"
+          >
+            <i class="fas fa-rocket mr-2"></i>
+            立即体验
+          </router-link>
+          <a 
+            href="https://github.com/your-repo/beancount-importer" 
+            target="_blank"
+            class="inline-flex items-center justify-center px-6 py-3 border border-white text-white rounded-md hover:bg-white hover:text-blue-600 font-medium"
+          >
+            <i class="fab fa-github mr-2"></i>
+            查看源码
+          </a>
+        </div>
+      </div>
+
       <!-- 功能卡片 -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6">
@@ -72,27 +95,11 @@
         />
       </div>
 
-      <!-- 快速开始 -->
-      <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-8 text-white">
-        <h2 class="text-2xl font-bold mb-4">快速开始</h2>
-        <p class="mb-6">准备好开始了吗？选择您要处理的账单类型，上传文件即可开始转换。</p>
-        <div class="flex flex-col sm:flex-row gap-4">
-          <router-link 
-            to="/test"
-            class="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-600 rounded-md hover:bg-gray-100 font-medium"
-          >
-            <i class="fas fa-rocket mr-2"></i>
-            立即体验
-          </router-link>
-          <a 
-            href="https://github.com/your-repo/beancount-importer" 
-            target="_blank"
-            class="inline-flex items-center justify-center px-6 py-3 border border-white text-white rounded-md hover:bg-white hover:text-blue-600 font-medium"
-          >
-            <i class="fab fa-github mr-2"></i>
-            查看源码
-          </a>
-        </div>
+
+
+      <!-- Font Awesome 测试组件 -->
+      <div class="mt-8">
+        <IconTest />
       </div>
     </div>
   </div>

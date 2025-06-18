@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen flex flex-col bg-gray-50 font-sans antialiased">
+    <FontAwesomeChecker />
     <AppHeader />
     <main class="flex-1">
       <router-view />
@@ -10,4 +11,5 @@
 
 <script setup lang="ts">
 import AppHeader from './components/AppHeader.vue';
+import FontAwesomeChecker from './components/FontAwesomeChecker.vue';
 </script>

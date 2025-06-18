@@ -1,163 +1,321 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <!-- 返回首页按钮 -->
-      <div class="mb-6">
-        <button 
-          @click="goHome"
-          class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold">规则配置</h1>
+        <router-link 
+          to="/"
+          class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
         >
           <i class="fas fa-arrow-left mr-2"></i>
           返回首页
-        </button>
+        </router-link>
       </div>
 
-      <!-- 页面标题 -->
+      <!-- Provider选择 -->
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">规则配置</h1>
-        <p class="mt-2 text-gray-600">配置数据源的处理规则和字段映射</p>
+        <h2 class="text-lg font-semibold mb-4">选择解析器</h2>
+        <ProviderSelector
+          :supported-providers="supportedProviders"
+          :selected-provider="selectedProvider"
+          @provider-selected="setProvider"
+        />
       </div>
 
-      <!-- 步骤指示器 -->
-      <div class="mb-8">
-        <div class="flex items-center justify-center">
-          <div class="flex items-center space-x-4">
-            <div 
-              :class="[
-                'flex items-center justify-center w-10 h-10 rounded-full border-2',
-                currentStep >= 0 ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300 text-gray-500'
-              ]"
-            >
-              <span class="text-sm font-medium">1</span>
-            </div>
-            <div 
-              :class="[
-                'flex-1 h-1',
-                currentStep >= 1 ? 'bg-indigo-600' : 'bg-gray-300'
-              ]"
-            ></div>
-            <div 
-              :class="[
-                'flex items-center justify-center w-10 h-10 rounded-full border-2',
-                currentStep >= 1 ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300 text-gray-500'
-              ]"
-            >
-              <span class="text-sm font-medium">2</span>
-            </div>
+      <!-- 配置内容 -->
+      <div v-if="selectedProvider && currentConfig" class="space-y-6">
+        <!-- 配置头部 -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-semibold">{{ currentConfig.name }}</h3>
+            <p class="text-gray-600">{{ currentConfig.description }}</p>
           </div>
-        </div>
-        <div class="flex justify-center mt-4 space-x-16">
-          <span :class="['text-sm', currentStep >= 0 ? 'text-indigo-600 font-medium' : 'text-gray-500']">选择数据源</span>
-          <span :class="['text-sm', currentStep >= 1 ? 'text-indigo-600 font-medium' : 'text-gray-500']">配置规则</span>
-        </div>
-      </div>
-
-      <!-- 步骤内容 -->
-      <div class="bg-white rounded-lg shadow">
-        <!-- 步骤1：数据源选择 -->
-        <div v-if="currentStep === 0" class="p-8">
-          <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">选择数据源</h2>
-            <p class="text-gray-600">请选择您要配置规则的数据源类型</p>
-          </div>
-          
-          <DataSourceSelector
-            :onDataSourceSelected="handleDataSourceSelected"
-            :onEditConfig="handleEditConfig"
-          />
-          
-          <div class="flex justify-end mt-8">
-            <button 
-              @click="nextStep"
-              :disabled="!selectedDataSource"
-              class="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          <div class="flex space-x-2">
+            <button
+              @click="showHistoryModal = true"
+              class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
             >
-              下一步
-              <i class="fas fa-arrow-right ml-2"></i>
+              <i class="fas fa-history mr-2"></i>
+              历史记录
+            </button>
+            <button
+              @click="exportConfig"
+              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              <i class="fas fa-download mr-2"></i>
+              导出配置
+            </button>
+            <button
+              @click="importConfig"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              <i class="fas fa-upload mr-2"></i>
+              导入配置
             </button>
           </div>
         </div>
 
-        <!-- 步骤2：规则配置 -->
-        <div v-if="currentStep === 1" class="p-8">
-          <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">配置规则</h2>
-            <p class="text-gray-600">配置数据源的处理规则和字段映射</p>
-            <div v-if="selectedDataSource" class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full">
-              <i class="fas fa-database mr-2"></i>
-              已选择：{{ selectedDataSource.name }}
+        <!-- 全局配置 -->
+        <div class="bg-gray-50 rounded-lg p-6">
+          <h4 class="text-lg font-semibold mb-4">全局配置</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">默认负账户(一般是资产账户)</label>
+              <input
+                v-model="currentConfig.defaultMinusAccount"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Assets:FIXME"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">默认增加账户(一般是支出账户)</label>
+              <input
+                v-model="currentConfig.defaultPlusAccount"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Expenses:FIXME"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">默认货币</label>
+              <input
+                v-model="currentConfig.defaultCurrency"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="CNY"
+              />
+            </div>
+            <div v-if="currentConfig.defaultCashAccount">
+              <label class="block text-sm font-medium text-gray-700 mb-1">默认现金账户</label>
+              <input
+                v-model="currentConfig.defaultCashAccount"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Assets:Cash"
+              />
+            </div>
+            <div v-if="currentConfig.defaultCommissionAccount">
+              <label class="block text-sm font-medium text-gray-700 mb-1">默认手续费账户</label>
+              <input
+                v-model="currentConfig.defaultCommissionAccount"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Expenses:Commission"
+              />
+            </div>
+            <div v-if="currentConfig.defaultPositionAccount">
+              <label class="block text-sm font-medium text-gray-700 mb-1">默认持仓账户</label>
+              <input
+                v-model="currentConfig.defaultPositionAccount"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Assets:Positions"
+              />
             </div>
           </div>
-          
-          <!-- 加载状态 -->
-          <div v-if="isLoadingFile" class="text-center py-12">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p class="text-gray-600">正在加载测试文件...</p>
-          </div>
-          
-          <!-- 错误状态 -->
-          <div v-else-if="fileLoadError" class="text-center py-12">
-            <div class="text-red-500 mb-4">
-              <i class="fas fa-exclamation-triangle text-4xl"></i>
-            </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">文件加载失败</h3>
-            <p class="text-gray-600 mb-4">{{ fileLoadError }}</p>
-            <button 
-              @click="loadTestFile"
-              class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+        </div>
+
+        <!-- 规则列表 -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-lg font-semibold">规则列表</h4>
+            <button
+              @click="showRuleEditor = true"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              重新加载
+              <i class="fas fa-plus mr-2"></i>
+              添加规则
             </button>
           </div>
-          
-          <!-- 规则配置编辑器 -->
-          <div v-else-if="previewFileContent">
-            <!-- 使用说明 -->
-            <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 class="text-sm font-medium text-blue-800 mb-2">
-                <i class="fas fa-info-circle mr-1"></i>
-                配置保存说明
-              </h4>
-              <div class="text-sm text-blue-700 space-y-1">
-                <p>• <strong>真实配置</strong>：在下方编辑器中设置字段映射和规则，然后点击"保存配置"按钮</p>
-                <p>• <strong>测试功能</strong>：点击"测试配置保存"按钮可以验证存储功能是否正常</p>
-                <p>• <strong>配置持久化</strong>：配置会保存在浏览器的 localStorage 中，关闭浏览器后仍然有效</p>
-                <p>• <strong>gh-pages 兼容</strong>：支持在 GitHub Pages 等静态托管环境中使用</p>
+
+          <div class="space-y-4">
+            <div
+              v-for="(rule, index) in sortedRules"
+              :key="rule.id"
+              class="border rounded-lg p-4 hover:bg-gray-50"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-2 mb-2">
+                    <h5 class="font-medium">{{ rule.name }}</h5>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">优先级: {{ rule.priority }}</span>
+                    <span v-if="rule.ignore" class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">忽略</span>
+                  </div>
+                  <p v-if="rule.description" class="text-sm text-gray-600 mb-2">{{ rule.description }}</p>
+                  
+                  <!-- 匹配条件 -->
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                    <div v-if="rule.peer">
+                      <span class="text-gray-500">交易对方:</span>
+                      <span class="ml-1">{{ rule.peer }}</span>
+                    </div>
+                    <div v-if="rule.item">
+                      <span class="text-gray-500">商品说明:</span>
+                      <span class="ml-1">{{ rule.item }}</span>
+                    </div>
+                    <div v-if="rule.type">
+                      <span class="text-gray-500">交易类型:</span>
+                      <span class="ml-1">{{ rule.type }}</span>
+                    </div>
+                    <div v-if="rule.method">
+                      <span class="text-gray-500">支付方式:</span>
+                      <span class="ml-1">{{ rule.method }}</span>
+                    </div>
+                    <div v-if="rule.category">
+                      <span class="text-gray-500">交易分类:</span>
+                      <span class="ml-1">{{ rule.category }}</span>
+                    </div>
+                    <div v-if="rule.txType">
+                      <span class="text-gray-500">交易类型:</span>
+                      <span class="ml-1">{{ rule.txType }}</span>
+                    </div>
+                    <div v-if="rule.time">
+                      <span class="text-gray-500">时间范围:</span>
+                      <span class="ml-1">{{ rule.time }}</span>
+                    </div>
+                    <div v-if="rule.fullMatch">
+                      <span class="text-gray-500">精确匹配:</span>
+                      <span class="ml-1">是</span>
+                    </div>
+                  </div>
+
+                  <!-- 账户配置 -->
+                  <div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                    <div v-if="rule.targetAccount">
+                      <span class="text-gray-500">目标账户:</span>
+                      <span class="ml-1 font-mono">{{ rule.targetAccount }}</span>
+                    </div>
+                    <div v-if="rule.methodAccount">
+                      <span class="text-gray-500">方法账户:</span>
+                      <span class="ml-1 font-mono">{{ rule.methodAccount }}</span>
+                    </div>
+                    <div v-if="rule.cashAccount">
+                      <span class="text-gray-500">现金账户:</span>
+                      <span class="ml-1 font-mono">{{ rule.cashAccount }}</span>
+                    </div>
+                    <div v-if="rule.positionAccount">
+                      <span class="text-gray-500">持仓账户:</span>
+                      <span class="ml-1 font-mono">{{ rule.positionAccount }}</span>
+                    </div>
+                  </div>
+
+                  <!-- 标签 -->
+                  <div v-if="rule.tags && rule.tags.length > 0" class="mt-2">
+                    <span class="text-gray-500 text-sm">标签:</span>
+                    <span class="ml-1 text-sm">
+                      <span
+                        v-for="tag in rule.tags"
+                        :key="tag"
+                        class="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded mr-1 mb-1"
+                      >
+                        {{ tag }}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex space-x-2 ml-4">
+                  <button
+                    @click="editRule(rule)"
+                    class="text-blue-600 hover:text-blue-800"
+                    title="编辑规则"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    @click="deleteRule(rule.id)"
+                    class="text-red-600 hover:text-red-800"
+                    title="删除规则"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
               </div>
             </div>
-            
-            <RuleConfigEditor
-              :dataSource="selectedDataSource"
-              :fileContent="previewFileContent"
-              @config-saved="handleConfigSaved"
-            />
           </div>
-          
-          <div class="flex justify-between mt-8">
-            <button 
-              @click="prevStep"
-              class="px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-            >
-              <i class="fas fa-arrow-left mr-2"></i>
-              上一步
-            </button>
-            <div class="flex space-x-2">
-              <button 
-                @click="testConfigSave"
-                class="px-4 py-3 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
+        </div>
+
+        <!-- 保存按钮 -->
+        <div class="flex justify-end pt-6 border-t">
+          <button
+            @click="saveConfig"
+            class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            <i class="fas fa-save mr-2"></i>
+            保存配置
+          </button>
+        </div>
+      </div>
+
+      <!-- 未选择Provider的提示 -->
+      <div v-else-if="!selectedProvider" class="text-center py-12">
+        <i class="fas fa-database text-4xl text-gray-400 mb-4"></i>
+        <p class="text-gray-600">请先选择一个解析器来配置规则</p>
+      </div>
+
+      <!-- 无配置的提示 -->
+      <div v-else-if="!currentConfig" class="text-center py-12">
+        <i class="fas fa-exclamation-triangle text-4xl text-yellow-400 mb-4"></i>
+        <p class="text-gray-600 mb-4">该解析器还没有配置，是否从预设配置创建？</p>
+        <button
+          @click="createFromPreset"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          <i class="fas fa-plus mr-2"></i>
+          从预设创建配置
+        </button>
+      </div>
+    </div>
+
+    <!-- 规则编辑器模态框 -->
+    <div v-if="showRuleEditor" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+        <RuleEditor
+          :rule="editingRule"
+          :is-editing="!!editingRule"
+          @save="saveRule"
+          @close="closeRuleEditor"
+        />
+      </div>
+    </div>
+
+    <!-- 历史记录模态框 -->
+    <div v-if="showHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">历史记录</h3>
+          <button
+            @click="showHistoryModal = false"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          <div
+            v-for="history in providerHistory"
+            :key="history.id"
+            class="border rounded p-3 hover:bg-gray-50 cursor-pointer"
+            @click="applyHistory(history.id)"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-medium">{{ history.name }}</h4>
+                <p class="text-sm text-gray-600">{{ formatDate(history.createdAt) }}</p>
+              </div>
+              <button
+                class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
               >
-                <i class="fas fa-flask mr-2"></i>
-                测试配置保存
-              </button>
-              <button 
-                @click="saveConfig"
-                class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
-              >
-                <i class="fas fa-save mr-2"></i>
-                保存配置
+                应用
               </button>
             </div>
           </div>
+        </div>
+
+        <div v-if="providerHistory.length === 0" class="text-center py-8 text-gray-500">
+          暂无历史记录
         </div>
       </div>
     </div>
@@ -165,167 +323,167 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import DataSourceSelector from '../components/DataSourceSelector.vue';
-import RuleConfigEditor from '../components/RuleConfigEditor.vue';
-import type { DataSource } from '../types/data-source';
-import { ruleConfigManager } from '../utils/rule-config-manager';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { ProviderType } from '../types/provider';
+import type { RuleConfig, Rule, ConfigHistory } from '../types/rule-config';
+import { providers } from '../data/providers';
+import { ruleConfigService } from '../services/rule-config-service';
+import ProviderSelector from '../components/ProviderSelector.vue';
+import RuleEditor from '../components/RuleEditor.vue';
 
-const currentStep = ref(0);
-const selectedDataSource = ref<DataSource | null>(null);
-const previewFileContent = ref<string>('');
-const isLoadingFile = ref(false);
-const fileLoadError = ref<string>('');
+const route = useRoute();
 
-const handleDataSourceSelected = async (source: DataSource) => {
-  selectedDataSource.value = source;
-  console.log('选中的数据源:', source);
+// 响应式数据
+const selectedProvider = ref<ProviderType | null>(null);
+const currentConfig = ref<RuleConfig | null>(null);
+const showRuleEditor = ref(false);
+const editingRule = ref<Rule | undefined>(undefined);
+const showHistoryModal = ref(false);
+
+// 计算属性
+const supportedProviders = computed(() => providers);
+
+const sortedRules = computed(() => {
+  if (!currentConfig.value) return [];
+  return [...currentConfig.value.rules].sort((a, b) => a.priority - b.priority);
+});
+
+const providerHistory = computed(() => {
+  if (!selectedProvider.value) return [];
+  return ruleConfigService.getHistory(selectedProvider.value);
+});
+
+// 方法
+const setProvider = (provider: ProviderType) => {
+  selectedProvider.value = provider;
+  loadConfig();
+};
+
+const loadConfig = () => {
+  if (!selectedProvider.value) return;
   
-  // 如果已经在步骤2，立即加载对应的测试文件
-  if (currentStep.value === 1) {
-    await loadTestFile();
+  const config = ruleConfigService.getConfig(selectedProvider.value);
+  currentConfig.value = config;
+};
+
+// 从URL参数初始化Provider
+const initFromRoute = () => {
+  const providerParam = route.query.provider as string;
+  if (providerParam && Object.values(ProviderType).includes(providerParam as ProviderType)) {
+    selectedProvider.value = providerParam as ProviderType;
+    loadConfig();
   }
 };
 
-const handleEditConfig = (sourceId: string) => {
-  console.log('编辑配置:', sourceId);
-};
-
-const nextStep = async () => {
-  if (currentStep.value < 1) {
-    currentStep.value++;
-    // 进入步骤2时加载测试文件
-    if (selectedDataSource.value) {
-      await loadTestFile();
-    }
-  }
-};
-
-const prevStep = () => {
-  if (currentStep.value > 0) {
-    currentStep.value--;
-    // 清空文件内容
-    previewFileContent.value = '';
-    fileLoadError.value = '';
-  }
-};
-
-const loadTestFile = async () => {
-  if (!selectedDataSource.value) return;
-  
-  isLoadingFile.value = true;
-  fileLoadError.value = '';
+const createFromPreset = () => {
+  if (!selectedProvider.value) return;
   
   try {
-    const source = selectedDataSource.value;
-    
-    if (!source.testFilePath) {
-      throw new Error('该数据源暂无测试文件');
-    }
-    
-    // 从public目录读取文件
-    const response = await fetch(source.testFilePath);
-    
-    if (!response.ok) {
-      throw new Error(`文件加载失败: ${response.status} ${response.statusText}`);
-    }
-    
-    // 获取文件内容
-    const content = await response.text();
-    previewFileContent.value = content;
-    
-    console.log(`成功加载测试文件: ${source.testFilePath}`);
+    const config = ruleConfigService.createFromPreset(selectedProvider.value, '我的配置');
+    currentConfig.value = config;
+    ruleConfigService.saveConfig(config);
   } catch (error) {
-    console.error('加载测试文件失败:', error);
-    fileLoadError.value = error instanceof Error ? error.message : '未知错误';
-    previewFileContent.value = '';
-  } finally {
-    isLoadingFile.value = false;
+    console.error('Failed to create from preset:', error);
+    alert('创建配置失败');
   }
 };
 
 const saveConfig = () => {
-  // 这里可以添加保存配置的逻辑
-  console.log('保存配置');
+  if (!currentConfig.value) return;
+  
+  ruleConfigService.saveConfig(currentConfig.value);
   alert('配置保存成功！');
+};
+
+const addRule = () => {
+  editingRule.value = undefined;
+  showRuleEditor.value = true;
+};
+
+const editRule = (rule: Rule) => {
+  editingRule.value = rule;
+  showRuleEditor.value = true;
+};
+
+const saveRule = (rule: Rule) => {
+  if (!currentConfig.value) return;
   
-  // 重置到第一步
-  currentStep.value = 0;
-  selectedDataSource.value = null;
-  previewFileContent.value = '';
-  fileLoadError.value = '';
-};
-
-const goHome = () => {
-  window.location.href = '/';
-};
-
-const handleConfigSaved = (config: any) => {
-  // 处理配置保存后的逻辑
-  console.log('配置保存后处理逻辑:', config);
-  
-  // 显示保存成功的提示
-  alert(`配置 "${config.name}" 保存成功！现在可以在账单处理页面使用此配置。`);
-};
-
-const testConfigSave = () => {
-  if (!selectedDataSource.value) {
-    alert('请先选择数据源');
-    return;
+  // 确保规则有id
+  if (!rule.id) {
+    rule.id = Date.now().toString();
   }
   
-  console.log('测试配置保存功能');
+  const existingIndex = currentConfig.value.rules.findIndex(r => r.id === rule.id);
   
-  // 创建一个测试配置（使用不同的ID前缀，避免与真实配置冲突）
-  const testConfig = {
-    id: `test_config_${selectedDataSource.value.id}_${Date.now()}`,
-    dataSourceId: selectedDataSource.value.id,
-    name: `${selectedDataSource.value.name} 测试配置`,
-    encoding: 'utf-8',
-    delimiter: ',',
-    skipRows: 0,
-    currency: 'CNY',
-    minusAccount: 'Expenses:Test',
-    plusAccount: 'Assets:Bank:Test',
-    commissionAccount: 'Expenses:Commission',
-    dateField: '0',
-    amountField: '1',
-    descriptionField: '2',
-    payeeField: '3',
-    fieldMappings: {
-      date: '0',
-      amount: '1',
-      description: '2',
-      payee: '3'
-    },
-    rules: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+  if (existingIndex >= 0) {
+    // 更新现有规则
+    currentConfig.value.rules[existingIndex] = rule;
+  } else {
+    // 添加新规则
+    rule.priority = currentConfig.value.rules.length + 1;
+    currentConfig.value.rules.push(rule);
+  }
   
-  // 保存测试配置
-  try {
-    ruleConfigManager.saveConfig(testConfig);
-    console.log('测试配置已保存:', testConfig);
-    
-    // 立即读取配置验证
-    const loadedConfig = ruleConfigManager.getConfigByDataSourceId(selectedDataSource.value.id);
-    console.log('读取的配置:', loadedConfig);
-    
-    if (loadedConfig && loadedConfig.id === testConfig.id) {
-      alert(`✅ 测试配置保存成功！\n\n配置名称: ${loadedConfig.name}\n配置ID: ${loadedConfig.id}\n\n注意：这是测试配置，真实配置请在规则编辑器中设置并保存。`);
-      
-      // 清理测试配置，避免影响真实配置
-      setTimeout(() => {
-        ruleConfigManager.deleteConfig(testConfig.id);
-        console.log('测试配置已清理');
-      }, 2000);
-    } else {
-      alert('❌ 配置保存成功，但读取验证失败');
-    }
-  } catch (error) {
-    console.error('测试配置保存失败:', error);
-    alert('❌ 测试配置保存失败: ' + error);
+  closeRuleEditor();
+};
+
+const deleteRule = (ruleId: string | undefined) => {
+  if (!currentConfig.value || !ruleId) return;
+  
+  if (confirm('确定要删除这个规则吗？')) {
+    currentConfig.value.rules = currentConfig.value.rules.filter(r => r.id !== ruleId);
   }
 };
+
+const closeRuleEditor = () => {
+  showRuleEditor.value = false;
+  editingRule.value = undefined;
+};
+
+const exportConfig = async () => {
+  if (!selectedProvider.value) return;
+  
+  const success = await ruleConfigService.exportToClipboard(selectedProvider.value);
+  if (success) {
+    alert('配置已复制到剪贴板！');
+  } else {
+    alert('导出失败，请重试');
+  }
+};
+
+const importConfig = async () => {
+  const config = await ruleConfigService.importFromClipboard();
+  if (config) {
+    currentConfig.value = config;
+    alert('配置导入成功！');
+  } else {
+    alert('导入失败，请检查剪贴板内容格式');
+  }
+};
+
+const applyHistory = (historyId: string) => {
+  const config = ruleConfigService.applyHistory(historyId);
+  if (config) {
+    currentConfig.value = config;
+    showHistoryModal.value = false;
+    alert('历史配置应用成功！');
+  } else {
+    alert('应用历史配置失败');
+  }
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString('zh-CN');
+};
+
+// 监听Provider变化
+watch(selectedProvider, () => {
+  loadConfig();
+});
+
+// 组件挂载时初始化
+onMounted(() => {
+  initFromRoute();
+});
 </script> 
