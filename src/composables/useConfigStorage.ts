@@ -1,17 +1,6 @@
 import { ref, watch } from 'vue';
-
-export interface ConfigRule {
-  pattern: string;
-  account: string;
-  tags?: string[];
-  payee?: string;
-}
-
-export interface ProviderConfig {
-  rules: ConfigRule[];
-  accounts: string[];
-  defaultCurrency: string;
-}
+import type { ProviderConfig, ConfigRule } from '../types/provider';
+import { ProviderType } from '../types/provider';
 
 export function useConfigStorage() {
   const STORAGE_KEY = 'beancount_configs';
@@ -59,6 +48,26 @@ export function useConfigStorage() {
     const configs = getConfigs();
     return Object.keys(configs);
   };
+
+  const createDefaultConfig = (provider: string): ProviderConfig => {
+    return {
+      rules: [],
+      accounts: [],
+      defaultCurrency: 'CNY',
+      provider
+    };
+  };
+
+  const getOrCreateConfig = (provider: string): ProviderConfig => {
+    const existing = getConfig(provider);
+    if (existing) {
+      return existing;
+    }
+    
+    const defaultConfig = createDefaultConfig(provider);
+    saveConfig(provider, defaultConfig);
+    return defaultConfig;
+  };
   
   // 创建响应式的配置状态
   const currentConfig = ref<ProviderConfig | null>(null);
@@ -66,13 +75,51 @@ export function useConfigStorage() {
   
   const loadConfig = (provider: string) => {
     currentProvider.value = provider;
-    currentConfig.value = getConfig(provider);
+    currentConfig.value = getOrCreateConfig(provider);
   };
   
   const updateConfig = (config: ProviderConfig) => {
     if (currentProvider.value) {
       currentConfig.value = config;
       saveConfig(currentProvider.value, config);
+    }
+  };
+
+  const addRule = (rule: ConfigRule) => {
+    if (currentConfig.value) {
+      currentConfig.value.rules.push(rule);
+      updateConfig(currentConfig.value);
+    }
+  };
+
+  const updateRule = (index: number, rule: ConfigRule) => {
+    if (currentConfig.value && index >= 0 && index < currentConfig.value.rules.length) {
+      currentConfig.value.rules[index] = rule;
+      updateConfig(currentConfig.value);
+    }
+  };
+
+  const removeRule = (index: number) => {
+    if (currentConfig.value && index >= 0 && index < currentConfig.value.rules.length) {
+      currentConfig.value.rules.splice(index, 1);
+      updateConfig(currentConfig.value);
+    }
+  };
+
+  const addAccount = (account: string) => {
+    if (currentConfig.value && !currentConfig.value.accounts.includes(account)) {
+      currentConfig.value.accounts.push(account);
+      updateConfig(currentConfig.value);
+    }
+  };
+
+  const removeAccount = (account: string) => {
+    if (currentConfig.value) {
+      const index = currentConfig.value.accounts.indexOf(account);
+      if (index > -1) {
+        currentConfig.value.accounts.splice(index, 1);
+        updateConfig(currentConfig.value);
+      }
     }
   };
   
@@ -89,11 +136,22 @@ export function useConfigStorage() {
     getConfig,
     deleteConfig,
     getAllProviders,
+    createDefaultConfig,
+    getOrCreateConfig,
     
     // 响应式状态
     currentConfig,
     currentProvider,
     loadConfig,
-    updateConfig
+    updateConfig,
+    
+    // 规则管理
+    addRule,
+    updateRule,
+    removeRule,
+    
+    // 账户管理
+    addAccount,
+    removeAccount
   };
 } 

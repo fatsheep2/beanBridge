@@ -1,5 +1,5 @@
-import type { ConfigRule } from './composables/useConfigStorage';
-import type { Transaction } from './utils/data-converter';
+import type { ConfigRule } from './types/provider';
+import type { IR, Order } from './types/provider';
 
 export class RuleEngine {
   private rules: ConfigRule[] = [];
@@ -24,23 +24,23 @@ export class RuleEngine {
     return [...this.rules];
   }
   
-  applyRules(transaction: Transaction): Transaction {
-    const matchedRule = this.findMatchingRule(transaction);
+  applyRules(order: Order): Order {
+    const matchedRule = this.findMatchingRule(order);
     
     if (matchedRule) {
       return {
-        ...transaction,
-        account: matchedRule.account,
-        tags: [...transaction.tags, ...(matchedRule.tags || [])],
-        payee: matchedRule.payee || transaction.payee
+        ...order,
+        tags: [...order.tags, ...(matchedRule.tags || [])],
+        peer: matchedRule.payee || order.peer,
+        category: matchedRule.category || order.category
       };
     }
     
-    return transaction;
+    return order;
   }
   
-  private findMatchingRule(transaction: Transaction): ConfigRule | null {
-    const text = `${transaction.narration} ${transaction.payee || ''}`.toLowerCase();
+  private findMatchingRule(order: Order): ConfigRule | null {
+    const text = `${order.note} ${order.peer || ''}`.toLowerCase();
     
     for (const rule of this.rules) {
       if (this.matchesPattern(text, rule.pattern)) {
@@ -67,9 +67,11 @@ export class RuleEngine {
     }
   }
   
-  // 批量应用规则
-  applyRulesToTransactions(transactions: Transaction[]): Transaction[] {
-    return transactions.map(transaction => this.applyRules(transaction));
+  // 批量应用规则到 IR
+  applyRulesToIR(ir: IR): IR {
+    return {
+      orders: ir.orders.map(order => this.applyRules(order))
+    };
   }
   
   // 验证规则
@@ -100,13 +102,13 @@ export class RuleEngine {
   }
   
   // 获取规则统计信息
-  getRuleStats(transactions: Transaction[]): Array<{ rule: ConfigRule; count: number; examples: string[] }> {
+  getRuleStats(ir: IR): Array<{ rule: ConfigRule; count: number; examples: string[] }> {
     const stats = this.rules.map(rule => {
       let count = 0;
       const examples: string[] = [];
       
-      transactions.forEach(transaction => {
-        const text = `${transaction.narration} ${transaction.payee || ''}`;
+      ir.orders.forEach(order => {
+        const text = `${order.note} ${order.peer || ''}`;
         if (this.matchesPattern(text.toLowerCase(), rule.pattern)) {
           count++;
           if (examples.length < 3) {
@@ -119,5 +121,43 @@ export class RuleEngine {
     });
     
     return stats.sort((a, b) => b.count - a.count);
+  }
+
+  // 根据规则生成账户映射
+  generateAccountMapping(ir: IR): Record<string, string> {
+    const mapping: Record<string, string> = {};
+    
+    ir.orders.forEach(order => {
+      const matchedRule = this.findMatchingRule(order);
+      if (matchedRule) {
+        const key = `${order.peer}-${order.category}`;
+        mapping[key] = matchedRule.account;
+      }
+    });
+    
+    return mapping;
+  }
+
+  // 应用账户映射到 IR
+  applyAccountMapping(ir: IR, mapping: Record<string, string>): IR {
+    return {
+      orders: ir.orders.map(order => {
+        const key = `${order.peer}-${order.category}`;
+        const mappedAccount = mapping[key];
+        
+        if (mappedAccount) {
+          return {
+            ...order,
+            extraAccounts: {
+              ...order.extraAccounts,
+              // 根据交易类型设置对应的账户
+              ...(order.type === 'Send' ? { minusAccount: mappedAccount } : { plusAccount: mappedAccount })
+            }
+          };
+        }
+        
+        return order;
+      })
+    };
   }
 } 

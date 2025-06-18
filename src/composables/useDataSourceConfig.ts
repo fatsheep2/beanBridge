@@ -1,168 +1,171 @@
 import { ref, computed } from 'vue';
-import type { DataSource } from '../types/data-source';
-import { ruleConfigManager, type RuleConfig } from '../utils/rule-config-manager';
+import { FileProcessorV2 } from '../utils/file-processor-v2';
+import type { ProviderConfig } from '../types/provider';
+import { ProviderType } from '../types/provider';
+import { useConfigStorage } from './useConfigStorage';
+import { mockAlipayFile, mockWechatFile } from '../utils/test-data';
 
 export function useDataSourceConfig() {
-  // 响应式状态
-  const configs = ref<RuleConfig[]>([]);
-  const currentConfig = ref<RuleConfig | null>(null);
-  const selectedDataSource = ref<string>('');
+  const fileProcessor = new FileProcessorV2();
+  const { currentConfig, currentProvider, loadConfig, updateConfig } = useConfigStorage();
   
-  // 加载所有配置
-  const loadConfigs = () => {
+  const selectedFile = ref<File | null>(null);
+  const detectedProvider = ref<ProviderType | null>(null);
+  const isProcessing = ref(false);
+  const processingResult = ref<any>(null);
+  const error = ref<string | null>(null);
+
+  const supportedProviders = computed(() => {
+    return fileProcessor.getSupportedProviders();
+  });
+
+  const selectedProvider = computed(() => {
+    return detectedProvider.value || (currentProvider.value as ProviderType);
+  });
+
+  const canProcess = computed(() => {
+    return selectedFile.value && selectedProvider.value && !isProcessing.value;
+  });
+
+  const handleFileSelect = async (file: File) => {
+    selectedFile.value = file;
+    error.value = null;
+    processingResult.value = null;
+
     try {
-      configs.value = ruleConfigManager.getAllConfigs();
-    } catch (error) {
-      console.error('加载配置失败:', error);
-      configs.value = [];
+      // 自动检测解析器类型
+      const detected = await fileProcessor.detectProvider(file);
+      detectedProvider.value = detected;
+      
+      if (detected) {
+        loadConfig(detected);
+      }
+    } catch (err) {
+      console.error('文件检测失败:', err);
+      error.value = '文件检测失败';
     }
-  };
-  
-  // 保存配置
-  const saveConfig = (config: RuleConfig) => {
-    try {
-      ruleConfigManager.saveConfig(config);
-      loadConfigs(); // 重新加载配置列表
-      return true;
-    } catch (error) {
-      console.error('保存配置失败:', error);
-      return false;
-    }
-  };
-  
-  // 获取配置
-  const getConfig = (id: string): RuleConfig | null => {
-    return configs.value.find(config => config.id === id) || null;
   };
 
-  // 根据数据源ID获取配置
-  const getConfigByDataSourceId = (dataSourceId: string): RuleConfig | null => {
-    return ruleConfigManager.getConfigByDataSourceId(dataSourceId);
+  const setProvider = (provider: ProviderType) => {
+    detectedProvider.value = provider;
+    loadConfig(provider);
   };
-  
-  // 删除配置
-  const deleteConfig = (id: string) => {
-    try {
-      ruleConfigManager.deleteConfig(id);
-      loadConfigs(); // 重新加载配置列表
-      return true;
-    } catch (error) {
-      console.error('删除配置失败:', error);
-      return false;
+
+  const validateFile = () => {
+    if (!selectedFile.value || !selectedProvider.value) {
+      return { valid: false, error: '请选择文件和解析器' };
     }
+
+    return fileProcessor.validateFile(selectedFile.value, selectedProvider.value);
   };
-  
-  // 选择数据源
-  const selectDataSource = (id: string) => {
-    selectedDataSource.value = id;
-    currentConfig.value = getConfigByDataSourceId(id);
-  };
-  
-  // 更新当前配置
-  const updateCurrentConfig = (config: Partial<RuleConfig>) => {
-    if (currentConfig.value) {
-      currentConfig.value = { ...currentConfig.value, ...config };
-      saveConfig(currentConfig.value);
+
+  const processFile = async () => {
+    if (!selectedFile.value || !selectedProvider.value) {
+      error.value = '请选择文件和解析器';
+      return;
     }
-  };
-  
-  // 创建默认配置
-  const createDefaultConfig = (dataSource: DataSource): RuleConfig => {
-    return ruleConfigManager.createDefaultConfig(dataSource);
-  };
-  
-  // 导出配置为JSON
-  const exportConfig = (id: string): string | null => {
-    const config = getConfig(id);
-    if (!config) return null;
-    
-    try {
-      return JSON.stringify(config, null, 2);
-    } catch (error) {
-      console.error('导出配置失败:', error);
-      return null;
+
+    const validation = validateFile();
+    if (!validation.valid) {
+      error.value = validation.error || '文件验证失败';
+      return;
     }
-  };
-  
-  // 导入配置从JSON
-  const importConfig = (jsonString: string): RuleConfig | null => {
+
+    isProcessing.value = true;
+    error.value = null;
+
     try {
-      const config = JSON.parse(jsonString);
-      // 验证配置格式
-      if (config.id && config.dataSourceId && config.name) {
-        return config;
+      const result = await fileProcessor.processFile(
+        selectedFile.value,
+        selectedProvider.value,
+        currentConfig.value || undefined
+      );
+
+      if (result.success) {
+        processingResult.value = result;
+      } else {
+        error.value = result.error || '处理失败';
       }
-      return null;
-    } catch (error) {
-      console.error('导入配置失败:', error);
-      return null;
+    } catch (err) {
+      console.error('文件处理失败:', err);
+      error.value = '文件处理失败';
+    } finally {
+      isProcessing.value = false;
     }
   };
-  
-  // 下载配置文件
-  const downloadConfig = (id: string) => {
-    const jsonString = exportConfig(id);
-    if (!jsonString) return;
-    
-    const blob = new Blob([jsonString], { type: 'application/json' });
+
+  const previewFile = async () => {
+    if (!selectedFile.value || !selectedProvider.value) {
+      error.value = '请选择文件和解析器';
+      return;
+    }
+
+    isProcessing.value = true;
+    error.value = null;
+
+    try {
+      const result = await fileProcessor.previewFile(
+        selectedFile.value,
+        selectedProvider.value
+      );
+
+      if (result.success) {
+        processingResult.value = result;
+      } else {
+        error.value = result.error || '预览失败';
+      }
+    } catch (err) {
+      console.error('文件预览失败:', err);
+      error.value = '文件预览失败';
+    } finally {
+      isProcessing.value = false;
+    }
+  };
+
+  const downloadResult = (filename?: string) => {
+    if (!processingResult.value?.data) {
+      error.value = '没有可下载的数据';
+      return;
+    }
+
+    const blob = new Blob([processingResult.value.data], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${id}-config.json`;
+    a.download = filename || `beancount_${new Date().toISOString().split('T')[0]}.beancount`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-  
-  // 上传配置文件
-  const uploadConfig = async (file: File): Promise<RuleConfig | null> => {
-    try {
-      const text = await file.text();
-      const config = importConfig(text);
-      if (config) {
-        saveConfig(config);
-        return config;
-      }
-      return null;
-    } catch (error) {
-      console.error('上传配置文件失败:', error);
-      return null;
-    }
+
+
+  const reset = () => {
+    selectedFile.value = null;
+    detectedProvider.value = null;
+    isProcessing.value = false;
+    processingResult.value = null;
+    error.value = null;
   };
-  
-  // 计算属性
-  const hasConfig = (id: string) => {
-    return configs.value.some(config => config.dataSourceId === id);
-  };
-  
-  const configList = computed(() => configs.value);
-  
-  // 初始化时加载配置
-  loadConfigs();
-  
+
   return {
     // 状态
-    configs,
-    currentConfig,
-    selectedDataSource,
-    
+    selectedFile,
+    detectedProvider,
+    selectedProvider,
+    isProcessing,
+    processingResult,
+    error,
+    supportedProviders,
+    canProcess,
+
     // 方法
-    loadConfigs,
-    saveConfig,
-    getConfig,
-    getConfigByDataSourceId,
-    deleteConfig,
-    selectDataSource,
-    updateCurrentConfig,
-    createDefaultConfig,
-    exportConfig,
-    importConfig,
-    downloadConfig,
-    uploadConfig,
-    
-    // 计算属性
-    hasConfig,
-    configList
+    handleFileSelect,
+    setProvider,
+    validateFile,
+    processFile,
+    previewFile,
+    downloadResult,
+    reset
   };
 } 
