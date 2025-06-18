@@ -100,7 +100,7 @@ export enum ProviderType {
   Citic = "citic",
   HsbcHK = "hsbchk",
   MT = "mt",
-  Hxsec = "hxsec"
+  Hxsec = "hxsec",
 }
 
 // 文件处理结果

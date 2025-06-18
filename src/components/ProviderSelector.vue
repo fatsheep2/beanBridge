@@ -5,7 +5,7 @@
     <!-- 分类选择 -->
     <div class="mb-4">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-md font-medium text-gray-800">解析器分类</h3>
+        <!-- <h3 class="text-md font-medium text-gray-800">解析器分类</h3> -->
         <div class="flex space-x-2">
           <button 
             v-for="category in categories" 
@@ -140,8 +140,8 @@ const getProviderCategory = (type: ProviderType): string => {
     [ProviderType.Jd]: 'payment',
     [ProviderType.Citic]: 'bank',
     [ProviderType.HsbcHK]: 'bank',
-    [ProviderType.MT]: 'securities',
-    [ProviderType.Hxsec]: 'securities'
+    [ProviderType.MT]: 'payment',
+    [ProviderType.Hxsec]: 'securities',
   };
   return categoryMap[type] || 'other';
 };
@@ -149,37 +149,39 @@ const getProviderCategory = (type: ProviderType): string => {
 const getProviderColor = (type: ProviderType): string => {
   const colorMap: Record<ProviderType, string> = {
     [ProviderType.Alipay]: '#1677FF',
-    [ProviderType.Wechat]: '#07C160',
-    [ProviderType.Huobi]: '#F6851B',
-    [ProviderType.Htsec]: '#1E40AF',
-    [ProviderType.Icbc]: '#C7000B',
-    [ProviderType.Td]: '#00A3E0',
     [ProviderType.Bmo]: '#0074D9',
-    [ProviderType.Jd]: '#E1251B',
     [ProviderType.Citic]: '#1E40AF',
     [ProviderType.HsbcHK]: '#DB0011',
+    [ProviderType.Htsec]: '#1E40AF',
+    [ProviderType.Huobi]: '#F6851B',
+    [ProviderType.Hxsec]: '#DC2626',
+    [ProviderType.Icbc]: '#C7000B',
+    [ProviderType.Jd]: '#E1251B',
     [ProviderType.MT]: '#059669',
-    [ProviderType.Hxsec]: '#DC2626'
+    [ProviderType.Td]: '#00A3E0',
+    [ProviderType.Wechat]: '#07C160',
+
   };
   return colorMap[type] || '#6B7280';
 };
 
 const getProviderIcon = (type: ProviderType): string => {
   const iconMap: Record<ProviderType, string> = {
-    [ProviderType.Alipay]: '/icons/alipay.png',
-    [ProviderType.Wechat]: '../icons/weixin.png',
-    [ProviderType.Huobi]: '/icons/huobi.png',
-    [ProviderType.Htsec]: '/icons/htsec.png',
-    [ProviderType.Icbc]: '/icons/icbc.png',
-    [ProviderType.Td]: '/icons/td.png',
-    [ProviderType.Bmo]: '/icons/bmo.png',
-    [ProviderType.Jd]: '/icons/jd.png',
-    [ProviderType.Citic]: '/icons/citic.png',
-    [ProviderType.HsbcHK]: '/icons/hsbc.png',
-    [ProviderType.MT]: '/icons/mt.png',
-    [ProviderType.Hxsec]: '/icons/hxsec.png'
+    [ProviderType.Alipay]: '/src/components/icons/alipay.png',
+    [ProviderType.Wechat]: '/src/components/icons/weixin.png',
+    [ProviderType.Huobi]: '/src/components/icons/火币.png',
+    [ProviderType.Htsec]: '/src/components/icons/海通证券.png',
+    [ProviderType.Icbc]: '/src/components/icons/工商银行.png',
+    [ProviderType.Td]: '/src/components/icons/信用卡银行卡.png',
+    [ProviderType.Bmo]: '/src/components/icons/蒙特利尔银行.png',
+    [ProviderType.Jd]: '/src/components/icons/京东.png',
+    [ProviderType.Citic]: '/src/components/icons/中信银行.png',
+    [ProviderType.HsbcHK]: '/src/components/icons/汇丰银行.png',
+    [ProviderType.MT]: '/src/components/icons/美团.png',
+    [ProviderType.Hxsec]: '/src/components/icons/default.svg',
+
   };
-  return iconMap[type] || '/icons/default.png';
+  return iconMap[type] || '/src/components/icons/default.svg';
 };
 
 const getProviderDescription = (type: ProviderType): string => {
@@ -189,13 +191,13 @@ const getProviderDescription = (type: ProviderType): string => {
     [ProviderType.Huobi]: '火币交易记录解析器',
     [ProviderType.Htsec]: '华泰证券交易记录解析器',
     [ProviderType.Icbc]: '工商银行交易记录解析器',
-    [ProviderType.Td]: 'TD银行交易记录解析器',
-    [ProviderType.Bmo]: 'BMO银行交易记录解析器',
+    [ProviderType.Td]: '多伦多道明银行 交易记录解析器',
+    [ProviderType.Bmo]: '蒙特利尔银行交易记录解析器',
     [ProviderType.Jd]: '京东金融交易记录解析器',
     [ProviderType.Citic]: '中信银行交易记录解析器',
     [ProviderType.HsbcHK]: '汇丰香港交易记录解析器',
-    [ProviderType.MT]: 'MT证券交易记录解析器',
-    [ProviderType.Hxsec]: '华鑫证券交易记录解析器'
+    [ProviderType.MT]: '美团生活平台交易记录解析器',
+    [ProviderType.Hxsec]: '华鑫证券交易记录解析器',
   };
   return descMap[type] || '通用交易记录解析器';
 };
