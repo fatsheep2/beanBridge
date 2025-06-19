@@ -180,17 +180,17 @@
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Expenses:Food"
             />
-            <p class="text-xs text-gray-500 mt-1">支出账户，如：Expenses:Food</p>
+            <p class="text-xs text-gray-500 mt-1">支出账户，如：Expenses:Food、Expenses:Life:Food:Snack:零食等</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">方法账户 (methodAccount)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">支付账户 (methodAccount)</label>
             <input
               v-model="ruleForm.methodAccount"
               type="text"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Assets:Alipay"
             />
-            <p class="text-xs text-gray-500 mt-1">支付方式账户，如：Assets:Alipay</p>
+            <p class="text-xs text-gray-500 mt-1">支付方式账户，如：Assets:Alipay、Liabilities:Life:Huabei:花呗等</p>
           </div>
         </div>
 
