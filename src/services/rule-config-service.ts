@@ -32,7 +32,7 @@ class RuleConfigService {
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(configs));
-      
+
       // 保存到历史记录
       this.saveToHistory(config);
     } catch (error) {
@@ -82,7 +82,7 @@ class RuleConfigService {
     try {
       const stored = localStorage.getItem(this.HISTORY_KEY);
       const history: ConfigHistory[] = stored ? JSON.parse(stored) : [];
-      
+
       if (provider) {
         return history.filter(h => h.provider === provider);
       }
@@ -93,12 +93,48 @@ class RuleConfigService {
     }
   }
 
+  // 删除历史记录
+  deleteHistory(historyId: string): boolean {
+    try {
+      const history = this.getHistory();
+      const filteredHistory = history.filter(h => h.id !== historyId);
+
+      if (filteredHistory.length === history.length) {
+        return false; // 没有找到要删除的记录
+      }
+
+      this.updateHistory(filteredHistory);
+      return true;
+    } catch (error) {
+      console.error('Failed to delete history:', error);
+      return false;
+    }
+  }
+
+  // 删除指定Provider的所有历史记录
+  deleteProviderHistory(provider: ProviderType): boolean {
+    try {
+      const history = this.getHistory();
+      const filteredHistory = history.filter(h => h.provider !== provider);
+
+      if (filteredHistory.length === history.length) {
+        return false; // 没有找到要删除的记录
+      }
+
+      this.updateHistory(filteredHistory);
+      return true;
+    } catch (error) {
+      console.error('Failed to delete provider history:', error);
+      return false;
+    }
+  }
+
   // 应用历史配置
   applyHistory(historyId: string): RuleConfig | null {
     try {
       const history = this.getHistory();
       const historyItem = history.find(h => h.id === historyId);
-      
+
       if (!historyItem) {
         return null;
       }
@@ -109,7 +145,7 @@ class RuleConfigService {
 
       // 保存配置
       this.saveConfig(historyItem.config);
-      
+
       return historyItem.config;
     } catch (error) {
       console.error('Failed to apply history:', error);
@@ -147,7 +183,7 @@ class RuleConfigService {
         navigator.clipboard.readText().then((text) => {
           try {
             const config = JSON.parse(text) as RuleConfig;
-            
+
             // 验证配置格式
             if (!this.validateConfig(config)) {
               resolve(null);
@@ -203,13 +239,29 @@ class RuleConfigService {
         createdAt: new Date().toISOString()
       };
 
-      // 限制历史记录数量（最多保存50条）
+      // 添加新记录到开头
       history.unshift(historyItem);
-      if (history.length > 50) {
-        history.splice(50);
+
+      // 按provider分组，每个provider最多保留5条记录
+      const providerGroups = new Map<ProviderType, ConfigHistory[]>();
+
+      for (const item of history) {
+        if (!providerGroups.has(item.provider)) {
+          providerGroups.set(item.provider, []);
+        }
+        providerGroups.get(item.provider)!.push(item);
       }
 
-      this.updateHistory(history);
+      // 限制每个provider最多5条记录
+      const limitedHistory: ConfigHistory[] = [];
+      for (const [provider, items] of providerGroups) {
+        limitedHistory.push(...items.slice(0, 5));
+      }
+
+      // 按创建时间排序（最新的在前）
+      limitedHistory.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      this.updateHistory(limitedHistory);
     } catch (error) {
       console.error('Failed to save to history:', error);
     }

@@ -6,13 +6,13 @@
         @click="$emit('close')"
         class="text-gray-400 hover:text-gray-600"
       >
-        <i class="fas fa-times"></i>
+        <span class="material-icons">close</span>
       </button>
     </div>
 
     <form @submit.prevent="saveRule" class="space-y-4">
       <!-- 基本信息 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">规则名称</label>
           <input
@@ -31,6 +31,17 @@
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             placeholder="规则描述（可选）"
           />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">优先级</label>
+          <input
+            v-model.number="ruleForm.priority"
+            type="number"
+            min="1"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+            placeholder="1"
+          />
+          <p class="text-xs text-gray-500 mt-1">数字越小优先级越高</p>
         </div>
       </div>
 
@@ -160,7 +171,7 @@
       <!-- 账户配置 -->
       <div class="border-t pt-4 border-gray-200 dark:border-gray-700">
         <h4 class="text-md font-medium text-gray-700 dark:text-gray-200 mb-3">账户配置</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">目标账户 (targetAccount)</label>
             <input
@@ -169,6 +180,7 @@
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Expenses:Food"
             />
+            <p class="text-xs text-gray-500 mt-1">支出账户，如：Expenses:Food</p>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">方法账户 (methodAccount)</label>
@@ -178,44 +190,55 @@
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               placeholder="Assets:Alipay"
             />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">现金账户 (cashAccount)</label>
-            <input
-              v-model="ruleForm.cashAccount"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-              placeholder="Assets:Cash"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">持仓账户 (positionAccount)</label>
-            <input
-              v-model="ruleForm.positionAccount"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-              placeholder="Assets:Positions"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">手续费账户 (commissionAccount)</label>
-            <input
-              v-model="ruleForm.commissionAccount"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-              placeholder="Expenses:Commission"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">损益账户 (pnlAccount)</label>
-            <input
-              v-model="ruleForm.pnlAccount"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-              placeholder="Income:PnL"
-            />
+            <p class="text-xs text-gray-500 mt-1">支付方式账户，如：Assets:Alipay</p>
           </div>
         </div>
+
+        <!-- 高级账户设置 -->
+        <details class="mt-4">
+          <summary class="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 flex items-center">
+            <span class="material-icons text-sm mr-1 transition-transform">expand_more</span>
+            高级账户设置
+          </summary>
+          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">现金账户 (cashAccount)</label>
+              <input
+                v-model="ruleForm.cashAccount"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                placeholder="Assets:Cash"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">持仓账户 (positionAccount)</label>
+              <input
+                v-model="ruleForm.positionAccount"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                placeholder="Assets:Positions"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">手续费账户 (commissionAccount)</label>
+              <input
+                v-model="ruleForm.commissionAccount"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                placeholder="Expenses:Commission"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">损益账户 (pnlAccount)</label>
+              <input
+                v-model="ruleForm.pnlAccount"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                placeholder="Income:PnL"
+              />
+            </div>
+          </div>
+        </details>
       </div>
 
       <!-- 标签 -->
@@ -301,6 +324,34 @@ const ruleForm = ref({
 
 const tagsInput = ref('');
 
+const resetForm = () => {
+  ruleForm.value = {
+    name: '',
+    description: '',
+    peer: '',
+    item: '',
+    type: '',
+    method: '',
+    category: '',
+    txType: '',
+    time: '',
+    minPrice: undefined,
+    maxPrice: undefined,
+    fullMatch: false,
+    sep: '',
+    ignore: false,
+    targetAccount: '',
+    methodAccount: '',
+    cashAccount: '',
+    positionAccount: '',
+    commissionAccount: '',
+    pnlAccount: '',
+    tags: [],
+    priority: 1
+  };
+  tagsInput.value = '';
+};
+
 // 监听规则变化，初始化表单
 watch(() => props.rule, (rule) => {
   if (rule) {
@@ -339,34 +390,6 @@ const updateTags = () => {
     .split(',')
     .map(tag => tag.trim())
     .filter(tag => tag.length > 0);
-};
-
-const resetForm = () => {
-  ruleForm.value = {
-    name: '',
-    description: '',
-    peer: '',
-    item: '',
-    type: '',
-    method: '',
-    category: '',
-    txType: '',
-    time: '',
-    minPrice: undefined,
-    maxPrice: undefined,
-    fullMatch: false,
-    sep: '',
-    ignore: false,
-    targetAccount: '',
-    methodAccount: '',
-    cashAccount: '',
-    positionAccount: '',
-    commissionAccount: '',
-    pnlAccount: '',
-    tags: [],
-    priority: 1
-  };
-  tagsInput.value = '';
 };
 
 const saveRule = () => {

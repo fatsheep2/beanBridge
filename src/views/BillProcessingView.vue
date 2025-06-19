@@ -12,13 +12,13 @@
 
       <!-- 解析器选择组件 -->
       <ProviderSelector
-        :supported-providers="supportedProviders"
+        :supported-providers="providers"
         :selected-provider="selectedProvider"
         @provider-selected="setProvider"
       />
 
       <!-- 操作按钮 -->
-      <div class="mb-8" v-if="canProcess">
+      <div class="mb-8" v-if="hasDataSource || selectedProvider">
         <h2 class="text-xl font-bold mb-6">操作</h2>
         <div class="flex justify-between items-center gap-6">
           <div class="flex gap-6">
@@ -42,7 +42,7 @@
               @click="goToRuleConfig"
               class="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 font-semibold shadow-md text-lg"
             >
-              <i class="fas fa-cog mr-3"></i>
+              <span class="material-icons mr-3">settings</span>
               规则配置
             </button>
             <button
@@ -50,7 +50,7 @@
               :disabled="isProcessing"
               class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md disabled:opacity-50 text-lg"
             >
-              <i class="fas fa-bug mr-3"></i>
+              <span class="material-icons mr-3">bug_report</span>
               测试规则
             </button>
           </div>
@@ -79,18 +79,18 @@ const router = useRouter();
 
 const {
   selectedFile,
-  detectedProvider,
   selectedProvider,
+  detectedProvider,
   isProcessing,
   processingResult,
   error,
-  supportedProviders,
-  canProcess,
-  handleFileSelect,
-  setProvider,
+  providers,
   processFile,
   previewFile,
-  testRules
+  testRules,
+  hasDataSource,
+  handleFileSelect,
+  setProvider
 } = useDataSourceConfig();
 
 // 跳转到规则配置页面

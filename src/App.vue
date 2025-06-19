@@ -1,6 +1,6 @@
 <template>
   <div id="app" class="min-h-screen flex flex-col font-sans antialiased bg-gray-50 dark:bg-gray-900">
-    <FontAwesomeChecker />
+    <!-- <FontAwesomeChecker /> -->
     <AppHeader />
     <div class="fixed top-4 right-4 z-50">
       <button @click="toggleDark" class="rounded-full bg-white/80 dark:bg-gray-800/80 shadow px-4 py-2 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">

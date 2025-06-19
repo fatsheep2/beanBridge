@@ -36,20 +36,22 @@ export class RuleEngine {
         category: matchedRule.category || order.category
       };
 
-      // 资金账户
-      if (matchedRule.methodAccount) {
-        if (order.type === 'Send') {
+      // 设置账户映射
+      if (order.type === 'Send') {
+        // 支出：资金从 methodAccount 流向 account
+        if (matchedRule.methodAccount) {
           updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.methodAccount;
-        } else if (order.type === 'Recv') {
-          updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.methodAccount;
         }
-      }
-      // 对方账户
-      if (matchedRule.account) {
-        if (order.type === 'Send') {
+        if (matchedRule.account) {
           updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.account;
-        } else if (order.type === 'Recv') {
+        }
+      } else if (order.type === 'Recv') {
+        // 收入：资金从 account 流向 methodAccount
+        if (matchedRule.account) {
           updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.account;
+        }
+        if (matchedRule.methodAccount) {
+          updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.methodAccount;
         }
       }
 
