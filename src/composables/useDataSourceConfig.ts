@@ -3,7 +3,6 @@ import { FileProcessorV2 } from '../utils/file-processor-v2';
 import type { ProviderConfig } from '../types/provider';
 import { ProviderType, Account } from '../types/provider';
 import { useConfigStorage } from './useConfigStorage';
-import { mockAlipayFile, mockWechatFile } from '../utils/test-data';
 import { providers } from '../data/providers';
 import { ruleConfigService } from '../services/rule-config-service';
 import type { RuleConfig } from '../types/rule-config';
