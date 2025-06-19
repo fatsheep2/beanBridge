@@ -112,7 +112,9 @@ export class WechatProvider extends BaseProvider {
             metadata: {
                 status,
                 dealNo,
-                method
+                method,
+                originalPeer: peer, // 保存原始的交易对方信息
+                originalItem: itemName // 保存原始的商品信息
             },
             tags: []
         };
@@ -173,11 +175,104 @@ export class WechatProvider extends BaseProvider {
                 continue;
             }
 
-            processedOrders.push(order);
+            // 应用规则匹配
+            const processedOrder = this.applyRules(order);
+            processedOrders.push(processedOrder);
         }
 
         return {
             orders: processedOrders
         };
+    }
+
+    private applyRules(order: Order): Order {
+        // 获取当前配置
+        const config = this.getCurrentConfig();
+        if (!config) {
+            // 如果没有配置，使用默认值
+            order.minusAccount = 'Assets:Unknown';
+            order.plusAccount = 'Expenses:Unknown';
+            return order;
+        }
+
+        // 设置默认账户
+        order.minusAccount = config.defaultMinusAccount || 'Assets:Unknown';
+        order.plusAccount = config.defaultPlusAccount || 'Expenses:Unknown';
+
+        // 应用规则匹配
+        if (config.rules && config.rules.length > 0) {
+            for (const rule of config.rules) {
+                if (this.matchesRule(order, rule)) {
+                    // 应用规则，但不修改原始的 peer 和 item
+                    if (rule.targetAccount) {
+                        order.plusAccount = rule.targetAccount;
+                    }
+                    if (rule.methodAccount) {
+                        order.minusAccount = rule.methodAccount;
+                    }
+                    if (rule.tags && rule.tags.length > 0) {
+                        order.tags = [...(order.tags || []), ...rule.tags];
+                    }
+                    // 不修改原始的 peer 和 item，保持原始数据
+                    break;
+                }
+            }
+        }
+
+        return order;
+    }
+
+    private matchesRule(order: Order, rule: any): boolean {
+        // 检查各个字段的匹配
+        const fields = ['peer', 'item', 'type', 'method', 'category', 'txType'];
+
+        for (const field of fields) {
+            if (rule[field]) {
+                const ruleValue = rule[field];
+                const orderValue = this.getOrderValue(order, field);
+
+                if (rule.sep && ruleValue.includes(rule.sep)) {
+                    // 使用分隔符分割规则值
+                    const ruleValues = ruleValue.split(rule.sep).map((v: string) => v.trim());
+                    const matches = ruleValues.some((v: string) =>
+                        rule.fullMatch ? orderValue === v : orderValue.includes(v)
+                    );
+                    if (!matches) return false;
+                } else {
+                    // 单个值匹配
+                    const matches = rule.fullMatch ?
+                        orderValue === ruleValue :
+                        orderValue.includes(ruleValue);
+                    if (!matches) return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private getOrderValue(order: Order, field: string): string {
+        switch (field) {
+            case 'peer':
+                return order.peer || '';
+            case 'item':
+                return order.item || '';
+            case 'type':
+                return order.typeOriginal || '';
+            case 'method':
+                return order.method || '';
+            case 'category':
+                return order.category || '';
+            case 'txType':
+                return order.txTypeOriginal || '';
+            default:
+                return '';
+        }
+    }
+
+    private getCurrentConfig(): any {
+        // 这里应该从配置服务获取当前配置
+        // 暂时返回 null，实际应该从 useConfigStorage 获取
+        return null;
     }
 } 

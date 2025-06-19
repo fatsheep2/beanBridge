@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   build-and-release:
@@ -50,6 +51,7 @@ jobs:
           cd dist
           zip -r ../dist.zip .
           cd ..
+          ls -la dist.zip
 
       - name: Get version
         id: get_version
@@ -57,16 +59,17 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
           else
-            VERSION=$(date +'%Y%m%d-%H%M%S')
+            VERSION="v$(date +'%Y%m%d-%H%M%S')"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: dist.zip
           tag_name: ${{ steps.get_version.outputs.version }}
-          name: Release ${{ steps.get_version.outputs.version }}
+          name: BeanBridge ${{ steps.get_version.outputs.version }}
           body: |
             ## BeanBridge ${{ steps.get_version.outputs.version }}
             
