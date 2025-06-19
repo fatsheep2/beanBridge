@@ -148,7 +148,7 @@ export const getProviderColor = (type: ProviderType): string => {
 
 export const getProviderIcon = (type: ProviderType): string => {
   const provider = getProviderByType(type);
-  return provider?.icon || './assets/icons/default.svg';
+  return provider?.icon || '../assets/icons/default.svg';
 };
 
 export const getProviderDescription = (type: ProviderType): string => {
