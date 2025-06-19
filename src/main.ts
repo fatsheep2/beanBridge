@@ -1,5 +1,5 @@
 import './assets/main.css'
-import './assets/fontawesome.css'
+// import '@/assets/fontawesome.css'
 
 import { createApp } from 'vue'
 import App from './App.vue'

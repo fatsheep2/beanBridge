@@ -6,6 +6,7 @@ import { useConfigStorage } from './useConfigStorage';
 import { providers } from '../data/providers';
 import { ruleConfigService } from '../services/rule-config-service';
 import type { RuleConfig } from '../types/rule-config';
+import { RuleEngine } from '../rule-engine';
 
 // 将RuleConfig转换为ProviderConfig的适配器
 function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConfig {
@@ -194,7 +195,6 @@ export function useDataSourceConfig() {
       const providerConfig = convertRuleConfigToProviderConfig(ruleConfig);
 
       // 创建规则引擎并重新处理
-      const { RuleEngine } = await import('../rule-engine');
       const ruleEngine = new RuleEngine(providerConfig.rules);
 
       // 获取缓存的数据，确保格式正确
@@ -345,7 +345,6 @@ export function useDataSourceConfig() {
       const providerConfig = convertRuleConfigToProviderConfig(ruleConfig);
 
       // 创建规则引擎并测试
-      const { RuleEngine } = await import('../rule-engine');
       const ruleEngine = new RuleEngine(providerConfig.rules);
 
       // 应用规则
@@ -403,7 +402,6 @@ export function useDataSourceConfig() {
       const providerConfig = convertRuleConfigToProviderConfig(ruleConfig);
 
       // 创建规则引擎并测试
-      const { RuleEngine } = await import('../rule-engine');
       const ruleEngine = new RuleEngine(providerConfig.rules);
 
       // 获取缓存的数据，确保格式正确
