@@ -3,7 +3,7 @@
     <div class="w-full flex-1 flex flex-col px-2 sm:px-4 md:px-8 py-4 sm:py-8 gap-y-8">
       <!-- 页面标题 -->
       <div class="mb-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full">
-        <img src="/assets/icons/beancount.png" class="w-16 h-16 sm:w-20 sm:h-20" alt="BeanBridge Logo" />
+        <img :src="logoPath" class="w-16 h-16 sm:w-20 sm:h-20" alt="BeanBridge Logo" />
         <div class="flex-1 w-full">
           <h1 class="text-3xl sm:text-5xl font-extrabold text-gray-800 dark:text-white">BeanBridge</h1>
           <p class="mt-2 sm:mt-3 text-base sm:text-lg text-gray-600 dark:text-gray-300">一个简单易用的工具，帮助您将银行对账单转换为Beancount格式，轻松管理个人财务。</p>
@@ -89,10 +89,16 @@
 
 <script setup lang="ts">
 // 简化的首页视图
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import ProviderSelector from '../components/ProviderSelector.vue';
 import { providers } from '../data/providers';
 import { ProviderType } from '../types/provider';
+
+// 获取正确的图标路径
+const logoPath = computed(() => {
+  const base = import.meta.env.BASE_URL || '/';
+  return `${base}assets/icons/beancount.png`;
+});
 
 // 响应式数据
 const supportedProviders = ref(providers);

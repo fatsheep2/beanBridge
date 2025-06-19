@@ -10,6 +10,13 @@ export interface ProviderInfo {
   icon: string;
 }
 
+// 获取正确的图标路径
+const getIconPath = (filename: string): string => {
+  // 在生产环境中，需要考虑 base 路径
+  const base = import.meta.env.BASE_URL || '/';
+  return `${base}assets/icons/${filename}`;
+};
+
 export const providers: ProviderInfo[] = [
   {
     type: ProviderType.Alipay,
@@ -18,7 +25,7 @@ export const providers: ProviderInfo[] = [
     description: '支付宝交易记录解析器',
     category: 'payment',
     color: '#1677FF',
-    icon: '/assets/icons/alipay.png'
+    icon: getIconPath('alipay.png')
   },
   {
     type: ProviderType.Wechat,
@@ -27,7 +34,7 @@ export const providers: ProviderInfo[] = [
     description: '微信支付交易记录解析器',
     category: 'payment',
     color: '#07C160',
-    icon: '/assets/icons/weixin.png'
+    icon: getIconPath('weixin.png')
   },
   {
     type: ProviderType.Huobi,
@@ -36,7 +43,7 @@ export const providers: ProviderInfo[] = [
     description: '火币交易记录解析器',
     category: 'crypto',
     color: '#F6851B',
-    icon: '/assets/icons/火币.png'
+    icon: getIconPath('火币.png')
   },
   {
     type: ProviderType.Htsec,
@@ -45,7 +52,7 @@ export const providers: ProviderInfo[] = [
     description: '华泰证券交易记录解析器',
     category: 'securities',
     color: '#1E40AF',
-    icon: '/assets/icons/海通证券.png'
+    icon: getIconPath('海通证券.png')
   },
   {
     type: ProviderType.Icbc,
@@ -54,7 +61,7 @@ export const providers: ProviderInfo[] = [
     description: '工商银行交易记录解析器',
     category: 'bank',
     color: '#C7000B',
-    icon: '/assets/icons/工商银行.png'
+    icon: getIconPath('工商银行.png')
   },
   {
     type: ProviderType.Td,
@@ -63,7 +70,7 @@ export const providers: ProviderInfo[] = [
     description: '多伦多道明银行交易记录解析器',
     category: 'bank',
     color: '#00A3E0',
-    icon: '/assets/icons/信用卡银行卡.png'
+    icon: getIconPath('信用卡银行卡.png')
   },
   {
     type: ProviderType.Bmo,
@@ -72,7 +79,7 @@ export const providers: ProviderInfo[] = [
     description: '蒙特利尔银行交易记录解析器',
     category: 'bank',
     color: '#0074D9',
-    icon: '/assets/icons/蒙特利尔银行.png'
+    icon: getIconPath('蒙特利尔银行.png')
   },
   {
     type: ProviderType.Jd,
@@ -81,7 +88,7 @@ export const providers: ProviderInfo[] = [
     description: '京东金融交易记录解析器',
     category: 'payment',
     color: '#E1251B',
-    icon: '/assets/icons/京东.png'
+    icon: getIconPath('京东.png')
   },
   {
     type: ProviderType.Citic,
@@ -90,7 +97,7 @@ export const providers: ProviderInfo[] = [
     description: '中信银行交易记录解析器',
     category: 'bank',
     color: '#1E40AF',
-    icon: '/assets/icons/中信银行.png'
+    icon: getIconPath('中信银行.png')
   },
   {
     type: ProviderType.HsbcHK,
@@ -99,7 +106,7 @@ export const providers: ProviderInfo[] = [
     description: '汇丰香港交易记录解析器',
     category: 'bank',
     color: '#DB0011',
-    icon: '/assets/icons/汇丰银行.png'
+    icon: getIconPath('汇丰银行.png')
   },
   {
     type: ProviderType.MT,
@@ -108,7 +115,7 @@ export const providers: ProviderInfo[] = [
     description: '美团生活平台交易记录解析器',
     category: 'payment',
     color: '#059669',
-    icon: '/assets/icons/美团.png'
+    icon: getIconPath('美团.png')
   },
   {
     type: ProviderType.Hxsec,
@@ -117,7 +124,7 @@ export const providers: ProviderInfo[] = [
     description: '华鑫证券交易记录解析器',
     category: 'securities',
     color: '#DC2626',
-    icon: '/assets/icons/default.svg'
+    icon: getIconPath('default.svg')
   }
 ];
 
@@ -148,7 +155,7 @@ export const getProviderColor = (type: ProviderType): string => {
 
 export const getProviderIcon = (type: ProviderType): string => {
   const provider = getProviderByType(type);
-  return provider?.icon || '/assets/icons/default.svg';
+  return provider?.icon || getIconPath('default.svg');
 };
 
 export const getProviderDescription = (type: ProviderType): string => {

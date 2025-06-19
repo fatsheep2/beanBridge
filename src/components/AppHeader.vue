@@ -3,7 +3,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <div class="flex items-center">
-          <img src="/assets/icons/beancount.png" class="w-8 h-8 mr-2" alt="BeanBridge Logo" />
+          <img :src="logoPath" class="w-8 h-8 mr-2" alt="BeanBridge Logo" />
           <span class="text-xl font-bold">BeanBridge</span>
         </div>
         <div class="hidden md:block">
@@ -35,9 +35,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 
 const mobileMenuOpen = ref(false);
+
+// 获取正确的图标路径
+const logoPath = computed(() => {
+  const base = import.meta.env.BASE_URL || '/';
+  return `${base}assets/icons/beancount.png`;
+});
 
 onMounted(() => {
   // 初始化主题
