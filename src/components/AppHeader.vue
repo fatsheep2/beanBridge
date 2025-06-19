@@ -6,14 +6,6 @@
           <img :src="logoPath" class="w-8 h-8 mr-2" alt="BeanBridge Logo" />
           <span class="text-xl font-bold">BeanBridge</span>
         </div>
-        <div class="hidden md:block">
-          <div class="ml-10 flex items-center space-x-4">
-            <a href="#" class="px-3 py-2 rounded-md text-sm font-medium bg-indigo-700">首页</a>
-            <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500">文档</a>
-            <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500">社区</a>
-            <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500">关于</a>
-          </div>
-        </div>
         <div class="flex items-center space-x-2">
           <div class="md:hidden">
             <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-md hover:bg-indigo-500 focus:outline-none">
@@ -24,13 +16,7 @@
       </div>
     </div>
     
-    <!-- 移动端菜单 -->
-    <div v-if="mobileMenuOpen" class="md:hidden bg-indigo-700 pb-3 px-2">
-      <a href="#" class="block px-3 py-2 rounded-md text-base font-medium bg-indigo-800">首页</a>
-      <a href="#" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-500">文档</a>
-      <a href="#" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-500">社区</a>
-      <a href="#" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-500">关于</a>
-    </div>
+
   </nav>
 </template>
 
