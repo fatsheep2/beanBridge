@@ -12,7 +12,7 @@
 
     <form @submit.prevent="saveRule" class="space-y-4">
       <!-- 基本信息 -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">规则名称</label>
           <input
@@ -31,17 +31,6 @@
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             placeholder="规则描述（可选）"
           />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">优先级</label>
-          <input
-            v-model.number="ruleForm.priority"
-            type="number"
-            min="1"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-            placeholder="1"
-          />
-          <p class="text-xs text-gray-500 mt-1">数字越小优先级越高</p>
         </div>
       </div>
 
@@ -318,8 +307,7 @@ const ruleForm = ref({
   positionAccount: '',
   commissionAccount: '',
   pnlAccount: '',
-  tags: [] as string[],
-  priority: 1
+  tags: [] as string[]
 });
 
 const tagsInput = ref('');
@@ -346,8 +334,7 @@ const resetForm = () => {
     positionAccount: '',
     commissionAccount: '',
     pnlAccount: '',
-    tags: [],
-    priority: 1
+    tags: []
   };
   tagsInput.value = '';
 };
@@ -376,8 +363,7 @@ watch(() => props.rule, (rule) => {
       positionAccount: rule.positionAccount || '',
       commissionAccount: rule.commissionAccount || '',
       pnlAccount: rule.pnlAccount || '',
-      tags: rule.tags || [],
-      priority: rule.priority
+      tags: rule.tags || []
     };
     tagsInput.value = rule.tags?.join(', ') || '';
   } else {
@@ -416,7 +402,7 @@ const saveRule = () => {
     commissionAccount: ruleForm.value.commissionAccount || '',
     pnlAccount: ruleForm.value.pnlAccount || '',
     tags: ruleForm.value.tags,
-    priority: ruleForm.value.priority
+    priority: 1
   };
   
   emit('save', rule);

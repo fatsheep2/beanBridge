@@ -57,7 +57,40 @@
 
         <!-- 全局配置 -->
         <div class="bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-8">
-          <h4 class="text-xl font-bold mb-6">全局配置</h4>
+          <div class="flex items-center justify-between mb-6">
+            <h4 class="text-xl font-bold">全局配置</h4>
+            <div v-if="showAutoSaveMessage" class="text-sm text-gray-600 dark:text-gray-300 transition-opacity duration-300">
+              <span class="material-icons mr-2 text-green-500">check_circle</span>
+              配置已自动保存
+            </div>
+          </div>
+          
+          <!-- 配置信息 -->
+          <div class="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">配置名称</label>
+                <input
+                  v-model="currentConfig.name"
+                  type="text"
+                  class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                  placeholder="配置名称"
+                  @input="autoSaveConfig"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">配置描述</label>
+                <input
+                  v-model="currentConfig.description"
+                  type="text"
+                  class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                  placeholder="配置描述"
+                  @input="autoSaveConfig"
+                />
+              </div>
+            </div>
+          </div>
+          
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认负账户(一般是资产账户)</label>
@@ -66,6 +99,7 @@
                 type="text"
                 class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                 placeholder="Assets:FIXME"
+                @input="autoSaveConfig"
               />
             </div>
             <div>
@@ -75,6 +109,7 @@
                 type="text"
                 class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                 placeholder="Expenses:FIXME"
+                @input="autoSaveConfig"
               />
             </div>
             <div>
@@ -84,6 +119,7 @@
                 type="text"
                 class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                 placeholder="CNY"
+                @input="autoSaveConfig"
               />
             </div>
             <div v-if="currentConfig.defaultCashAccount">
@@ -93,6 +129,7 @@
                 type="text"
                 class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                 placeholder="Assets:Cash"
+                @input="autoSaveConfig"
               />
             </div>
             <div v-if="currentConfig.defaultCommissionAccount">
@@ -102,6 +139,7 @@
                 type="text"
                 class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                 placeholder="Expenses:Commission"
+                @input="autoSaveConfig"
               />
             </div>
             <div v-if="currentConfig.defaultPositionAccount">
@@ -111,6 +149,7 @@
                 type="text"
                 class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                 placeholder="Assets:Positions"
+                @input="autoSaveConfig"
               />
             </div>
           </div>
@@ -164,94 +203,164 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">排序方式</label>
-                <select
-                  v-model="sortBy"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="priority">按优先级</option>
-                  <option value="name">按名称</option>
-                  <option value="created">按创建时间</option>
-                </select>
+                <div class="flex space-x-2">
+                  <select
+                    v-model="sortBy"
+                    class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="name">按名称</option>
+                    <option value="created">按创建时间</option>
+                  </select>
+                  <button
+                    @click="toggleSortOrder"
+                    class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    :title="sortOrder === 'asc' ? '升序' : '降序'"
+                  >
+                    <span class="material-icons text-sm">{{ sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div
               v-for="rule in filteredAndSortedRules"
               :key="rule.id"
-              class="border-2 border-gray-100 dark:border-gray-800 rounded-xl p-4 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-150"
+              class="relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 hover:border-blue-300 dark:hover:border-blue-600"
             >
-              <div class="flex items-start justify-between mb-3">
-                <div class="flex-1">
-                  <div class="flex items-center space-x-2 mb-2">
-                    <h5 class="font-medium text-gray-900 dark:text-gray-100">{{ rule.name }}</h5>
-                    <span class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded-full font-semibold">优先级: {{ rule.priority }}</span>
-                    <span v-if="rule.ignore" class="text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded-full font-semibold">忽略</span>
-                  </div>
-                  <p v-if="rule.description" class="text-sm text-gray-600 dark:text-gray-300 mb-3">{{ rule.description }}</p>
-                  
-                  <!-- 匹配条件 -->
-                  <div class="space-y-1 text-xs">
-                    <div v-if="rule.peer" class="flex">
-                      <span class="text-gray-500 dark:text-gray-400 w-16">交易对方:</span>
-                      <span class="flex-1 text-gray-700 dark:text-gray-300 truncate">{{ rule.peer }}</span>
-                    </div>
-                    <div v-if="rule.item" class="flex">
-                      <span class="text-gray-500 dark:text-gray-400 w-16">商品说明:</span>
-                      <span class="flex-1 text-gray-700 dark:text-gray-300 truncate">{{ rule.item }}</span>
-                    </div>
-                    <div v-if="rule.type" class="flex">
-                      <span class="text-gray-500 dark:text-gray-400 w-16">交易类型:</span>
-                      <span class="flex-1 text-gray-700 dark:text-gray-300">{{ rule.type }}</span>
-                    </div>
-                    <div v-if="rule.method" class="flex">
-                      <span class="text-gray-500 dark:text-gray-400 w-16">支付方式:</span>
-                      <span class="flex-1 text-gray-700 dark:text-gray-300 truncate">{{ rule.method }}</span>
-                    </div>
-                  </div>
+              <!-- 删除按钮 - 固定在右上角 -->
+              <div class="absolute top-3 right-3 flex space-x-1 z-10">
+                <button
+                  @click="editRule(rule)"
+                  class="text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                  title="编辑规则"
+                >
+                  <span class="material-icons text-lg">edit</span>
+                </button>
+                <button
+                  @click="deleteRule(rule.id)"
+                  class="text-red-600 hover:text-red-800 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  title="删除规则"
+                >
+                  <span class="material-icons text-lg">delete</span>
+                </button>
+              </div>
 
-                  <!-- 账户配置 -->
-                  <div class="mt-3 space-y-1 text-xs">
-                    <div v-if="rule.targetAccount" class="flex">
-                      <span class="text-gray-500 dark:text-gray-400 w-16">目标账户:</span>
-                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-mono truncate">{{ rule.targetAccount }}</span>
+              <!-- 规则内容 -->
+              <div class="pr-16"> <!-- 为按钮留出空间 -->
+                <!-- 规则标题 -->
+                <div class="flex items-center space-x-2 mb-3">
+                  <h5 class="font-semibold text-gray-900 dark:text-gray-100 text-lg">{{ rule.name }}</h5>
+                  <span v-if="rule.ignore" class="text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded-full font-semibold">忽略</span>
+                </div>
+                
+                <!-- 规则描述 -->
+                <p v-if="rule.description" class="text-sm text-gray-600 dark:text-gray-300 mb-4">{{ rule.description }}</p>
+                
+                <!-- 匹配条件 -->
+                <div class="mb-4">
+                  <h6 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">匹配条件</h6>
+                  <div class="space-y-1.5">
+                    <div v-if="rule.peer" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">交易对方:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-medium truncate">{{ rule.peer }}</span>
                     </div>
-                    <div v-if="rule.methodAccount" class="flex">
-                      <span class="text-gray-500 dark:text-gray-400 w-16">方法账户:</span>
-                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-mono truncate">{{ rule.methodAccount }}</span>
+                    <div v-if="rule.item" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">商品说明:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-medium truncate">{{ rule.item }}</span>
                     </div>
-                  </div>
-
-                  <!-- 标签 -->
-                  <div v-if="rule.tags && rule.tags.length > 0" class="mt-3">
-                    <div class="flex flex-wrap gap-1">
-                      <span
-                        v-for="tag in rule.tags"
-                        :key="tag"
-                        class="inline-block bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded text-xs font-semibold"
-                      >
-                        {{ tag }}
+                    <div v-if="rule.type" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">交易类型:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-medium">{{ rule.type }}</span>
+                    </div>
+                    <div v-if="rule.method" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">支付方式:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-medium truncate">{{ rule.method }}</span>
+                    </div>
+                    <div v-if="rule.category" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">交易分类:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-medium truncate">{{ rule.category }}</span>
+                    </div>
+                    <div v-if="rule.txType" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">交易类型:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-medium truncate">{{ rule.txType }}</span>
+                    </div>
+                    <div v-if="rule.time" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">时间范围:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-medium">{{ rule.time }}</span>
+                    </div>
+                    <div v-if="rule.minPrice || rule.maxPrice" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">金额范围:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-medium">
+                        {{ rule.minPrice ? `${rule.minPrice}` : '0' }} - {{ rule.maxPrice ? `${rule.maxPrice}` : '∞' }}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div class="flex space-x-2 ml-3">
-                  <button
-                    @click="editRule(rule)"
-                    class="text-blue-600 hover:text-blue-800 p-1"
-                    title="编辑规则"
-                  >
-                    <span class="material-icons text-lg">edit</span>
-                  </button>
-                  <button
-                    @click="deleteRule(rule.id)"
-                    class="text-red-600 hover:text-red-800 p-1"
-                    title="删除规则"
-                  >
-                    <span class="material-icons text-lg">delete</span>
-                  </button>
+                <!-- 账户配置 -->
+                <div class="mb-4">
+                  <h6 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">账户配置</h6>
+                  <div class="space-y-1.5">
+                    <div v-if="rule.targetAccount" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">目标账户:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-mono text-xs truncate">{{ rule.targetAccount }}</span>
+                    </div>
+                    <div v-if="rule.methodAccount" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">方法账户:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-mono text-xs truncate">{{ rule.methodAccount }}</span>
+                    </div>
+                    <div v-if="rule.cashAccount" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">现金账户:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-mono text-xs truncate">{{ rule.cashAccount }}</span>
+                    </div>
+                    <div v-if="rule.positionAccount" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">持仓账户:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-mono text-xs truncate">{{ rule.positionAccount }}</span>
+                    </div>
+                    <div v-if="rule.commissionAccount" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">手续费账户:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-mono text-xs truncate">{{ rule.commissionAccount }}</span>
+                    </div>
+                    <div v-if="rule.pnlAccount" class="flex items-center text-sm">
+                      <span class="text-gray-500 dark:text-gray-400 w-16 text-xs">损益账户:</span>
+                      <span class="flex-1 text-gray-700 dark:text-gray-300 font-mono text-xs truncate">{{ rule.pnlAccount }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 匹配选项 -->
+                <div v-if="rule.fullMatch || rule.ignore || rule.sep" class="mb-4">
+                  <h6 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">匹配选项</h6>
+                  <div class="flex flex-wrap gap-2">
+                    <span v-if="rule.fullMatch" class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded text-xs font-semibold">
+                      <span class="material-icons text-xs mr-1">check_circle</span>
+                      精确匹配
+                    </span>
+                    <span v-if="rule.ignore" class="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded text-xs font-semibold">
+                      <span class="material-icons text-xs mr-1">block</span>
+                      忽略交易
+                    </span>
+                    <span v-if="rule.sep" class="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded text-xs font-semibold">
+                      <span class="material-icons text-xs mr-1">list</span>
+                      分隔符: {{ rule.sep }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 标签 -->
+                <div v-if="rule.tags && rule.tags.length > 0">
+                  <h6 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">标签</h6>
+                  <div class="flex flex-wrap gap-1">
+                    <span
+                      v-for="tag in rule.tags"
+                      :key="tag"
+                      class="inline-block bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded text-xs font-semibold"
+                    >
+                      {{ tag }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -268,10 +377,7 @@
 
         <!-- 保存按钮 -->
         <div class="flex justify-end pt-8 border-t border-gray-200 dark:border-gray-700">
-          <div class="text-sm text-gray-600 dark:text-gray-300">
-            <span class="material-icons mr-2 text-green-500">check_circle</span>
-            规则已自动保存
-          </div>
+          <!-- 删除原来的自动保存提示 -->
         </div>
       </div>
 
@@ -380,13 +486,16 @@ const showHistoryModal = ref(false);
 const searchQuery = ref('');
 const filterType = ref('');
 const sortBy = ref('');
+const showConfigEditor = ref(false);
+const sortOrder = ref<'asc' | 'desc'>('asc');
+const showAutoSaveMessage = ref(false);
 
 // 计算属性
 const supportedProviders = computed(() => providers);
 
 const sortedRules = computed(() => {
   if (!currentConfig.value) return [];
-  return [...currentConfig.value.rules].sort((a, b) => a.priority - b.priority);
+  return [...currentConfig.value.rules];
 });
 
 const providerHistory = computed(() => {
@@ -404,12 +513,16 @@ const filteredAndSortedRules = computed(() => {
   });
 
   // 排序
-  if (sortBy.value === 'priority') {
-    rules = rules.sort((a, b) => a.priority - b.priority);
-  } else if (sortBy.value === 'name') {
-    rules = rules.sort((a, b) => a.name.localeCompare(b.name));
+  if (sortBy.value === 'name') {
+    rules = rules.sort((a, b) => {
+      const result = a.name.localeCompare(b.name);
+      return sortOrder.value === 'asc' ? result : -result;
+    });
   } else if (sortBy.value === 'created') {
-    rules = rules.sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+    rules = rules.sort((a, b) => {
+      const result = (a.id || '').localeCompare(b.id || '');
+      return sortOrder.value === 'asc' ? result : -result;
+    });
   }
 
   return rules;
@@ -481,7 +594,6 @@ const saveRule = (rule: Rule) => {
     currentConfig.value.rules[existingIndex] = rule;
   } else {
     // 添加新规则
-    rule.priority = currentConfig.value.rules.length + 1;
     currentConfig.value.rules.push(rule);
   }
   
@@ -499,6 +611,8 @@ const deleteRule = (ruleId: string | undefined) => {
   
   if (confirm('确定要删除这个规则吗？')) {
     currentConfig.value.rules = currentConfig.value.rules.filter(r => r.id !== ruleId);
+    // 自动保存配置
+    ruleConfigService.saveConfig(currentConfig.value);
   }
 };
 
@@ -562,10 +676,30 @@ const debugRules = () => {
 
 const deleteHistory = (historyId: string) => {
   if (confirm('确定要删除这个历史记录吗？')) {
-    ruleConfigService.deleteHistory(historyId);
-    showHistoryModal.value = false;
-    alert('历史记录删除成功！');
+    const success = ruleConfigService.deleteHistory(historyId);
+    if (success) {
+      // 重新加载历史记录
+      showHistoryModal.value = false;
+      alert('历史记录删除成功！');
+    } else {
+      alert('删除失败，请重试');
+    }
   }
+};
+
+const autoSaveConfig = () => {
+  if (currentConfig.value) {
+    ruleConfigService.saveConfig(currentConfig.value);
+    // 不弹出提示，避免频繁打扰用户
+    showAutoSaveMessage.value = true;
+    setTimeout(() => {
+      showAutoSaveMessage.value = false;
+    }, 3000);
+  }
+};
+
+const toggleSortOrder = () => {
+  sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
 };
 
 // 监听Provider变化

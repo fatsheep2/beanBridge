@@ -108,12 +108,12 @@ export class BeancountConverter {
     let targetAccount = '';
 
     if (order.type === 'Send') {
-      mainAccount = order.extraAccounts[Account.MinusAccount] || config?.defaultMinusAccount || 'Assets:Unknown';
-      targetAccount = order.extraAccounts[Account.PlusAccount] || config?.defaultPlusAccount || 'Expenses:Unknown';
+      mainAccount = order.extraAccounts[Account.MinusAccount] || config?.defaultMinusAccount || 'Assets:FIXME';
+      targetAccount = order.extraAccounts[Account.PlusAccount] || config?.defaultPlusAccount || 'Expenses:FIXME';
       postings.push(`  ${mainAccount}  -${amount} ${currency}`);
       postings.push(`  ${targetAccount}  ${amount} ${currency}`);
     } else if (order.type === 'Recv') {
-      mainAccount = order.extraAccounts[Account.PlusAccount] || config?.defaultPlusAccount || 'Assets:Unknown';
+      mainAccount = order.extraAccounts[Account.PlusAccount] || config?.defaultPlusAccount || 'Assets:FIXME';
       targetAccount = order.extraAccounts[Account.MinusAccount] || 'Income:Other';
       postings.push(`  ${mainAccount}  ${amount} ${currency}`);
       postings.push(`  ${targetAccount}  -${amount} ${currency}`);

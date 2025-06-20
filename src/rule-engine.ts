@@ -233,7 +233,7 @@ export class RuleEngine {
 
     if (sep && ruleValueLower.includes(sep)) {
       // 使用分隔符分割规则值
-      const ruleValues = ruleValueLower.split(sep).map(v => v.trim());
+      const ruleValues = ruleValueLower.split(sep).map(v => v.trim()).filter(v => v.length > 0);
       return ruleValues.some(v =>
         fullMatch ? orderValueLower === v : orderValueLower.includes(v)
       );
