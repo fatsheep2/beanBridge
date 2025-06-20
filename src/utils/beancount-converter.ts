@@ -2,7 +2,7 @@ import type { IR, Order } from '../types/provider';
 import { Account } from '../types/provider';
 
 export class BeancountConverter {
-  convertToBeancount(ir: IR, config?: any): string {
+  convertToBeancount(ir: IR, config?: any, selectedMetadata?: string[]): string {
     const lines: string[] = [];
 
     // 添加文件头
@@ -16,7 +16,7 @@ export class BeancountConverter {
     // 生成交易记录
     for (const [date, orders] of Object.entries(groupedOrders)) {
       for (const order of orders) {
-        const transaction = this.convertOrderToBeancount(order, config);
+        const transaction = this.convertOrderToBeancount(order, config, selectedMetadata);
         if (transaction) {
           lines.push(transaction);
           lines.push('');
@@ -27,7 +27,7 @@ export class BeancountConverter {
     return lines.join('\n');
   }
 
-  private convertOrderToBeancount(order: Order, config?: any): string | null {
+  private convertOrderToBeancount(order: Order, config?: any, selectedMetadata?: string[]): string | null {
     const date = this.formatDate(order.payTime);
     const narration = order.note || order.item || order.peer;
 
@@ -35,7 +35,7 @@ export class BeancountConverter {
     const tags = order.tags.length > 0 ? ` ${order.tags.map(tag => `#${tag}`).join(' ')}` : '';
 
     // 构建元数据
-    const metadata = this.buildMetadata(order);
+    const metadata = this.buildMetadata(order, selectedMetadata);
 
     // 构建账户和金额
     const postings = this.buildPostings(order, config);
@@ -68,47 +68,22 @@ export class BeancountConverter {
     return `${hours}:${minutes}:${seconds}`;
   }
 
-  private buildMetadata(order: Order): string[] {
+  private buildMetadata(order: Order, selectedMetadata?: string[]): string[] {
     const metadata: string[] = [];
 
-    // 添加订单ID
-    if (order.orderID) {
-      metadata.push(`  order-id: "${order.orderID}"`);
-    }
-
-    // 添加商家订单ID
-    if (order.merchantOrderID) {
-      metadata.push(`  merchant-order-id: "${order.merchantOrderID}"`);
-    }
-
-    // 添加交易类型
-    if (order.typeOriginal) {
-      metadata.push(`  type: "${order.typeOriginal}"`);
-    }
-
-    // 添加支付方式
-    if (order.method) {
-      metadata.push(`  method: "${order.method}"`);
-    }
-
-    // 添加分类
-    if (order.category) {
-      metadata.push(`  category: "${order.category}"`);
-    }
-
-    // 添加交易对方
-    if (order.peer) {
-      metadata.push(`  peer: "${order.peer}"`);
-    }
-
-    // 添加商品说明
-    if (order.item) {
-      metadata.push(`  item: "${order.item}"`);
-    }
-
-    // 添加备注
-    if (order.note) {
-      metadata.push(`  note: "${order.note}"`);
+    // 只输出勾选的元数据
+    const meta = order.metadata || {};
+    if (selectedMetadata && selectedMetadata.length > 0) {
+      for (const key of selectedMetadata) {
+        if (meta[key]) {
+          metadata.push(`  ${key}: "${meta[key]}"`);
+        }
+      }
+    } else {
+      // 兼容老逻辑，全部输出
+      for (const [key, value] of Object.entries(meta)) {
+        if (value) metadata.push(`  ${key}: "${value}"`);
+      }
     }
 
     // 添加金额信息
@@ -118,17 +93,6 @@ export class BeancountConverter {
     // 添加时间信息
     const payTime = order.payTime.toISOString();
     metadata.push(`  pay-time: "${payTime}"`);
-
-    // 添加其他元数据，跳过所有已处理过的 key
-    const skipKeys = [
-      'type', 'category', 'peer', 'item', 'note', 'amount', 'currency', 'payTime',
-      'method', 'orderID', 'merchantOrderID', 'typeOriginal'
-    ];
-    for (const [key, value] of Object.entries(order.metadata)) {
-      if (value && !skipKeys.includes(key)) {
-        metadata.push(`  ${key}: "${value}"`);
-      }
-    }
 
     return metadata;
   }

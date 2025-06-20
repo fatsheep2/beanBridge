@@ -143,7 +143,7 @@ export function useDataSourceConfig() {
     return fileProcessor.validateFile(selectedFile.value, selectedProvider.value);
   };
 
-  const processFile = async () => {
+  const processFile = async (selectedMetadata?: string[]) => {
     if (!selectedProvider.value) {
       error.value = '请选择解析器';
       return;
@@ -176,10 +176,12 @@ export function useDataSourceConfig() {
         ? convertRuleConfigToProviderConfig(ruleConfig)
         : currentConfig.value || undefined;
 
+      // 传递 selectedMetadata
       const result = await fileProcessor.processFile(
         selectedFile.value,
         selectedProvider.value,
-        providerConfig
+        providerConfig,
+        selectedMetadata
       );
 
       if (result.success) {
@@ -271,7 +273,7 @@ export function useDataSourceConfig() {
     }
   };
 
-  const previewFile = async () => {
+  const previewFile = async (selectedMetadata?: string[]) => {
     if (!selectedProvider.value) {
       error.value = '请选择解析器';
       return;
@@ -294,7 +296,8 @@ export function useDataSourceConfig() {
     try {
       const result = await fileProcessor.previewFile(
         selectedFile.value,
-        selectedProvider.value
+        selectedProvider.value,
+        selectedMetadata
       );
 
       if (result.success) {

@@ -39,6 +39,7 @@ export const presetConfigs: PresetConfig[] = [
           name: '餐饮午餐',
           description: '11:00-14:00的餐饮消费归类为午餐',
           category: '餐饮美食',
+          type: '支出',
           time: '11:00-14:00',
           targetAccount: 'Expenses:Food:Lunch',
           priority: 4
@@ -47,6 +48,7 @@ export const presetConfigs: PresetConfig[] = [
           name: '餐饮晚餐',
           description: '16:00-22:00的餐饮消费归类为晚餐',
           category: '餐饮美食',
+          type: '支出',
           time: '16:00-22:00',
           targetAccount: 'Expenses:Food:Dinner',
           priority: 5
@@ -55,6 +57,7 @@ export const presetConfigs: PresetConfig[] = [
           name: '日用百货',
           description: '日用百货消费归类为杂货',
           category: '日用百货',
+          type: '支出',
           targetAccount: 'Expenses:Groceries',
           priority: 6
         },
@@ -62,6 +65,7 @@ export const presetConfigs: PresetConfig[] = [
           name: '苏宁购物',
           description: '苏宁购物归类为电子产品',
           peer: '苏宁',
+          type: '支出',
           targetAccount: 'Expenses:Electronics',
           priority: 7
         },
@@ -69,6 +73,7 @@ export const presetConfigs: PresetConfig[] = [
           name: '相互宝保险',
           description: '相互宝费用归类为保险',
           item: '相互宝',
+          type: '支出',
           targetAccount: 'Expenses:Insurance',
           priority: 8
         },
@@ -124,6 +129,7 @@ export const presetConfigs: PresetConfig[] = [
           type: '收入',
           method: '/',
           item: '/',
+          sep: ',',
           targetAccount: 'Income:Wechat:RedPacket',
           priority: 3
         },
@@ -133,6 +139,7 @@ export const presetConfigs: PresetConfig[] = [
           txType: '转入零钱通',
           peer: '/',
           item: '/',
+          sep: ',',
           targetAccount: 'Assets:Digital:Wechat:MiniFund',
           priority: 4
         },
@@ -184,6 +191,123 @@ export const presetConfigs: PresetConfig[] = [
           type: '收入',
           targetAccount: 'Income:Service',
           priority: 10
+        }
+      ]
+    }
+  },
+  {
+    provider: ProviderType.CCB,
+    name: '建设银行基础配置',
+    description: '建设银行交易记录的基础配置模板',
+    config: {
+      defaultMinusAccount: 'Assets:Bank:CN:CCB',
+      defaultPlusAccount: 'Expenses:FIXME',
+      defaultCurrency: 'CNY',
+      rules: [
+        {
+          name: '建设银行账户',
+          description: '建设银行账户作为资金账户',
+          method: '建设银行',
+          fullMatch: true,
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 1
+        },
+        {
+          name: '工资收入',
+          description: '工资收入归类为工资收入',
+          type: '收入',
+          item: '工资,薪金,薪金报酬',
+          sep: ',',
+          targetAccount: 'Income:Salary',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 2
+        },
+        {
+          name: '电子汇入收入',
+          description: '电子汇入收入归类为转账收入',
+          type: '收入',
+          item: '电子汇入,银联入账',
+          sep: ',',
+          targetAccount: 'Income:Transfer',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 3
+        },
+        {
+          name: '消费支出',
+          description: '消费支出归类为日常消费',
+          type: '支出',
+          item: '消费,无卡自助交易,有卡自助消费',
+          sep: ',',
+          targetAccount: 'Expenses:Daily',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 4
+        },
+        {
+          name: '餐饮消费',
+          description: '餐饮相关消费归类为餐饮',
+          type: '支出',
+          peer: '微超,便利店,餐厅,餐饮',
+          sep: ',',
+          targetAccount: 'Expenses:Food',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 5
+        },
+        {
+          name: '交通消费',
+          description: '交通相关消费归类为交通',
+          type: '支出',
+          peer: '高德打车,地铁,公交,交通',
+          sep: ',',
+          targetAccount: 'Expenses:Transport',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 6
+        },
+        {
+          name: '第三方支付',
+          description: '第三方支付消费归类为第三方支付',
+          type: '支出',
+          item: '微信支付,支付宝,抖音支付,财付通',
+          sep: ',',
+          targetAccount: 'Expenses:DigitalPayment',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 7
+        },
+        {
+          name: '转账支出',
+          description: '转账支出归类为转账',
+          type: '支出',
+          item: '转账,跨行转出',
+          sep: ',',
+          targetAccount: 'Expenses:Transfer',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 8
+        },
+        {
+          name: '手续费',
+          description: '手续费支出归类为手续费',
+          type: '支出',
+          item: '手续费',
+          targetAccount: 'Expenses:Fees',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 9
+        },
+        {
+          name: '利息收入',
+          description: '利息收入归类为利息收入',
+          type: '收入',
+          item: '利息存入',
+          targetAccount: 'Income:Interest',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 10
+        },
+        {
+          name: '退款收入',
+          description: '退款收入归类为退款',
+          type: '收入',
+          item: '消费退货',
+          targetAccount: 'Income:Refund',
+          methodAccount: 'Assets:Bank:CN:CCB',
+          priority: 11
         }
       ]
     }

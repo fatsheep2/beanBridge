@@ -21,37 +21,38 @@ export class FileProcessorV2 {
   }
 
   async processFile(
-    file: File, 
-    providerType: ProviderType, 
-    config?: ProviderConfig
+    file: File,
+    providerType: ProviderType,
+    config?: ProviderConfig,
+    selectedMetadata?: string[]
   ): Promise<ProcessingResult> {
     try {
       // 1. 创建解析器
       const provider = ProviderFactory.create(providerType);
-      
+
       // 2. 解析文件
       const ir = await provider.translate(file);
-      
+
       // 3. 应用规则（如果有配置）
       let processedIR = ir;
       if (config && config.rules.length > 0) {
         this.ruleEngine = new RuleEngine(config.rules);
         processedIR = this.ruleEngine.applyRulesToIR(ir);
       }
-      
+
       // 4. 转换为 Beancount 格式
-      const beancountData = this.beancountConverter.convertToBeancount(processedIR, config);
-      
+      const beancountData = this.beancountConverter.convertToBeancount(processedIR, config, selectedMetadata);
+
       // 5. 获取统计信息
       const statistics = provider.getStatistics();
-      
+
       return {
         success: true,
         data: beancountData,
         statistics,
         provider: provider.getProviderName()
       };
-      
+
     } catch (error) {
       console.error('文件处理失败:', error);
       return {
@@ -66,7 +67,7 @@ export class FileProcessorV2 {
       // 读取文件头来检测解析器类型
       const text = await this.readFileHeader(file);
       const lines = text.split('\n').slice(0, 5); // 只读取前5行
-      
+
       return ProviderFactory.detectProvider(file.name, lines);
     } catch (error) {
       console.error('解析器检测失败:', error);
@@ -105,9 +106,9 @@ export class FileProcessorV2 {
 
     const extension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!info.formats.includes(extension)) {
-      return { 
-        valid: false, 
-        error: `不支持的文件格式。支持的格式: ${info.formats.join(', ')}` 
+      return {
+        valid: false,
+        error: `不支持的文件格式。支持的格式: ${info.formats.join(', ')}`
       };
     }
 
@@ -119,7 +120,7 @@ export class FileProcessorV2 {
   }
 
   // 预览解析结果（不生成 Beancount）
-  async previewFile(file: File, providerType: ProviderType): Promise<{
+  async previewFile(file: File, providerType: ProviderType, selectedMetadata?: string[]): Promise<{
     success: boolean;
     data?: IR;
     error?: string;
@@ -130,7 +131,7 @@ export class FileProcessorV2 {
       const provider = ProviderFactory.create(providerType);
       const ir = await provider.translate(file);
       const statistics = provider.getStatistics();
-      
+
       return {
         success: true,
         data: ir,

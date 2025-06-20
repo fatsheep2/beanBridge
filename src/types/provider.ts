@@ -112,6 +112,7 @@ export enum ProviderType {
   HsbcHK = "hsbchk",
   MT = "mt",
   Hxsec = "hxsec",
+  CCB = "ccb",
 }
 
 // 文件处理结果

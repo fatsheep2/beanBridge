@@ -17,6 +17,17 @@
         @provider-selected="setProvider"
       />
 
+      <!-- 元数据选项 -->
+      <div class="mb-8">
+        <h2 class="text-xl font-bold mb-2">元数据选项</h2>
+        <div class="flex flex-wrap gap-4">
+          <label v-for="opt in metadataOptions" :key="opt.key" class="flex items-center space-x-2">
+            <input type="checkbox" v-model="selectedMetadata" :value="opt.key" />
+            <span>{{ opt.label }}</span>
+          </label>
+        </div>
+      </div>
+
       <!-- 操作按钮 -->
       <div class="mb-8" v-if="hasDataSource || selectedProvider">
         <h2 class="text-xl font-bold mb-6">操作</h2>
@@ -74,7 +85,7 @@ import { useDataSourceConfig } from '../composables/useDataSourceConfig';
 import FileUploadSection from '../components/FileUploadSection.vue';
 import ProviderSelector from '../components/ProviderSelector.vue';
 import ResultDisplay from '../components/ResultDisplay.vue';
-import { onMounted } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -95,6 +106,17 @@ const {
   setProvider,
   clearFileState
 } = useDataSourceConfig();
+
+// 元数据选项
+const metadataOptions = [
+  { key: 'summary', label: '摘要' },
+  { key: 'peerAccount', label: '对方账号' },
+  { key: 'peerName', label: '对方户名' },
+  { key: 'tradeLocation', label: '交易地点' },
+  { key: 'balance', label: '账户余额' },
+  { key: 'payTime', label: '交易时间' },
+];
+const selectedMetadata = ref(metadataOptions.map(opt => opt.key)); // 默认全部勾选
 
 // 跳转到规则配置页面
 const goToRuleConfig = () => {

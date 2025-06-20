@@ -118,13 +118,13 @@ export const providers: ProviderInfo[] = [
     icon: getIconPath('美团.png')
   },
   {
-    type: ProviderType.Hxsec,
-    name: '华鑫证券',
-    formats: ['CSV', 'Excel'],
-    description: '华鑫证券交易记录解析器',
-    category: 'securities',
-    color: '#DC2626',
-    icon: getIconPath('default.svg')
+    type: ProviderType.CCB,
+    name: '建设银行',
+    formats: ['XLS'],
+    description: '建设银行交易记录解析器',
+    category: 'bank',
+    color: '#1E40AF',
+    icon: getIconPath('建设银行.png')
   }
 ];
 
