@@ -545,9 +545,18 @@ const formatDate = (dateString: string) => {
 
 const debugRules = () => {
   if (selectedProvider.value) {
-    router.push({ path: '/bill-processing', query: { provider: selectedProvider.value } });
+    router.push({ 
+      path: '/bill-processing', 
+      query: { 
+        provider: selectedProvider.value,
+        from: 'rule-config'
+      } 
+    });
   } else {
-    router.push({ path: '/bill-processing' });
+    router.push({ 
+      path: '/bill-processing',
+      query: { from: 'rule-config' }
+    });
   }
 };
 

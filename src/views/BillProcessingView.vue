@@ -69,13 +69,15 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useDataSourceConfig } from '../composables/useDataSourceConfig';
 import FileUploadSection from '../components/FileUploadSection.vue';
 import ProviderSelector from '../components/ProviderSelector.vue';
 import ResultDisplay from '../components/ResultDisplay.vue';
+import { onMounted } from 'vue';
 
 const router = useRouter();
+const route = useRoute();
 
 const {
   selectedFile,
@@ -90,7 +92,8 @@ const {
   testRules,
   hasDataSource,
   handleFileSelect,
-  setProvider
+  setProvider,
+  clearFileState
 } = useDataSourceConfig();
 
 // 跳转到规则配置页面
@@ -104,4 +107,20 @@ const goToRuleConfig = () => {
     router.push('/rule-config');
   }
 };
+
+// 处理从规则配置页面跳转过来的情况
+const handleRuleConfigRedirect = () => {
+  const fromRuleConfig = route.query.from === 'rule-config';
+  if (fromRuleConfig) {
+    // 如果是从规则配置页面跳转过来的，清除缓存状态
+    clearFileState();
+    // 移除查询参数
+    router.replace({ path: '/bill-processing', query: {} });
+  }
+};
+
+// 组件挂载时检查是否需要清除缓存
+onMounted(() => {
+  handleRuleConfigRedirect();
+});
 </script> 

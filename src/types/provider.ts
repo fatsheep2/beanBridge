@@ -86,6 +86,16 @@ export interface ConfigRule {
   tags?: string[];
   payee?: string;
   category?: string;
+
+  // 新增字段用于精确匹配
+  peer?: string;
+  item?: string;
+  type?: string;
+  method?: string;
+  txType?: string;
+  sep?: string;
+  fullMatch?: boolean;
+  priority?: number;
 }
 
 // 支持的解析器类型

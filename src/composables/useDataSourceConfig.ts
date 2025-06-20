@@ -10,7 +10,9 @@ import { RuleEngine } from '../rule-engine';
 
 // 将RuleConfig转换为ProviderConfig的适配器
 function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConfig {
-  return {
+  console.log('Converting rule config:', ruleConfig);
+
+  const result = {
     provider: ruleConfig.provider,
     defaultCurrency: ruleConfig.defaultCurrency,
     accounts: [
@@ -21,7 +23,7 @@ function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConf
       ...(ruleConfig.defaultPositionAccount ? [ruleConfig.defaultPositionAccount] : []),
       ...(ruleConfig.defaultPnlAccount ? [ruleConfig.defaultPnlAccount] : [])
     ],
-    rules: ruleConfig.rules.map(rule => {
+    rules: ruleConfig.rules.map((rule, index) => {
       // 构建匹配模式 - 使用多个字段组合
       const patterns: string[] = [];
 
@@ -47,16 +49,37 @@ function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConf
       // 如果没有明确的匹配字段，使用规则名称作为备选
       const pattern = patterns.length > 0 ? patterns.join('|') : rule.name;
 
-      return {
+      const convertedRule = {
         pattern: pattern,
         account: rule.targetAccount || ruleConfig.defaultPlusAccount,
         methodAccount: rule.methodAccount || ruleConfig.defaultMinusAccount,
         tags: rule.tags || [],
         payee: rule.peer,
-        category: rule.category
+        category: rule.category,
+
+        // 添加精确匹配字段
+        peer: rule.peer,
+        item: rule.item,
+        type: rule.type,
+        method: rule.method,
+        txType: rule.txType,
+        sep: rule.sep,
+        fullMatch: rule.fullMatch,
+        priority: rule.priority
       };
+
+      console.log(`Rule ${index + 1} conversion:`, {
+        original: rule,
+        converted: convertedRule,
+        hasFieldMatching: !!(rule.peer || rule.item || rule.type || rule.method || rule.category || rule.txType)
+      });
+
+      return convertedRule;
     })
   };
+
+  console.log('Final converted config:', result);
+  return result;
 }
 
 export function useDataSourceConfig() {
@@ -199,10 +222,13 @@ export function useDataSourceConfig() {
 
       // 获取缓存的数据，确保格式正确
       let cachedData;
-      if (processingResult.value.statistics?.processedIR) {
+      if (processingResult.value.statistics?.processedIR?.orders) {
+        cachedData = processingResult.value.statistics.processedIR;
+      } else if (processingResult.value.statistics?.processedIR) {
+        // 如果 processedIR 存在但没有 orders，尝试使用原始数据
         cachedData = processingResult.value.statistics.processedIR;
       } else if (processingResult.value.data) {
-        // 如果缓存的是字符串数据，需要重新解析
+        // 如果缓存的是字符串数据，提示用户重新上传
         error.value = '缓存数据格式不支持重新处理，请重新上传文件';
         return;
       } else {
@@ -212,7 +238,7 @@ export function useDataSourceConfig() {
 
       // 确保数据是 IR 格式
       if (!cachedData || !cachedData.orders || !Array.isArray(cachedData.orders)) {
-        error.value = '缓存数据格式错误';
+        error.value = '缓存数据格式错误，请重新上传文件';
         return;
       }
 
@@ -406,7 +432,10 @@ export function useDataSourceConfig() {
 
       // 获取缓存的数据，确保格式正确
       let cachedData;
-      if (processingResult.value.statistics?.processedIR) {
+      if (processingResult.value.statistics?.processedIR?.orders) {
+        cachedData = processingResult.value.statistics.processedIR;
+      } else if (processingResult.value.statistics?.processedIR) {
+        // 如果 processedIR 存在但没有 orders，尝试使用原始数据
         cachedData = processingResult.value.statistics.processedIR;
       } else if (processingResult.value.data) {
         // 如果缓存的是字符串数据，无法进行规则测试
@@ -419,7 +448,7 @@ export function useDataSourceConfig() {
 
       // 确保数据是 IR 格式
       if (!cachedData || !cachedData.orders || !Array.isArray(cachedData.orders)) {
-        error.value = '缓存数据格式错误';
+        error.value = '缓存数据格式错误，请重新上传文件';
         return;
       }
 
@@ -464,10 +493,23 @@ export function useDataSourceConfig() {
       }
 
       if (cachedResult) {
-        processingResult.value = JSON.parse(cachedResult);
+        const parsedResult = JSON.parse(cachedResult);
+        // 验证缓存数据的完整性
+        if (parsedResult && typeof parsedResult === 'object') {
+          // 检查是否有必要的数据结构
+          if (parsedResult.statistics?.processedIR?.orders || parsedResult.data) {
+            processingResult.value = parsedResult;
+          } else {
+            // 如果缓存数据不完整，清除缓存
+            console.warn('缓存数据不完整，清除缓存');
+            clearFileState();
+          }
+        }
       }
     } catch (err) {
       console.warn('恢复缓存状态失败:', err);
+      // 如果解析失败，清除缓存
+      clearFileState();
     }
   };
 

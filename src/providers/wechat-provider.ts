@@ -1,6 +1,7 @@
 import { BaseProvider } from './base-provider';
 import type { Order, IR, FileData } from '../types/provider';
 import { OrderType, Type, ProviderType, Unit, Account } from '../types/provider';
+import { ruleConfigService } from '../services/rule-config-service';
 
 export class WechatProvider extends BaseProvider {
     getProviderName(): string {
@@ -192,6 +193,8 @@ export class WechatProvider extends BaseProvider {
             // 如果没有配置，使用默认值
             order.minusAccount = 'Assets:Unknown';
             order.plusAccount = 'Expenses:Unknown';
+            // 确保使用原始的 peer 值
+            order.peer = order.metadata.originalPeer || order.peer;
             return order;
         }
 
@@ -218,6 +221,9 @@ export class WechatProvider extends BaseProvider {
                 }
             }
         }
+
+        // 确保在应用规则后，peer 字段始终使用原始的 originalPeer 值
+        order.peer = order.metadata.originalPeer || order.peer;
 
         return order;
     }
@@ -271,8 +277,7 @@ export class WechatProvider extends BaseProvider {
     }
 
     private getCurrentConfig(): any {
-        // 这里应该从配置服务获取当前配置
-        // 暂时返回 null，实际应该从 useConfigStorage 获取
-        return null;
+        // 从配置服务获取当前配置
+        return ruleConfigService.getConfig(this.getProviderType());
     }
 } 

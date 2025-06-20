@@ -25,20 +25,35 @@ export class RuleEngine {
     return [...this.rules];
   }
 
-  applyRules(order: Order): Order {
-    const matchedRule = this.findMatchingRule(order);
+  // 找到最优规则：字段多的优先，priority高的优先
+  private findBestRule(order: Order): ConfigRule | null {
+    const fieldList = ['peer', 'item', 'type', 'method', 'category', 'txType'] as const;
+    const sortedRules = [...this.rules].sort((a, b) => {
+      const aFields = fieldList.filter(f => !!(a as any)[f]).length;
+      const bFields = fieldList.filter(f => !!(b as any)[f]).length;
+      if (bFields !== aFields) return bFields - aFields;
+      // priority越大越优先
+      return (b.priority ?? 0) - (a.priority ?? 0);
+    });
+    for (const rule of sortedRules) {
+      if (this.matchesRule(order, rule)) {
+        return rule;
+      }
+    }
+    return null;
+  }
 
+  applyRules(order: Order): Order {
+    const matchedRule = this.findBestRule(order);
     if (matchedRule) {
-      const updatedOrder = {
+      let updatedOrder = {
         ...order,
         tags: [...order.tags, ...(matchedRule.tags || [])],
         peer: matchedRule.payee || order.peer,
         category: matchedRule.category || order.category
       };
-
       // 设置账户映射
       if (order.type === 'Send') {
-        // 支出：资金从 methodAccount 流向 account
         if (matchedRule.methodAccount) {
           updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.methodAccount;
         }
@@ -46,7 +61,6 @@ export class RuleEngine {
           updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.account;
         }
       } else if (order.type === 'Recv') {
-        // 收入：资金从 account 流向 methodAccount
         if (matchedRule.account) {
           updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.account;
         }
@@ -54,29 +68,36 @@ export class RuleEngine {
           updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.methodAccount;
         }
       }
-
       return updatedOrder;
     }
-
     return order;
   }
 
-  private findMatchingRule(order: Order): ConfigRule | null {
-    // 构建用于匹配的文本
-    const matchText = `${order.note || ''} ${order.peer || ''} ${order.item || ''} ${order.type || ''} ${order.method || ''} ${order.category || ''}`.toLowerCase();
+  private findAllMatchingRules(order: Order): ConfigRule[] {
+    const matchedRules: ConfigRule[] = [];
 
     for (const rule of this.rules) {
       if (this.matchesRule(order, rule)) {
-        return rule;
+        matchedRules.push(rule);
       }
     }
 
-    return null;
+    return matchedRules;
+  }
+
+  private findMatchingRule(order: Order): ConfigRule | null {
+    const matchedRules = this.findAllMatchingRules(order);
+    return matchedRules.length > 0 ? matchedRules[0] : null;
   }
 
   private matchesRule(order: Order, rule: ConfigRule): boolean {
-    // 构建用于匹配的文本
-    const matchText = `${order.note || ''} ${order.peer || ''} ${order.item || ''} ${order.type || ''} ${order.method || ''} ${order.category || ''}`.toLowerCase();
+    // 首先尝试精确字段匹配
+    if (this.hasFieldMatching(rule)) {
+      return this.matchesRuleFields(order, rule);
+    }
+
+    // 如果没有字段匹配，才使用模式匹配
+    const matchText = `${order.note || ''} ${order.peer || ''} ${order.item || ''} ${order.typeOriginal || ''} ${order.method || ''} ${order.category || ''}`.toLowerCase();
 
     // 如果规则有多个模式（用|分隔），分别检查每个模式
     const patterns = rule.pattern.split('|').map(p => p.trim()).filter(p => p.length > 0);
@@ -88,6 +109,78 @@ export class RuleEngine {
     }
 
     return false;
+  }
+
+  private hasFieldMatching(rule: ConfigRule): boolean {
+    const hasFields = !!(rule.peer || rule.item || rule.type || rule.method || rule.category || rule.txType);
+    console.log('Rule field matching check:', {
+      pattern: rule.pattern,
+      peer: rule.peer,
+      item: rule.item,
+      type: rule.type,
+      method: rule.method,
+      category: rule.category,
+      txType: rule.txType,
+      hasFields: hasFields
+    });
+    return hasFields;
+  }
+
+  // 新增：更精确的字段匹配方法
+  private matchesRuleFields(order: Order, rule: ConfigRule): boolean {
+    // 检查各个字段的匹配 - 所有非空字段都必须匹配
+    if (rule.peer && !this.matchesFieldValue(this.getOrderValue(order, 'peer'), rule.peer, rule.sep, rule.fullMatch)) {
+      return false;
+    }
+    if (rule.item && !this.matchesFieldValue(this.getOrderValue(order, 'item'), rule.item, rule.sep, rule.fullMatch)) {
+      return false;
+    }
+    if (rule.type && !this.matchesFieldValue(this.getOrderValue(order, 'type'), rule.type, rule.sep, rule.fullMatch)) {
+      return false;
+    }
+    if (rule.method && !this.matchesFieldValue(this.getOrderValue(order, 'method'), rule.method, rule.sep, rule.fullMatch)) {
+      return false;
+    }
+    if (rule.category && !this.matchesFieldValue(this.getOrderValue(order, 'category'), rule.category, rule.sep, rule.fullMatch)) {
+      return false;
+    }
+    if (rule.txType && !this.matchesFieldValue(this.getOrderValue(order, 'txType'), rule.txType, rule.sep, rule.fullMatch)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private getOrderValue(order: Order, field: string): string {
+    switch (field) {
+      case 'peer': return order.peer || '';
+      case 'item': return order.item || '';
+      case 'type': return order.typeOriginal || '';
+      case 'method': return order.method || '';
+      case 'category': return order.category || '';
+      case 'txType': return order.txTypeOriginal || '';
+      default: return '';
+    }
+  }
+
+  private matchesFieldValue(orderValue: string, ruleValue: string, sep?: string, fullMatch?: boolean): boolean {
+    if (!ruleValue) return true;
+
+    const orderValueLower = orderValue.toLowerCase();
+    const ruleValueLower = ruleValue.toLowerCase();
+
+    if (sep && ruleValueLower.includes(sep)) {
+      // 使用分隔符分割规则值
+      const ruleValues = ruleValueLower.split(sep).map(v => v.trim());
+      return ruleValues.some(v =>
+        fullMatch ? orderValueLower === v : orderValueLower.includes(v)
+      );
+    } else {
+      // 单个值匹配
+      return fullMatch ?
+        orderValueLower === ruleValueLower :
+        orderValueLower.includes(ruleValueLower);
+    }
   }
 
   private matchesPattern(text: string, pattern: string): boolean {

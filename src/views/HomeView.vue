@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
+  <div class="w-full min-h-screen bg-gray-100  flex flex-col">
     <div class="w-full flex-1 flex flex-col px-2 sm:px-4 md:px-8 py-4 sm:py-8 gap-y-8">
       <!-- 页面标题 -->
       <div class="mb-6 flex flex-col items-center gap-4 sm:gap-6 w-full">
