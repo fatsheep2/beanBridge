@@ -61,6 +61,13 @@ export class BeancountConverter {
     return `${year}-${month}-${day}`;
   }
 
+  private formatTime(date: Date): string {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
   private buildMetadata(order: Order): string[] {
     const metadata: string[] = [];
 
@@ -89,9 +96,36 @@ export class BeancountConverter {
       metadata.push(`  category: "${order.category}"`);
     }
 
-    // 添加其他元数据
+    // 添加交易对方
+    if (order.peer) {
+      metadata.push(`  peer: "${order.peer}"`);
+    }
+
+    // 添加商品说明
+    if (order.item) {
+      metadata.push(`  item: "${order.item}"`);
+    }
+
+    // 添加备注
+    if (order.note) {
+      metadata.push(`  note: "${order.note}"`);
+    }
+
+    // 添加金额信息
+    metadata.push(`  amount: "${order.money}"`);
+    metadata.push(`  currency: "${order.currency || 'CNY'}"`);
+
+    // 添加时间信息
+    const payTime = order.payTime.toISOString();
+    metadata.push(`  pay-time: "${payTime}"`);
+
+    // 添加其他元数据，跳过所有已处理过的 key
+    const skipKeys = [
+      'type', 'category', 'peer', 'item', 'note', 'amount', 'currency', 'payTime',
+      'method', 'orderID', 'merchantOrderID', 'typeOriginal'
+    ];
     for (const [key, value] of Object.entries(order.metadata)) {
-      if (value && key !== 'status' && key !== 'dealNo' && key !== 'merchantId' && key !== 'method') {
+      if (value && !skipKeys.includes(key)) {
         metadata.push(`  ${key}: "${value}"`);
       }
     }
