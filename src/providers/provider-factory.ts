@@ -86,56 +86,47 @@ export class ProviderFactory {
 
     // 根据文件头检测
     if (headers && headers.length > 0) {
+      // 新增：如果第一行包含China Construction Bank，直接识别为建设银行
+      if (headers[0] && headers[0].toLowerCase().includes('china construction bank')) {
+        return ProviderType.CCB;
+      }
       const headerText = headers.join(' ').toLowerCase();
-
       if (headerText.includes('支付宝') || headerText.includes('alipay')) {
         return ProviderType.Alipay;
       }
-
       if (headerText.includes('微信') || headerText.includes('wechat')) {
         return ProviderType.Wechat;
       }
-
       if (headerText.includes('火币') || headerText.includes('huobi')) {
         return ProviderType.Huobi;
       }
-
       if (headerText.includes('华泰') || headerText.includes('htsec')) {
         return ProviderType.Htsec;
       }
-
       if (headerText.includes('工商') || headerText.includes('icbc')) {
         return ProviderType.Icbc;
       }
-
       if (headerText.includes('建设') || headerText.includes('ccb')) {
         return ProviderType.CCB;
       }
-
       if (headerText.includes('信用卡') || headerText.includes('银行卡')) {
         return ProviderType.Td;
       }
-
       if (headerText.includes('蒙特利尔') || headerText.includes('bmo')) {
         return ProviderType.Bmo;
       }
-
       if (headerText.includes('京东') || headerText.includes('jd')) {
         return ProviderType.Jd;
       }
-
       if (headerText.includes('中信') || headerText.includes('citic')) {
         return ProviderType.Citic;
       }
-
       if (headerText.includes('汇丰') || headerText.includes('hsbc')) {
         return ProviderType.HsbcHK;
       }
-
       if (headerText.includes('海通') || headerText.includes('htsec')) {
         return ProviderType.Htsec;
       }
-
       if (headerText.includes('蒙特利尔') || headerText.includes('bmo')) {
         return ProviderType.Bmo;
       }

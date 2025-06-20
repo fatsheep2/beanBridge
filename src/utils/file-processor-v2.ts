@@ -64,11 +64,29 @@ export class FileProcessorV2 {
 
   async detectProvider(file: File): Promise<ProviderType | null> {
     try {
-      // 读取文件头来检测解析器类型
-      const text = await this.readFileHeader(file);
-      const lines = text.split('\n').slice(0, 5); // 只读取前5行
-
-      return ProviderFactory.detectProvider(file.name, lines);
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (ext === 'xls' || ext === 'xlsx') {
+        // Excel: 读取前10行所有单元格内容作为header检测
+        const XLSX = await import('xlsx');
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+        // 拉平前10行所有单元格内容
+        const headers: string[] = [];
+        for (let i = 0; i < Math.min(10, json.length); i++) {
+          for (const cell of json[i] as string[]) {
+            if (cell && typeof cell === 'string') headers.push(cell);
+          }
+        }
+        return ProviderFactory.detectProvider(file.name, headers);
+      } else {
+        // 读取文件头来检测解析器类型
+        const text = await this.readFileHeader(file);
+        const lines = text.split('\n').slice(0, 5);
+        return ProviderFactory.detectProvider(file.name, lines);
+      }
     } catch (error) {
       console.error('解析器检测失败:', error);
       return null;

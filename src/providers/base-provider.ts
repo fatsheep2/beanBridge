@@ -1,5 +1,6 @@
 import type { IR, Order, ProviderInterface, ProviderType, Statistics, FileData } from '../types/provider';
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
 export abstract class BaseProvider implements ProviderInterface {
   protected statistics: Statistics = {
@@ -21,12 +22,12 @@ export abstract class BaseProvider implements ProviderInterface {
 
   async translate(file: File): Promise<IR> {
     this.reset();
-    
+
     try {
       const fileData = await this.readFileFromBlob(file);
       const orders = await this.parseOrders(fileData);
       this.orders = orders;
-      
+
       const ir = this.convertToIR();
       return this.postProcess(ir);
     } catch (error) {
@@ -58,26 +59,87 @@ export abstract class BaseProvider implements ProviderInterface {
     });
   }
 
-  protected async readFileFromBlob(file: File): Promise<FileData> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const text = e.target?.result as string;
-          const processedData = this.preprocessFileContent(text, file.name);
-          resolve(processedData);
-        } catch (error) {
-          reject(error);
+  /**
+   * 获取表头所在行的索引，默认自动查找。子类可重写。
+   * @param lines Excel: string[][], CSV: string[]
+   */
+  protected getHeaderRowIndex(lines: string[][] | string[]): number {
+    // Excel: lines为二维数组，CSV: lines为一维字符串数组
+    if (Array.isArray(lines) && Array.isArray(lines[0])) {
+      // Excel: 默认自动查找第一个包含多个字段的行
+      for (let i = 0; i < lines.length; i++) {
+        const row = lines[i] as string[];
+        // 至少有3个非空字段
+        if (row.filter(cell => cell && cell.trim()).length >= 3) {
+          return i;
         }
-      };
-      reader.onerror = () => reject(new Error('文件读取失败'));
-      reader.readAsText(file);
-    });
+      }
+      return 0;
+    } else {
+      // CSV: 走原有自动查找逻辑
+      return this.findHeaderRow(lines as string[]);
+    }
+  }
+
+  protected async readFileFromBlob(file: File): Promise<FileData> {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'csv' || ext === 'txt') {
+      // 纯文本文件，走原有逻辑
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const text = e.target?.result as string;
+            const processedData = this.preprocessFileContent(text, file.name);
+            resolve(processedData);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = () => reject(new Error('文件读取失败'));
+        reader.readAsText(file);
+      });
+    } else if (ext === 'xls' || ext === 'xlsx') {
+      // Excel 文件，使用 xlsx 解析
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            // 默认取第一个sheet
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+            if (!json || json.length === 0) {
+              reject(new Error('Excel文件内容为空'));
+              return;
+            }
+            // 自动查找表头行
+            const headerIndex = this.getHeaderRowIndex(json as string[][]);
+            const headers = (json[headerIndex] as string[]).map(h => h?.trim?.() || '');
+            const rows = (json.slice(headerIndex + 1) as string[][]).map(row => row.map(cell => (cell ?? '').toString().trim()));
+            resolve({
+              headers,
+              rows,
+              provider: this.getProviderType(),
+              filename: file.name
+            });
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = () => reject(new Error('文件读取失败'));
+        reader.readAsArrayBuffer(file);
+      });
+    } else {
+      throw new Error('不支持的文件格式');
+    }
   }
 
   protected preprocessFileContent(text: string, filename: string): FileData {
     const lines = text.split('\n');
-    
+
     // 查找表头行
     const headerIndex = this.findHeaderRow(lines);
     if (headerIndex === -1) {
@@ -163,12 +225,12 @@ export abstract class BaseProvider implements ProviderInterface {
       header: false,
       skipEmptyLines: false
     });
-    
+
     if (result.errors.length > 0) {
       console.warn(`数据行解析失败: ${result.errors[0].message}, 行内容: ${line}`);
       return [];
     }
-    
+
     const row = (result.data[0] as string[]) || [];
     return row.map(cell => cell.trim());
   }
@@ -214,28 +276,28 @@ export abstract class BaseProvider implements ProviderInterface {
 
   protected parseAmount(amountStr: string): number {
     if (!amountStr) return 0;
-    
+
     // 移除货币符号和空格
     const cleanAmount = amountStr.replace(/[^\d.-]/g, '');
     const amount = parseFloat(cleanAmount);
-    
+
     if (isNaN(amount)) {
       throw new Error(`无法解析金额: ${amountStr}`);
     }
-    
+
     return amount;
   }
 
   protected updateStatistics(order: Order): void {
     this.statistics.parsedItems++;
-    
+
     if (order.payTime < this.statistics.start) {
       this.statistics.start = order.payTime;
     }
     if (order.payTime > this.statistics.end) {
       this.statistics.end = order.payTime;
     }
-    
+
     if (order.type === 'Recv') {
       this.statistics.totalInRecords++;
       this.statistics.totalInMoney += order.money;

@@ -91,6 +91,7 @@ export function useDataSourceConfig() {
   const isProcessing = ref(false);
   const processingResult = ref<any>(null);
   const error = ref<string | null>(null);
+  const ruleTestResult = ref<any>(null);
 
   const supportedProviders = computed(() => {
     return providers;
@@ -149,9 +150,12 @@ export function useDataSourceConfig() {
       return;
     }
 
+    // 每次都刷新最新规则配置
+    await loadConfig(selectedProvider.value);
+
     // 如果没有文件但有缓存结果，直接重新处理缓存数据
     if (!selectedFile.value && processingResult.value) {
-      await reprocessCachedData();
+      await reprocessCachedData(selectedMetadata);
       return;
     }
 
@@ -199,7 +203,7 @@ export function useDataSourceConfig() {
   };
 
   // 重新处理缓存数据
-  const reprocessCachedData = async () => {
+  const reprocessCachedData = async (selectedMetadata?: string[]) => {
     if (!processingResult.value || !selectedProvider.value) {
       error.value = '没有可用的缓存数据';
       return;
@@ -250,7 +254,7 @@ export function useDataSourceConfig() {
       // 使用 BeancountConverter 生成格式，与直接上传保持一致
       const { BeancountConverter } = await import('../utils/beancount-converter');
       const beancountConverter = new BeancountConverter();
-      const beancountData = beancountConverter.convertToBeancount(processedIR, providerConfig);
+      const beancountData = beancountConverter.convertToBeancount(processedIR, providerConfig, selectedMetadata);
 
       const result = {
         success: true,
@@ -278,6 +282,9 @@ export function useDataSourceConfig() {
       error.value = '请选择解析器';
       return;
     }
+
+    // 每次都刷新最新规则配置
+    await loadConfig(selectedProvider.value);
 
     // 如果没有文件但有缓存结果，直接显示缓存数据
     if (!selectedFile.value && processingResult.value) {
@@ -387,8 +394,8 @@ export function useDataSourceConfig() {
       console.log('规则统计:', stats);
       console.log('处理后的数据:', processedIR);
 
-      // 显示结果
-      processingResult.value = {
+      // 显示结果（只存到ruleTestResult，不覆盖processingResult）
+      ruleTestResult.value = {
         success: true,
         data: `规则测试完成\n\n规则数量: ${providerConfig.rules.length}\n匹配统计:\n${stats.map(s => `- ${s.rule.pattern}: ${s.count} 条`).join('\n')}`,
         statistics: {
@@ -398,8 +405,6 @@ export function useDataSourceConfig() {
         },
         provider: selectedProvider.value
       };
-
-      saveFileState(); // 保存状态
 
     } catch (err) {
       console.error('规则测试失败:', err);
@@ -461,8 +466,8 @@ export function useDataSourceConfig() {
       console.log('转换后的配置:', providerConfig);
       console.log('规则统计:', stats);
 
-      // 显示结果
-      processingResult.value = {
+      // 显示结果（只存到ruleTestResult，不覆盖processingResult）
+      ruleTestResult.value = {
         success: true,
         data: `规则测试完成（使用缓存数据）\n\n规则数量: ${providerConfig.rules.length}\n匹配统计:\n${stats.map(s => `- ${s.rule.pattern}: ${s.count} 条`).join('\n')}`,
         statistics: {
@@ -472,8 +477,6 @@ export function useDataSourceConfig() {
         },
         provider: selectedProvider.value
       };
-
-      saveFileState(); // 保存状态
 
     } catch (err) {
       console.error('规则测试失败:', err);
@@ -497,21 +500,21 @@ export function useDataSourceConfig() {
 
       if (cachedResult) {
         const parsedResult = JSON.parse(cachedResult);
-        // 验证缓存数据的完整性
-        if (parsedResult && typeof parsedResult === 'object') {
-          // 检查是否有必要的数据结构
-          if (parsedResult.statistics?.processedIR?.orders || parsedResult.data) {
-            processingResult.value = parsedResult;
-          } else {
-            // 如果缓存数据不完整，清除缓存
-            console.warn('缓存数据不完整，清除缓存');
-            clearFileState();
-          }
+        // 只恢复账单IR结构的缓存，规则调试结果不恢复
+        if (
+          parsedResult &&
+          typeof parsedResult === 'object' &&
+          parsedResult.statistics &&
+          parsedResult.statistics.processedIR &&
+          Array.isArray(parsedResult.statistics.processedIR.orders)
+        ) {
+          processingResult.value = parsedResult;
+        } else {
+          clearFileState();
         }
       }
     } catch (err) {
       console.warn('恢复缓存状态失败:', err);
-      // 如果解析失败，清除缓存
       clearFileState();
     }
   };

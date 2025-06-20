@@ -6,8 +6,9 @@
         type="file"
         ref="fileInput"
         @change="handleFileChange"
-        accept=".csv"
+        accept=".csv,.xls,.xlsx"
         class="hidden"
+        multiple
       />
       <button
         @click="() => fileInput?.click()"
@@ -16,7 +17,7 @@
         选择文件
       </button>
       <p class="mt-2 text-gray-600">
-        支持的文件格式: CSV
+        支持的文件格式: csv xls
       </p>
     </div>
     

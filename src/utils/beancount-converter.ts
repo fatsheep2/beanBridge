@@ -90,9 +90,10 @@ export class BeancountConverter {
     metadata.push(`  amount: "${order.money}"`);
     metadata.push(`  currency: "${order.currency || 'CNY'}"`);
 
-    // 添加时间信息
-    const payTime = order.payTime.toISOString();
-    metadata.push(`  pay-time: "${payTime}"`);
+    // pay-time 只在用户勾选时输出，不再强制输出
+    // if (selectedMetadata && selectedMetadata.includes('payTime') && order.payTime) {
+    //   metadata.push(`  pay-time: "${order.payTime.toISOString()}"`);
+    // }
 
     return metadata;
   }

@@ -34,14 +34,14 @@
         <div class="flex justify-between items-center gap-6">
           <div class="flex gap-6">
             <button
-              @click="previewFile"
+              @click="previewFile(selectedMetadata)"
               :disabled="isProcessing"
               class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold shadow-md disabled:opacity-50 text-lg"
             >
               {{ isProcessing ? '处理中...' : '预览' }}
             </button>
             <button
-              @click="processFile"
+              @click="processFile(selectedMetadata)"
               :disabled="isProcessing"
               class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-semibold shadow-md disabled:opacity-50 text-lg"
             >
@@ -123,26 +123,25 @@ const goToRuleConfig = () => {
   if (selectedProvider.value) {
     router.push({
       path: '/rule-config',
-      query: { provider: selectedProvider.value }
+      query: { provider: selectedProvider.value, from: 'bill-processing' }
     });
   } else {
-    router.push('/rule-config');
+    router.push({ path: '/rule-config', query: { from: 'bill-processing' } });
   }
 };
 
-// 处理从规则配置页面跳转过来的情况
-const handleRuleConfigRedirect = () => {
-  const fromRuleConfig = route.query.from === 'rule-config';
-  if (fromRuleConfig) {
-    // 如果是从规则配置页面跳转过来的，清除缓存状态
-    clearFileState();
-    // 移除查询参数
-    router.replace({ path: '/bill-processing', query: {} });
-  }
-};
+// 跳转到调试规则页面（如有单独页面可加from参数）
+// ... existing code ...
 
 // 组件挂载时检查是否需要清除缓存
 onMounted(() => {
-  handleRuleConfigRedirect();
+  // 只有首次进入且没有from参数时才清理缓存
+  if (!route.query.from) {
+    clearFileState();
+  }
+  // 移除from参数，避免后续影响
+  if (route.query.from) {
+    router.replace({ path: '/bill-processing', query: {} });
+  }
 });
 </script> 

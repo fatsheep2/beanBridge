@@ -278,4 +278,19 @@ export class CCBProvider extends BaseProvider {
             orders: processedOrders
         };
     }
+
+    // 重写表头行号识别，适配建行Excel账单
+    protected getHeaderRowIndex(lines: string[][] | string[]): number {
+        if (Array.isArray(lines) && Array.isArray(lines[0])) {
+            // Excel: 检查前几行是否包含'China Construction Bank'，如有则第6行为表头
+            for (let i = 0; i < 5 && i < lines.length; i++) {
+                const row = lines[i] as string[];
+                if (row.some(cell => typeof cell === 'string' && cell.includes('China Construction Bank'))) {
+                    return 5; // 第6行（index=5）为表头
+                }
+            }
+        }
+        // 其它情况走默认逻辑
+        return super.getHeaderRowIndex(lines);
+    }
 } 
