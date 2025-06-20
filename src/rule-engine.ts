@@ -44,33 +44,95 @@ export class RuleEngine {
   }
 
   applyRules(order: Order): Order {
-    const matchedRule = this.findBestRule(order);
-    if (matchedRule) {
+    const matchedRules = this.findAllMatchingRulesSorted(order);
+
+    if (matchedRules.length > 0) {
+      console.log('Order matched rules:', {
+        order: `${order.peer} ${order.item} ${order.typeOriginal} ${order.method}`,
+        matchedRules: matchedRules.map(r => ({
+          pattern: r.pattern,
+          account: r.account,
+          methodAccount: r.methodAccount,
+          item: r.item,
+          type: r.type,
+          method: r.method
+        }))
+      });
+
       let updatedOrder = {
         ...order,
-        tags: [...order.tags, ...(matchedRule.tags || [])],
-        peer: matchedRule.payee || order.peer,
-        category: matchedRule.category || order.category
+        tags: [...order.tags],
+        peer: order.peer,
+        category: order.category
       };
-      // 设置账户映射
-      if (order.type === 'Send') {
-        if (matchedRule.methodAccount) {
-          updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.methodAccount;
+
+      // 按优先级和精确度排序的规则，依次应用
+      for (const matchedRule of matchedRules) {
+        console.log('Applying rule:', {
+          pattern: matchedRule.pattern,
+          account: matchedRule.account,
+          methodAccount: matchedRule.methodAccount
+        });
+
+        // 合并标签
+        if (matchedRule.tags) {
+          updatedOrder.tags.push(...matchedRule.tags);
         }
-        if (matchedRule.account) {
-          updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.account;
+
+        // 设置 payee 和 category（后面的规则会覆盖前面的）
+        if (matchedRule.payee) {
+          updatedOrder.peer = matchedRule.payee;
         }
-      } else if (order.type === 'Recv') {
-        if (matchedRule.account) {
-          updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.account;
+        if (matchedRule.category) {
+          updatedOrder.category = matchedRule.category;
         }
-        if (matchedRule.methodAccount) {
-          updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.methodAccount;
+
+        // 设置账户映射
+        if (order.type === 'Send') {
+          if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
+            updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.methodAccount;
+            console.log('Set MinusAccount:', matchedRule.methodAccount);
+          }
+          if (matchedRule.account && matchedRule.account !== 'Expenses:FIXME') {
+            updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.account;
+            console.log('Set PlusAccount:', matchedRule.account);
+          }
+        } else if (order.type === 'Recv') {
+          if (matchedRule.account && matchedRule.account !== 'Expenses:FIXME') {
+            updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.account;
+          }
+          if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
+            updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.methodAccount;
+          }
         }
       }
+
+      console.log('Final account mapping:', updatedOrder.extraAccounts);
       return updatedOrder;
     }
+
     return order;
+  }
+
+  // 找到所有匹配的规则，并按优先级和精确度排序
+  private findAllMatchingRulesSorted(order: Order): ConfigRule[] {
+    const matchedRules: ConfigRule[] = [];
+
+    for (const rule of this.rules) {
+      if (this.matchesRule(order, rule)) {
+        matchedRules.push(rule);
+      }
+    }
+
+    // 按字段数量多的优先，再按priority高的优先排序
+    const fieldList = ['peer', 'item', 'type', 'method', 'category', 'txType'] as const;
+    return matchedRules.sort((a, b) => {
+      const aFields = fieldList.filter(f => !!(a as any)[f]).length;
+      const bFields = fieldList.filter(f => !!(b as any)[f]).length;
+      if (bFields !== aFields) return bFields - aFields;
+      // priority越大越优先
+      return (b.priority ?? 0) - (a.priority ?? 0);
+    });
   }
 
   private findAllMatchingRules(order: Order): ConfigRule[] {

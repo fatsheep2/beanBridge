@@ -52,17 +52,17 @@ function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConf
       const convertedRule = {
         pattern: pattern,
         account: rule.targetAccount || ruleConfig.defaultPlusAccount,
-        methodAccount: rule.methodAccount || ruleConfig.defaultMinusAccount,
+        methodAccount: rule.methodAccount || undefined,
         tags: rule.tags || [],
         payee: rule.peer,
         category: rule.category,
 
-        // 添加精确匹配字段
-        peer: rule.peer,
-        item: rule.item,
-        type: rule.type,
-        method: rule.method,
-        txType: rule.txType,
+        // 添加精确匹配字段 - 只有明确设置时才传递
+        peer: rule.peer || undefined,
+        item: rule.item || undefined,
+        type: rule.type || undefined,
+        method: rule.method || undefined,
+        txType: rule.txType || undefined,
         sep: rule.sep,
         fullMatch: rule.fullMatch,
         priority: rule.priority
@@ -245,14 +245,14 @@ export function useDataSourceConfig() {
       // 应用规则到缓存的数据
       const processedIR = ruleEngine.applyRulesToIR(cachedData);
 
-      // 生成新的 Beancount 格式
+      // 使用 BeancountConverter 生成格式，与直接上传保持一致
+      const { BeancountConverter } = await import('../utils/beancount-converter');
+      const beancountConverter = new BeancountConverter();
+      const beancountData = beancountConverter.convertToBeancount(processedIR, providerConfig);
+
       const result = {
         success: true,
-        data: `重新处理完成\n\n规则数量: ${providerConfig.rules.length}\n处理结果:\n${processedIR.orders.map(order => {
-          const targetAccount = order.extraAccounts?.[Account.PlusAccount] || ruleConfig.defaultPlusAccount;
-          const methodAccount = order.extraAccounts?.[Account.MinusAccount] || ruleConfig.defaultMinusAccount;
-          return `${order.payTime} * "${order.peer}" "${order.note}"\n  ${targetAccount} ${order.money} CNY\n  ${methodAccount} -${order.money} CNY`;
-        }).join('\n\n')}`,
+        data: beancountData,
         statistics: {
           rules: providerConfig.rules,
           processedIR: processedIR
