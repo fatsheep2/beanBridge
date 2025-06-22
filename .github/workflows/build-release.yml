@@ -82,12 +82,12 @@ jobs:
             ### 📋 使用说明
             1. 下载 `dist.zip` 文件
             2. 解压到本地目录
-            3. **请使用本地静态服务器访问 `index.html`，不要直接双击打开！**
+            3. **请在 dist 目录下用本地静态服务器访问 `index.html`，不要直接双击打开！**
                - 推荐命令：
-                 - `pnpm preview`（需全局安装 pnpm）
-                 - `npx serve dist`
+                 - `npx serve`（推荐，需安装 Node.js）
                  - `python -m http.server 8080`（需安装 Python）
                - 然后在浏览器访问 `http://localhost:端口号`
+               - `pnpm preview` 仅适用于开发者在完整项目根目录下预览
             
             ### 🚀 功能特性
             - 支持多种支付平台（支付宝、微信等）
