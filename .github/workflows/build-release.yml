@@ -44,13 +44,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: |
-          # 为本地离线版本构建（使用相对路径）
-          pnpm run build
-          # 为GitHub Pages构建（使用绝对路径）
-          VITE_DEPLOY=github BASE_PATH=/beanBridge/ pnpm run build:github
-        env:
-          VITE_DEPLOY: github
+        run: pnpm run build
 
       - name: Create dist.zip
         run: |
