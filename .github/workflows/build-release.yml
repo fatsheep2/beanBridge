@@ -45,6 +45,8 @@ jobs:
 
       - name: Build
         run: pnpm run build
+        env:
+          VITE_DEPLOY: github
 
       - name: Create dist.zip
         run: |
