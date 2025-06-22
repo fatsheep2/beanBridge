@@ -22,6 +22,33 @@
           <span class="text-gray-600 dark:text-gray-300">解析器:</span>
           <span class="font-medium">{{ processingResult.provider }}</span>
         </div>
+        <!-- 规则匹配统计 -->
+        <div v-if="processingResult.statistics.totalRules">
+          <span class="text-gray-600 dark:text-gray-300">规则总数:</span>
+          <span class="font-medium">{{ processingResult.statistics.totalRules }}</span>
+        </div>
+        <div v-if="processingResult.statistics.matchedRules">
+          <span class="text-gray-600 dark:text-gray-300">匹配规则:</span>
+          <span class="font-medium">{{ processingResult.statistics.matchedRules }}</span>
+        </div>
+        <div v-if="processingResult.statistics.totalMatched">
+          <span class="text-gray-600 dark:text-gray-300">匹配记录:</span>
+          <span class="font-medium">{{ processingResult.statistics.totalMatched }}</span>
+        </div>
+        <div v-if="processingResult.statistics.totalMatched && processingResult.statistics.parsedItems">
+          <span class="text-gray-600 dark:text-gray-300">匹配率:</span>
+          <span class="font-medium">{{ ((processingResult.statistics.totalMatched / processingResult.statistics.parsedItems) * 100).toFixed(1) }}%</span>
+        </div>
+      </div>
+      
+      <!-- 规则匹配提示 -->
+      <div v-if="processingResult.statistics.totalRules && processingResult.statistics.totalRules > 0" class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+        <div class="flex items-center text-sm text-blue-700 dark:text-blue-300">
+          <span class="material-icons mr-2 text-lg">info</span>
+          <span>
+            规则匹配统计已生成。点击上方的"测试规则"按钮可以查看详细的规则匹配信息，包括每个规则的匹配数量、示例记录等。
+          </span>
+        </div>
       </div>
     </div>
 

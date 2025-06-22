@@ -134,4 +134,9 @@ export interface Statistics {
   totalInMoney: number;
   totalOutRecords: number;
   totalOutMoney: number;
+  // 规则匹配统计
+  ruleStats?: Array<{ rule: ConfigRule; count: number; examples: string[] }>;
+  totalMatched?: number;
+  totalRules?: number;
+  matchedRules?: number;
 } 

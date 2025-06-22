@@ -35,9 +35,11 @@ export class FileProcessorV2 {
 
       // 3. 应用规则（如果有配置）
       let processedIR = ir;
+      let ruleStats = null;
       if (config && config.rules.length > 0) {
         this.ruleEngine = new RuleEngine(config.rules);
         processedIR = this.ruleEngine.applyRulesToIR(ir);
+        ruleStats = this.ruleEngine.getRuleStats(ir);
       }
 
       // 4. 转换为 Beancount 格式
@@ -45,6 +47,15 @@ export class FileProcessorV2 {
 
       // 5. 获取统计信息
       const statistics = provider.getStatistics();
+
+      // 6. 增加规则匹配统计
+      if (ruleStats && config) {
+        const totalMatched = ruleStats.reduce((sum, stat) => sum + stat.count, 0);
+        statistics.ruleStats = ruleStats;
+        statistics.totalMatched = totalMatched;
+        statistics.totalRules = config.rules.length;
+        statistics.matchedRules = ruleStats.filter(stat => stat.count > 0).length;
+      }
 
       return {
         success: true,

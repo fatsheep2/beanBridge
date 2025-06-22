@@ -150,6 +150,9 @@ export function useDataSourceConfig() {
       return;
     }
 
+    // 清除测试规则结果，确保只显示Beancount结果
+    ruleTestResult.value = null;
+
     // 每次都刷新最新规则配置
     await loadConfig(selectedProvider.value);
 
@@ -189,6 +192,10 @@ export function useDataSourceConfig() {
       );
 
       if (result.success) {
+        // 保存原始IR数据用于测试规则
+        if (result.statistics?.processedIR) {
+          result.statistics.originalIR = result.statistics.processedIR;
+        }
         processingResult.value = result;
         saveFileState(); // 保存状态
       } else {
@@ -228,14 +235,20 @@ export function useDataSourceConfig() {
 
       // 获取缓存的数据，确保格式正确
       let cachedData;
-      if (processingResult.value.statistics?.processedIR?.orders) {
+      if (processingResult.value.statistics?.originalIR?.orders) {
+        // 使用保存的原始IR数据
+        cachedData = processingResult.value.statistics.originalIR;
+      } else if (processingResult.value.statistics?.processedIR?.orders) {
         cachedData = processingResult.value.statistics.processedIR;
       } else if (processingResult.value.statistics?.processedIR) {
         // 如果 processedIR 存在但没有 orders，尝试使用原始数据
         cachedData = processingResult.value.statistics.processedIR;
-      } else if (processingResult.value.data) {
-        // 如果缓存的是字符串数据，提示用户重新上传
-        error.value = '缓存数据格式不支持重新处理，请重新上传文件';
+      } else if (processingResult.value.data && typeof processingResult.value.data === 'object' && processingResult.value.data.orders) {
+        // 如果data是IR对象
+        cachedData = processingResult.value.data;
+      } else if (processingResult.value.data && typeof processingResult.value.data === 'string') {
+        // 如果缓存的是字符串数据（Beancount格式），无法进行规则测试
+        error.value = '当前数据为Beancount格式，无法进行规则测试。请重新上传文件或先进行预览。';
         return;
       } else {
         error.value = '没有可用的缓存数据';
@@ -251,15 +264,35 @@ export function useDataSourceConfig() {
       // 应用规则到缓存的数据
       const processedIR = ruleEngine.applyRulesToIR(cachedData);
 
+      // 获取规则统计
+      const ruleStats = ruleEngine.getRuleStats(cachedData);
+
       // 使用 BeancountConverter 生成格式，与直接上传保持一致
       const { BeancountConverter } = await import('../utils/beancount-converter');
       const beancountConverter = new BeancountConverter();
       const beancountData = beancountConverter.convertToBeancount(processedIR, providerConfig, selectedMetadata);
 
+      // 构建统计信息
+      const statistics = {
+        parsedItems: cachedData.orders.length,
+        start: new Date(),
+        end: new Date(),
+        totalInRecords: cachedData.orders.filter((order: any) => order.type === 'Recv').length,
+        totalInMoney: cachedData.orders.filter((order: any) => order.type === 'Recv').reduce((sum: number, order: any) => sum + order.money, 0),
+        totalOutRecords: cachedData.orders.filter((order: any) => order.type === 'Send').length,
+        totalOutMoney: cachedData.orders.filter((order: any) => order.type === 'Send').reduce((sum: number, order: any) => sum + Math.abs(order.money), 0),
+        // 规则匹配统计
+        ruleStats: ruleStats,
+        totalMatched: ruleStats.reduce((sum: number, stat: any) => sum + stat.count, 0),
+        totalRules: providerConfig.rules.length,
+        matchedRules: ruleStats.filter((stat: any) => stat.count > 0).length
+      };
+
       const result = {
         success: true,
         data: beancountData,
         statistics: {
+          ...statistics,
           rules: providerConfig.rules,
           processedIR: processedIR
         },
@@ -394,14 +427,89 @@ export function useDataSourceConfig() {
       console.log('规则统计:', stats);
       console.log('处理后的数据:', processedIR);
 
+      // 生成详细的测试报告
+      let testReport = `规则测试完成\n\n`;
+      testReport += `规则数量: ${providerConfig.rules.length}\n`;
+      testReport += `数据记录数: ${previewResult.data.orders.length}\n\n`;
+
+      testReport += `=== 规则匹配统计 ===\n`;
+      let totalMatched = 0;
+      stats.forEach((stat, index) => {
+        totalMatched += stat.count;
+        testReport += `${index + 1}. ${stat.rule.pattern || '未命名规则'}\n`;
+        testReport += `   匹配数量: ${stat.count} 条\n`;
+
+        // 显示规则的具体匹配字段
+        const matchedFields = [];
+        if (stat.rule.peer) matchedFields.push(`peer: ${stat.rule.peer}`);
+        if (stat.rule.item) matchedFields.push(`item: ${stat.rule.item}`);
+        if (stat.rule.type) matchedFields.push(`type: ${stat.rule.type}`);
+        if (stat.rule.method) matchedFields.push(`method: ${stat.rule.method}`);
+        if (stat.rule.category) matchedFields.push(`category: ${stat.rule.category}`);
+        if (stat.rule.txType) matchedFields.push(`txType: ${stat.rule.txType}`);
+
+        if (matchedFields.length > 0) {
+          testReport += `   匹配字段: ${matchedFields.join(', ')}\n`;
+        }
+
+        if (stat.examples.length > 0) {
+          testReport += `   示例: ${stat.examples.join(', ')}\n`;
+        }
+        if (stat.rule.account) {
+          testReport += `   目标账户: ${stat.rule.account}\n`;
+        }
+        if (stat.rule.methodAccount) {
+          testReport += `   方法账户: ${stat.rule.methodAccount}\n`;
+        }
+        if (stat.rule.priority !== undefined) {
+          testReport += `   优先级: ${stat.rule.priority}\n`;
+        }
+        testReport += `\n`;
+      });
+
+      testReport += `=== 匹配详情 ===\n`;
+      testReport += `总匹配记录: ${totalMatched} 条\n`;
+      testReport += `未匹配记录: ${previewResult.data.orders.length - totalMatched} 条\n`;
+      testReport += `匹配率: ${((totalMatched / previewResult.data.orders.length) * 100).toFixed(1)}%\n\n`;
+
+      // 显示未匹配的记录示例
+      const unmatchedOrders = previewResult.data.orders.filter((order: any) => {
+        return !stats.some(stat => stat.examples.some(example =>
+          example.includes(order.peer || '') || example.includes(order.item || '')
+        ));
+      });
+
+      if (unmatchedOrders.length > 0) {
+        testReport += `=== 未匹配记录示例 ===\n`;
+        unmatchedOrders.slice(0, 5).forEach((order: any, index: number) => {
+          testReport += `${index + 1}. ${order.peer || '未知'} - ${order.item || '无描述'}\n`;
+          testReport += `   金额: ${order.money} ${order.currency}\n`;
+          testReport += `   类型: ${order.type}\n`;
+          testReport += `   方法: ${order.method || '未知'}\n`;
+          if (order.category) {
+            testReport += `   分类: ${order.category}\n`;
+          }
+          if (order.txTypeOriginal) {
+            testReport += `   交易类型: ${order.txTypeOriginal}\n`;
+          }
+          testReport += `\n`;
+        });
+        if (unmatchedOrders.length > 5) {
+          testReport += `... 还有 ${unmatchedOrders.length - 5} 条未匹配记录\n`;
+        }
+      }
+
       // 显示结果（只存到ruleTestResult，不覆盖processingResult）
       ruleTestResult.value = {
         success: true,
-        data: `规则测试完成\n\n规则数量: ${providerConfig.rules.length}\n匹配统计:\n${stats.map(s => `- ${s.rule.pattern}: ${s.count} 条`).join('\n')}`,
+        data: testReport,
         statistics: {
           rules: providerConfig.rules,
           stats: stats,
-          processedIR: processedIR
+          processedIR: processedIR,
+          totalMatched: totalMatched,
+          totalRecords: previewResult.data.orders.length,
+          unmatchedOrders: unmatchedOrders.slice(0, 10) // 只保存前10条未匹配记录
         },
         provider: selectedProvider.value
       };
@@ -440,14 +548,20 @@ export function useDataSourceConfig() {
 
       // 获取缓存的数据，确保格式正确
       let cachedData;
-      if (processingResult.value.statistics?.processedIR?.orders) {
+      if (processingResult.value.statistics?.originalIR?.orders) {
+        // 使用保存的原始IR数据
+        cachedData = processingResult.value.statistics.originalIR;
+      } else if (processingResult.value.statistics?.processedIR?.orders) {
         cachedData = processingResult.value.statistics.processedIR;
       } else if (processingResult.value.statistics?.processedIR) {
         // 如果 processedIR 存在但没有 orders，尝试使用原始数据
         cachedData = processingResult.value.statistics.processedIR;
-      } else if (processingResult.value.data) {
-        // 如果缓存的是字符串数据，无法进行规则测试
-        error.value = '缓存数据格式不支持规则测试，请重新上传文件';
+      } else if (processingResult.value.data && typeof processingResult.value.data === 'object' && processingResult.value.data.orders) {
+        // 如果data是IR对象
+        cachedData = processingResult.value.data;
+      } else if (processingResult.value.data && typeof processingResult.value.data === 'string') {
+        // 如果缓存的是字符串数据（Beancount格式），无法进行规则测试
+        error.value = '当前数据为Beancount格式，无法进行规则测试。请重新上传文件或先进行预览。';
         return;
       } else {
         error.value = '没有可用的缓存数据';
@@ -460,20 +574,99 @@ export function useDataSourceConfig() {
         return;
       }
 
+      // 应用规则到缓存的数据
+      const processedIR = ruleEngine.applyRulesToIR(cachedData);
+
+      // 获取规则统计
       const stats = ruleEngine.getRuleStats(cachedData);
 
       console.log('规则配置:', ruleConfig);
       console.log('转换后的配置:', providerConfig);
       console.log('规则统计:', stats);
 
+      // 生成详细的测试报告
+      let testReport = `规则测试完成（使用缓存数据）\n\n`;
+      testReport += `规则数量: ${providerConfig.rules.length}\n`;
+      testReport += `数据记录数: ${cachedData.orders.length}\n\n`;
+
+      testReport += `=== 规则匹配统计 ===\n`;
+      let totalMatched = 0;
+      stats.forEach((stat, index) => {
+        totalMatched += stat.count;
+        testReport += `${index + 1}. ${stat.rule.pattern || '未命名规则'}\n`;
+        testReport += `   匹配数量: ${stat.count} 条\n`;
+
+        // 显示规则的具体匹配字段
+        const matchedFields = [];
+        if (stat.rule.peer) matchedFields.push(`peer: ${stat.rule.peer}`);
+        if (stat.rule.item) matchedFields.push(`item: ${stat.rule.item}`);
+        if (stat.rule.type) matchedFields.push(`type: ${stat.rule.type}`);
+        if (stat.rule.method) matchedFields.push(`method: ${stat.rule.method}`);
+        if (stat.rule.category) matchedFields.push(`category: ${stat.rule.category}`);
+        if (stat.rule.txType) matchedFields.push(`txType: ${stat.rule.txType}`);
+
+        if (matchedFields.length > 0) {
+          testReport += `   匹配字段: ${matchedFields.join(', ')}\n`;
+        }
+
+        if (stat.examples.length > 0) {
+          testReport += `   示例: ${stat.examples.join(', ')}\n`;
+        }
+        if (stat.rule.account) {
+          testReport += `   目标账户: ${stat.rule.account}\n`;
+        }
+        if (stat.rule.methodAccount) {
+          testReport += `   方法账户: ${stat.rule.methodAccount}\n`;
+        }
+        if (stat.rule.priority !== undefined) {
+          testReport += `   优先级: ${stat.rule.priority}\n`;
+        }
+        testReport += `\n`;
+      });
+
+      testReport += `=== 匹配详情 ===\n`;
+      testReport += `总匹配记录: ${totalMatched} 条\n`;
+      testReport += `未匹配记录: ${cachedData.orders.length - totalMatched} 条\n`;
+      testReport += `匹配率: ${((totalMatched / cachedData.orders.length) * 100).toFixed(1)}%\n\n`;
+
+      // 显示未匹配的记录示例
+      const unmatchedOrders = cachedData.orders.filter((order: any) => {
+        return !stats.some(stat => stat.examples.some(example =>
+          example.includes(order.peer || '') || example.includes(order.item || '')
+        ));
+      });
+
+      if (unmatchedOrders.length > 0) {
+        testReport += `=== 未匹配记录示例 ===\n`;
+        unmatchedOrders.slice(0, 5).forEach((order: any, index: number) => {
+          testReport += `${index + 1}. ${order.peer || '未知'} - ${order.item || '无描述'}\n`;
+          testReport += `   金额: ${order.money} ${order.currency}\n`;
+          testReport += `   类型: ${order.type}\n`;
+          testReport += `   方法: ${order.method || '未知'}\n`;
+          if (order.category) {
+            testReport += `   分类: ${order.category}\n`;
+          }
+          if (order.txTypeOriginal) {
+            testReport += `   交易类型: ${order.txTypeOriginal}\n`;
+          }
+          testReport += `\n`;
+        });
+        if (unmatchedOrders.length > 5) {
+          testReport += `... 还有 ${unmatchedOrders.length - 5} 条未匹配记录\n`;
+        }
+      }
+
       // 显示结果（只存到ruleTestResult，不覆盖processingResult）
       ruleTestResult.value = {
         success: true,
-        data: `规则测试完成（使用缓存数据）\n\n规则数量: ${providerConfig.rules.length}\n匹配统计:\n${stats.map(s => `- ${s.rule.pattern}: ${s.count} 条`).join('\n')}`,
+        data: testReport,
         statistics: {
           rules: providerConfig.rules,
           stats: stats,
-          processedIR: cachedData
+          processedIR: processedIR,
+          totalMatched: totalMatched,
+          totalRecords: cachedData.orders.length,
+          unmatchedOrders: unmatchedOrders.slice(0, 10) // 只保存前10条未匹配记录
         },
         provider: selectedProvider.value
       };
@@ -561,6 +754,7 @@ export function useDataSourceConfig() {
     selectedProvider,
     detectedProvider,
     processingResult,
+    ruleTestResult,
     isProcessing,
     error,
     providers,

@@ -73,8 +73,35 @@
         {{ error }}
       </div>
 
-      <!-- 结果展示组件 -->
-      <ResultDisplay :processing-result="processingResult" />
+      <!-- 结果展示组件 - 只在没有测试规则结果时显示 -->
+      <ResultDisplay v-if="!ruleTestResult" :processing-result="processingResult" />
+
+      <!-- 测试规则结果 - 只在有测试规则结果时显示 -->
+      <div v-if="ruleTestResult" class="mb-6">
+        <h2 class="text-lg font-semibold mb-4 dark:bg-gray-800">测试规则结果</h2>
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-600 rounded-lg p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-medium text-yellow-800 dark:text-yellow-200">规则测试报告</h3>
+            <button
+              @click="clearRuleTestResult"
+              class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200"
+            >
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <div class="relative">
+            <pre class="bg-white dark:bg-gray-900 p-4 rounded text-sm overflow-x-auto max-h-96 overflow-y-auto text-yellow-800 dark:text-yellow-200">{{ ruleTestResult.data }}</pre>
+            <div class="absolute top-2 right-2 flex gap-2">
+              <button
+                @click="copyToClipboard(ruleTestResult.data)"
+                class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
+              >
+                <i class="fas fa-copy mr-1"></i>复制
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -96,6 +123,7 @@ const {
   detectedProvider,
   isProcessing,
   processingResult,
+  ruleTestResult,
   error,
   providers,
   processFile,
@@ -130,8 +158,27 @@ const goToRuleConfig = () => {
   }
 };
 
-// 跳转到调试规则页面（如有单独页面可加from参数）
-// ... existing code ...
+// 清除测试规则结果
+const clearRuleTestResult = () => {
+  ruleTestResult.value = null;
+};
+
+// 复制到剪贴板
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    // 可以添加一个简单的提示
+  } catch (err) {
+    console.error('复制失败:', err);
+    // 降级方案：使用传统的复制方法
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+  }
+};
 
 // 组件挂载时检查是否需要清除缓存
 onMounted(() => {

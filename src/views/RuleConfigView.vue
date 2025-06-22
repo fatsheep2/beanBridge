@@ -55,6 +55,46 @@
           </div>
         </div>
 
+        <!-- 字段映射说明 -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200 dark:border-blue-700 p-6">
+          <div class="flex items-center mb-4">
+            <span class="material-icons text-blue-600 dark:text-blue-400 mr-2">info</span>
+            <h4 class="text-lg font-semibold text-blue-800 dark:text-blue-200">字段映射说明</h4>
+          </div>
+          <p class="text-blue-700 dark:text-blue-300 mb-4">
+            以下是 {{ selectedProvider }} 解析器的字段映射关系，帮助您了解原始表格字段如何映射到规则匹配字段：
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              v-for="mapping in fieldMappings"
+              :key="mapping.originalField"
+              class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-blue-200 dark:border-blue-700"
+            >
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">原始字段</span>
+                <span class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded">
+                  {{ mapping.mappedField }}
+                </span>
+              </div>
+              <div class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                {{ mapping.originalField }}
+              </div>
+              <div class="text-xs text-gray-600 dark:text-gray-400">
+                {{ mapping.description }}
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+            <div class="flex items-start">
+              <span class="material-icons text-yellow-600 dark:text-yellow-400 mr-2 text-sm mt-0.5">lightbulb</span>
+              <div class="text-sm text-yellow-800 dark:text-yellow-200">
+                <strong>提示：</strong>在规则配置中，您可以使用映射后的字段名（如 peer、item、method 等）来设置匹配条件。
+                例如：建设银行的"交易地点"字段会映射为"method"，您可以在规则中设置 method 匹配条件。
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 全局配置 -->
         <div class="bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-8">
           <div class="flex items-center justify-between mb-6">
@@ -469,7 +509,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ProviderType } from '../types/provider';
 import type { RuleConfig, Rule, ConfigHistory } from '../types/rule-config';
-import { providers } from '../data/providers';
+import { providers, getProviderFieldMappings } from '../data/providers';
 import { ruleConfigService } from '../services/rule-config-service';
 import ProviderSelector from '../components/ProviderSelector.vue';
 import RuleEditor from '../components/RuleEditor.vue';
@@ -492,6 +532,11 @@ const showAutoSaveMessage = ref(false);
 
 // 计算属性
 const supportedProviders = computed(() => providers);
+
+const fieldMappings = computed(() => {
+  if (!selectedProvider.value) return [];
+  return getProviderFieldMappings(selectedProvider.value);
+});
 
 const sortedRules = computed(() => {
   if (!currentConfig.value) return [];
