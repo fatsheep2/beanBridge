@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "build:github": "vite build --base /beanBridge/",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",

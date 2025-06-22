@@ -44,7 +44,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm run build
+        run: |
+          # 为本地离线版本构建（使用相对路径）
+          pnpm run build
+          # 为GitHub Pages构建（使用绝对路径）
+          VITE_DEPLOY=github BASE_PATH=/beanBridge/ pnpm run build:github
         env:
           VITE_DEPLOY: github
 
@@ -84,7 +88,12 @@ jobs:
             ### 📋 使用说明
             1. 下载 `dist.zip` 文件
             2. 解压到本地目录
-            3. 用浏览器打开 `index.html` 即可使用
+            3. **请使用本地静态服务器访问 `index.html`，不要直接双击打开！**
+               - 推荐命令：
+                 - `pnpm preview`（需全局安装 pnpm）
+                 - `npx serve dist`
+                 - `python -m http.server 8080`（需安装 Python）
+               - 然后在浏览器访问 `http://localhost:端口号`
             
             ### 🚀 功能特性
             - 支持多种支付平台（支付宝、微信等）

@@ -97,20 +97,6 @@
         <IconTest />
       </div>
     </div>
-    <div id="busuanzi_container_site_uv" class="flex items-center justify-center mt-8 text-gray-700 dark:text-gray-300 text-base sm:text-lg">
-      <span class="flex items-center justify-center">
-        <svg class="mr-2 text-blue-500" width="22" height="22" fill="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;">
-        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05C16.16 13.66 18 14.84 18 16.5V19h6v-2.5c0-2.33-4.67-3.5-6-3.5z"/>
-      </svg>
-        本站已经服务过
-        <span
-          id="busuanzi_value_site_uv"
-          class="font-bold text-blue-600 dark:text-blue-400 mx-1 inline-flex items-center justify-center min-w-[2.5em] text-center align-middle"
-          style="vertical-align:middle;"
-        >xx</span>
-        位用户啦
-      </span>
-    </div>
   </div>
 </template>
 
