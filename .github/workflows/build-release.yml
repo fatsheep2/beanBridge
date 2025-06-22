@@ -82,11 +82,12 @@ jobs:
             ### 📋 使用说明
             1. 下载 `dist.zip` 文件
             2. 解压到本地目录
-            3. **请在 dist 目录下用本地静态服务器访问 `index.html`，不要直接双击打开！**
-               - 推荐命令：
-                 - `npx serve`（推荐，需安装 Node.js）
-                 - `python -m http.server 8080`（需安装 Python）
-               - 然后在浏览器访问 `http://localhost:端口号`
+            3. **请在 dist 目录下用本地静态服务器访问，不要直接双击打开！**
+               - 操作步骤：
+                 - 进入解压后的 dist 目录：`cd dist`
+                 - 启动本地服务器：`npx serve`（推荐，需安装 Node.js）
+                 - 或：`python -m http.server 8080`（需安装 Python）
+               - 然后在浏览器访问 `http://localhost:3000`（或 8080）
                - `pnpm preview` 仅适用于开发者在完整项目根目录下预览
             
             ### 🚀 功能特性
