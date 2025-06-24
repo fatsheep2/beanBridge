@@ -83,14 +83,6 @@ export class RuleEngine {
           updatedOrder.tags.push(...matchedRule.tags);
         }
 
-        // 设置 payee 和 category（后面的规则会覆盖前面的）
-        if (matchedRule.payee) {
-          updatedOrder.peer = matchedRule.payee;
-        }
-        if (matchedRule.category) {
-          updatedOrder.category = matchedRule.category;
-        }
-
         // 设置账户映射
         if (order.type === 'Send') {
           // 设置 MinusAccount（资金账户）

@@ -83,7 +83,22 @@ export class WechatProvider extends BaseProvider {
             method,
             originalPeer: peer, // 保存原始的交易对方信息
             originalItem: itemName, // 保存原始的商品信息
-            originalDate: dateStr // 保存原始日期字符串
+            originalDate: dateStr, // 保存原始日期字符串
+            originalType: typeStr, // 保存原始的交易类型
+            originalCategory: category, // 保存原始的分类
+            originalMoney: moneyStr, // 保存原始的金额字符串
+            // 保存完整的原始CSV行数据
+            originalCsvData: JSON.stringify({
+                date: dateStr,
+                type: typeStr,
+                peer: peer,
+                item: itemName,
+                method: method,
+                money: moneyStr,
+                status: status,
+                category: category,
+                dealNo: dealNo
+            })
         };
 
         const order: Order = {
@@ -200,6 +215,7 @@ export class WechatProvider extends BaseProvider {
             // 确保使用原始的 peer 和 item 值
             order.peer = order.metadata.originalPeer || order.peer;
             order.item = order.metadata.originalItem || order.item;
+            order.category = order.metadata.originalCategory || order.category;
             return order;
         }
 
@@ -230,6 +246,7 @@ export class WechatProvider extends BaseProvider {
         // 确保在应用规则后，peer 和 item 字段始终使用原始值
         order.peer = order.metadata.originalPeer || order.peer;
         order.item = order.metadata.originalItem || order.item;
+        order.category = order.metadata.originalCategory || order.category;
 
         return order;
     }
@@ -266,15 +283,15 @@ export class WechatProvider extends BaseProvider {
     private getOrderValue(order: Order, field: string): string {
         switch (field) {
             case 'peer':
-                return order.peer || '';
+                return order.metadata.originalPeer || order.peer || '';
             case 'item':
-                return order.item || '';
+                return order.metadata.originalItem || order.item || '';
             case 'type':
                 return order.typeOriginal || '';
             case 'method':
                 return order.method || '';
             case 'category':
-                return order.category || '';
+                return order.metadata.originalCategory || order.category || '';
             case 'txType':
                 return order.txTypeOriginal || '';
             default:
