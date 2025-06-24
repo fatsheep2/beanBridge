@@ -77,6 +77,12 @@ export interface ProviderConfig {
   accounts: string[];
   defaultCurrency: string;
   provider: string;
+  defaultMinusAccount?: string;
+  defaultPlusAccount?: string;
+  defaultCashAccount?: string;
+  defaultCommissionAccount?: string;
+  defaultPositionAccount?: string;
+  defaultPnlAccount?: string;
 }
 
 export interface ConfigRule {

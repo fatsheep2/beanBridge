@@ -76,6 +76,16 @@ export class WechatProvider extends BaseProvider {
         const money = this.parseAmount(moneyStr);
         const type = this.parseType(typeStr);
 
+        // 保存原始时间字符串到元数据
+        const metadata: Record<string, string> = {
+            status,
+            dealNo,
+            method,
+            originalPeer: peer, // 保存原始的交易对方信息
+            originalItem: itemName, // 保存原始的商品信息
+            originalDate: dateStr // 保存原始日期字符串
+        };
+
         const order: Order = {
             orderType: OrderType.Normal,
             peer,
@@ -110,13 +120,7 @@ export class WechatProvider extends BaseProvider {
             },
             minusAccount: '',
             plusAccount: '',
-            metadata: {
-                status,
-                dealNo,
-                method,
-                originalPeer: peer, // 保存原始的交易对方信息
-                originalItem: itemName // 保存原始的商品信息
-            },
+            metadata,
             tags: []
         };
 
@@ -193,8 +197,9 @@ export class WechatProvider extends BaseProvider {
             // 如果没有配置，使用默认值
             order.minusAccount = 'Assets:Unknown';
             order.plusAccount = 'Expenses:Unknown';
-            // 确保使用原始的 peer 值
+            // 确保使用原始的 peer 和 item 值
             order.peer = order.metadata.originalPeer || order.peer;
+            order.item = order.metadata.originalItem || order.item;
             return order;
         }
 
@@ -222,8 +227,9 @@ export class WechatProvider extends BaseProvider {
             }
         }
 
-        // 确保在应用规则后，peer 字段始终使用原始的 originalPeer 值
+        // 确保在应用规则后，peer 和 item 字段始终使用原始值
         order.peer = order.metadata.originalPeer || order.peer;
+        order.item = order.metadata.originalItem || order.item;
 
         return order;
     }

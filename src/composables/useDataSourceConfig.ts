@@ -15,6 +15,12 @@ function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConf
   const result = {
     provider: ruleConfig.provider,
     defaultCurrency: ruleConfig.defaultCurrency,
+    defaultMinusAccount: ruleConfig.defaultMinusAccount,
+    defaultPlusAccount: ruleConfig.defaultPlusAccount,
+    defaultCashAccount: ruleConfig.defaultCashAccount,
+    defaultCommissionAccount: ruleConfig.defaultCommissionAccount,
+    defaultPositionAccount: ruleConfig.defaultPositionAccount,
+    defaultPnlAccount: ruleConfig.defaultPnlAccount,
     accounts: [
       ruleConfig.defaultMinusAccount,
       ruleConfig.defaultPlusAccount,
@@ -231,7 +237,11 @@ export function useDataSourceConfig() {
       const providerConfig = convertRuleConfigToProviderConfig(ruleConfig);
 
       // 创建规则引擎并重新处理
-      const ruleEngine = new RuleEngine(providerConfig.rules);
+      const ruleEngine = new RuleEngine(
+        providerConfig.rules,
+        ruleConfig.defaultMinusAccount,
+        ruleConfig.defaultPlusAccount
+      );
 
       // 获取缓存的数据，确保格式正确
       let cachedData;
@@ -414,7 +424,11 @@ export function useDataSourceConfig() {
       const providerConfig = convertRuleConfigToProviderConfig(ruleConfig);
 
       // 创建规则引擎并测试
-      const ruleEngine = new RuleEngine(providerConfig.rules);
+      const ruleEngine = new RuleEngine(
+        providerConfig.rules,
+        ruleConfig.defaultMinusAccount,
+        ruleConfig.defaultPlusAccount
+      );
 
       // 应用规则
       const processedIR = ruleEngine.applyRulesToIR(previewResult.data);
@@ -544,7 +558,11 @@ export function useDataSourceConfig() {
       const providerConfig = convertRuleConfigToProviderConfig(ruleConfig);
 
       // 创建规则引擎并测试
-      const ruleEngine = new RuleEngine(providerConfig.rules);
+      const ruleEngine = new RuleEngine(
+        providerConfig.rules,
+        ruleConfig.defaultMinusAccount,
+        ruleConfig.defaultPlusAccount
+      );
 
       // 获取缓存的数据，确保格式正确
       let cachedData;

@@ -37,7 +37,11 @@ export class FileProcessorV2 {
       let processedIR = ir;
       let ruleStats = null;
       if (config && config.rules.length > 0) {
-        this.ruleEngine = new RuleEngine(config.rules);
+        this.ruleEngine = new RuleEngine(
+          config.rules,
+          config.defaultMinusAccount,
+          config.defaultPlusAccount
+        );
         processedIR = this.ruleEngine.applyRulesToIR(ir);
         ruleStats = this.ruleEngine.getRuleStats(ir);
       }

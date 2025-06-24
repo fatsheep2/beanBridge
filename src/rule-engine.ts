@@ -4,9 +4,13 @@ import { Account } from './types/provider';
 
 export class RuleEngine {
   private rules: ConfigRule[] = [];
+  private defaultMinusAccount: string = 'Assets:FIXME';
+  private defaultPlusAccount: string = 'Expenses:FIXME';
 
-  constructor(rules: ConfigRule[] = []) {
+  constructor(rules: ConfigRule[] = [], defaultMinusAccount?: string, defaultPlusAccount?: string) {
     this.rules = rules;
+    if (defaultMinusAccount) this.defaultMinusAccount = defaultMinusAccount;
+    if (defaultPlusAccount) this.defaultPlusAccount = defaultPlusAccount;
   }
 
   addRule(rule: ConfigRule) {
@@ -46,6 +50,13 @@ export class RuleEngine {
   applyRules(order: Order): Order {
     const matchedRules = this.findAllMatchingRulesSorted(order);
 
+    let updatedOrder = {
+      ...order,
+      tags: [...order.tags],
+      peer: order.peer,
+      category: order.category
+    };
+
     if (matchedRules.length > 0) {
       console.log('Order matched rules:', {
         order: `${order.peer} ${order.item} ${order.typeOriginal} ${order.method}`,
@@ -58,13 +69,6 @@ export class RuleEngine {
           method: r.method
         }))
       });
-
-      let updatedOrder = {
-        ...order,
-        tags: [...order.tags],
-        peer: order.peer,
-        category: order.category
-      };
 
       // 按优先级和精确度排序的规则，依次应用
       for (const matchedRule of matchedRules) {
@@ -89,29 +93,63 @@ export class RuleEngine {
 
         // 设置账户映射
         if (order.type === 'Send') {
+          // 设置 MinusAccount（资金账户）
           if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
             updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.methodAccount;
-            console.log('Set MinusAccount:', matchedRule.methodAccount);
+            console.log('Set MinusAccount from rule:', matchedRule.methodAccount);
+          } else if (!updatedOrder.extraAccounts[Account.MinusAccount]) {
+            // 如果规则没有设置 methodAccount，使用默认账户
+            updatedOrder.extraAccounts[Account.MinusAccount] = this.defaultMinusAccount;
+            console.log('Set MinusAccount from default:', this.defaultMinusAccount);
           }
+
+          // 设置 PlusAccount（目标账户）
           if (matchedRule.account && matchedRule.account !== 'Expenses:FIXME') {
             updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.account;
-            console.log('Set PlusAccount:', matchedRule.account);
+            console.log('Set PlusAccount from rule:', matchedRule.account);
+          } else if (!updatedOrder.extraAccounts[Account.PlusAccount]) {
+            // 如果规则没有设置 account，使用默认账户
+            updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultPlusAccount;
+            console.log('Set PlusAccount from default:', this.defaultPlusAccount);
           }
         } else if (order.type === 'Recv') {
+          // 设置 MinusAccount（来源账户）
           if (matchedRule.account && matchedRule.account !== 'Expenses:FIXME') {
             updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.account;
+          } else if (!updatedOrder.extraAccounts[Account.MinusAccount]) {
+            updatedOrder.extraAccounts[Account.MinusAccount] = 'Income:Other';
           }
+
+          // 设置 PlusAccount（资金账户）
           if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
             updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.methodAccount;
+          } else if (!updatedOrder.extraAccounts[Account.PlusAccount]) {
+            updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultMinusAccount;
           }
         }
       }
 
       console.log('Final account mapping:', updatedOrder.extraAccounts);
-      return updatedOrder;
+    } else {
+      // 如果没有匹配的规则，设置默认账户
+      if (order.type === 'Send') {
+        updatedOrder.extraAccounts[Account.MinusAccount] = this.defaultMinusAccount;
+        updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultPlusAccount;
+        console.log('Set default accounts for unmatched Send order:', {
+          minusAccount: this.defaultMinusAccount,
+          plusAccount: this.defaultPlusAccount
+        });
+      } else if (order.type === 'Recv') {
+        updatedOrder.extraAccounts[Account.MinusAccount] = 'Income:Other';
+        updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultMinusAccount;
+        console.log('Set default accounts for unmatched Recv order:', {
+          minusAccount: 'Income:Other',
+          plusAccount: this.defaultMinusAccount
+        });
+      }
     }
 
-    return order;
+    return updatedOrder;
   }
 
   // 找到所有匹配的规则，并按优先级和精确度排序

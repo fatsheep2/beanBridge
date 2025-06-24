@@ -93,6 +93,7 @@ export class CCBProvider extends BaseProvider {
 
         if (money === 0) return null; // 跳过金额为0的交易
 
+        // 拼接日期和时间，然后转换为Date对象
         const payTime = this.parseDate(dateStr, tradeTimeStr);
         const type = money > 0 ? Type.Recv : Type.Send;
 
@@ -103,8 +104,19 @@ export class CCBProvider extends BaseProvider {
         if (peerName) metadata.peerName = peerName;
         if (tradeLocation) metadata.tradeLocation = tradeLocation;
         if (balanceStr) metadata.balance = balanceStr;
-        // payTime 作为唯一时间字段
-        if (payTime) metadata.payTime = payTime.toISOString();
+        // 保存原始时间字符串到元数据中
+        if (tradeTimeStr) metadata.tradeTime = tradeTimeStr;
+        if (dateStr) metadata.tradeDate = dateStr;
+        // payTime 保存为本地时间格式，而不是ISO字符串
+        if (payTime) {
+            const year = payTime.getFullYear();
+            const month = String(payTime.getMonth() + 1).padStart(2, '0');
+            const day = String(payTime.getDate()).padStart(2, '0');
+            const hour = String(payTime.getHours()).padStart(2, '0');
+            const minute = String(payTime.getMinutes()).padStart(2, '0');
+            const second = String(payTime.getSeconds()).padStart(2, '0');
+            metadata.payTime = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+        }
 
         const order: Order = {
             orderType: OrderType.Normal,
@@ -122,7 +134,7 @@ export class CCBProvider extends BaseProvider {
             method: tradeLocation,
             amount: Math.abs(money),
             price: 1,
-            currency: currency || 'CNY',
+            currency: this.normalizeCurrency(currency) || 'CNY',
             commission: 0,
             units: {
                 [Unit.BaseUnit]: '',
@@ -188,23 +200,47 @@ export class CCBProvider extends BaseProvider {
             const month = parseInt(dateStr.substring(4, 6)) - 1; // 月份从0开始
             const day = parseInt(dateStr.substring(6, 8));
 
-            let date = new Date(year, month, day);
+            let hour = 0, minute = 0, second = 0;
 
-            // 如果有时间信息，添加到日期中
+            // 如果有时间信息，先解析时间
             if (timeStr && timeStr.includes(':')) {
                 const timeParts = timeStr.split(':');
-                const hour = parseInt(timeParts[0]);
-                const minute = parseInt(timeParts[1]);
-                const second = timeParts[2] ? parseInt(timeParts[2]) : 0;
-
-                date.setHours(hour, minute, second);
+                hour = parseInt(timeParts[0]);
+                minute = parseInt(timeParts[1]);
+                second = timeParts[2] ? parseInt(timeParts[2]) : 0;
             }
+
+            console.log('[Provider-CCB] 开始解析:', { dateStr, timeStr });
+            console.log('[Provider-CCB] 解析结果:', { year, month, day, hour, minute, second });
+
+            // 直接使用Date构造函数传入参数，避免时区转换
+            const date = new Date(year, month, day, hour, minute, second, 0);
+
+            console.log('[Provider-CCB] 创建的时间对象:', date);
+            console.log('[Provider-CCB] 本地时间字符串:', date.toString());
+            console.log('[Provider-CCB] ISO字符串:', date.toISOString());
 
             return date;
         }
 
-        // 尝试其他日期格式
-        return new Date(dateStr);
+        // 尝试其他日期格式，但也要避免时区转换
+        const parsedDate = new Date(dateStr);
+        if (!isNaN(parsedDate.getTime())) {
+            // 如果解析成功，返回本地时间
+            return new Date(
+                parsedDate.getFullYear(),
+                parsedDate.getMonth(),
+                parsedDate.getDate(),
+                parsedDate.getHours(),
+                parsedDate.getMinutes(),
+                parsedDate.getSeconds(),
+                0
+            );
+        }
+
+        // 如果都失败了，返回当前时间
+        console.warn(`[Provider-CCB] 无法解析日期: ${dateStr}，使用当前时间`);
+        return new Date();
     }
 
     protected parseAmount(amountStr: string): number {
@@ -292,5 +328,61 @@ export class CCBProvider extends BaseProvider {
         }
         // 其它情况走默认逻辑
         return super.getHeaderRowIndex(lines);
+    }
+
+    private normalizeCurrency(currency: string): string | null {
+        if (!currency) return null;
+
+        const currencyMap: Record<string, string> = {
+            '人民币': 'CNY',
+            '人民币元': 'CNY',
+            '元': 'CNY',
+            '美元': 'USD',
+            '美金': 'USD',
+            '港币': 'HKD',
+            '港元': 'HKD',
+            '欧元': 'EUR',
+            '日元': 'JPY',
+            '英镑': 'GBP',
+            '加元': 'CAD',
+            '澳元': 'AUD',
+            '新加坡元': 'SGD',
+            '新币': 'SGD',
+            '韩元': 'KRW',
+            '韩币': 'KRW',
+            '泰铢': 'THB',
+            '马来西亚林吉特': 'MYR',
+            '林吉特': 'MYR',
+            '印尼盾': 'IDR',
+            '菲律宾比索': 'PHP',
+            '比索': 'PHP',
+            '印度卢比': 'INR',
+            '卢比': 'INR',
+            '俄罗斯卢布': 'RUB',
+            '卢布': 'RUB',
+            '瑞士法郎': 'CHF',
+            '瑞典克朗': 'SEK',
+            '挪威克朗': 'NOK',
+            '丹麦克朗': 'DKK',
+            '新西兰元': 'NZD'
+        };
+
+        // 标准化输入：去除空格，转换为小写
+        const normalizedInput = currency.trim().toLowerCase();
+
+        // 查找匹配的中文货币名称
+        for (const [chineseName, code] of Object.entries(currencyMap)) {
+            if (normalizedInput === chineseName.toLowerCase()) {
+                return code;
+            }
+        }
+
+        // 如果输入已经是标准货币代码，直接返回
+        if (/^[A-Z]{3}$/.test(currency.toUpperCase())) {
+            return currency.toUpperCase();
+        }
+
+        // 如果没有找到匹配，返回原始值（让后续逻辑处理）
+        return currency;
     }
 } 

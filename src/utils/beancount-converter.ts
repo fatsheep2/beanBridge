@@ -118,6 +118,14 @@ export class BeancountConverter {
       postings.push(`  ${targetAccount}  -${amount} ${currency}`);
     }
 
+    // 处理手续费
+    if (order.commission && order.commission > 0) {
+      const commissionAccount = order.extraAccounts[Account.CommissionAccount] || config?.defaultCommissionAccount || 'Expenses:Commission:FIXME';
+      postings.push(`  ${commissionAccount}  ${order.commission} ${currency}`);
+      // 手续费从主账户扣除
+      postings.push(`  ${mainAccount}  -${order.commission} ${currency}`);
+    }
+
     return postings;
   }
 
