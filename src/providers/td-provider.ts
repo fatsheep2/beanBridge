@@ -62,7 +62,7 @@ export class TdProvider extends BaseProvider {
 
     // TD Bank CSV格式字段映射
     const fieldMap = this.mapFields(headers);
-    
+
     const dateStr = row[fieldMap.date] || '';
     const description = row[fieldMap.description] || '';
     const debitStr = row[fieldMap.debit] || '';
@@ -79,7 +79,7 @@ export class TdProvider extends BaseProvider {
     // 确定交易类型和金额
     let amount = 0;
     let type = Type.Unknown;
-    
+
     if (debit > 0) {
       amount = -debit; // 支出为负数
       type = Type.Send;
@@ -133,15 +133,22 @@ export class TdProvider extends BaseProvider {
       tags: ['bank', 'td']
     };
 
+    if (order.plusAccount) {
+      order.extraAccounts[Account.PlusAccount] = order.plusAccount;
+    }
+    if (order.minusAccount) {
+      order.extraAccounts[Account.MinusAccount] = order.minusAccount;
+    }
+
     return order;
   }
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('date') || lowerHeader.includes('日期')) {
         fieldMap.date = index;
       } else if (lowerHeader.includes('description') || lowerHeader.includes('描述') || lowerHeader.includes('交易描述')) {
@@ -161,17 +168,17 @@ export class TdProvider extends BaseProvider {
   protected postProcess(ir: IR): IR {
     // TD Bank 特有的后处理逻辑
     const processedOrders: Order[] = [];
-    
+
     for (const order of ir.orders) {
       // 过滤掉无效交易
       if (order.money === 0) {
         console.log(`[orderId ${order.orderID}] 金额为0，跳过`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };

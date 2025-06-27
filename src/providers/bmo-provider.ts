@@ -62,7 +62,7 @@ export class BmoProvider extends BaseProvider {
 
     // BMO Bank CSV格式字段映射
     const fieldMap = this.mapFields(headers);
-    
+
     const cardNumber = row[fieldMap.cardNumber] || '';
     const typeStr = row[fieldMap.type] || '';
     const dateStr = row[fieldMap.date] || '';
@@ -117,15 +117,22 @@ export class BmoProvider extends BaseProvider {
       tags: ['bank', 'bmo']
     };
 
+    if (order.plusAccount) {
+      order.extraAccounts[Account.PlusAccount] = order.plusAccount;
+    }
+    if (order.minusAccount) {
+      order.extraAccounts[Account.MinusAccount] = order.minusAccount;
+    }
+
     return order;
   }
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('first bank card') || lowerHeader.includes('银行卡')) {
         fieldMap.cardNumber = index;
       } else if (lowerHeader.includes('transaction type') || lowerHeader.includes('交易类型')) {
@@ -144,7 +151,7 @@ export class BmoProvider extends BaseProvider {
 
   private parseType(typeStr: string): Type {
     const lowerType = typeStr.toLowerCase();
-    
+
     if (lowerType.includes('debit') || lowerType.includes('支出')) {
       return Type.Send;
     } else if (lowerType.includes('credit') || lowerType.includes('收入')) {
@@ -157,17 +164,17 @@ export class BmoProvider extends BaseProvider {
   protected postProcess(ir: IR): IR {
     // BMO Bank 特有的后处理逻辑
     const processedOrders: Order[] = [];
-    
+
     for (const order of ir.orders) {
       // 过滤掉无效交易
       if (order.money === 0) {
         console.log(`[orderId ${order.orderID}] 金额为0，跳过`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };

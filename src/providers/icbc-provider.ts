@@ -66,7 +66,7 @@ export class IcbcProvider extends BaseProvider {
 
     // 工商银行CSV格式字段映射
     const fieldMap = this.mapFields(headers);
-    
+
     const dateStr = row[fieldMap.date] || '';
     const timeStr = row[fieldMap.time] || '';
     const amountStr = row[fieldMap.amount] || '';
@@ -128,15 +128,22 @@ export class IcbcProvider extends BaseProvider {
       tags: ['bank', 'icbc']
     };
 
+    if (order.plusAccount) {
+      order.extraAccounts[Account.PlusAccount] = order.plusAccount;
+    }
+    if (order.minusAccount) {
+      order.extraAccounts[Account.MinusAccount] = order.minusAccount;
+    }
+
     return order;
   }
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('日期') || lowerHeader.includes('交易日期') || lowerHeader.includes('记账日期')) {
         fieldMap.date = index;
       } else if (lowerHeader.includes('时间') || lowerHeader.includes('交易时间')) {
@@ -175,17 +182,17 @@ export class IcbcProvider extends BaseProvider {
   protected postProcess(ir: IR): IR {
     // 工商银行特有的后处理逻辑
     const processedOrders: Order[] = [];
-    
+
     for (const order of ir.orders) {
       // 过滤掉无效交易
       if (order.money === 0) {
         console.log(`[orderId ${order.orderID}] 金额为0，跳过`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };

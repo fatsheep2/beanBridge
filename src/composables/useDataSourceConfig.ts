@@ -58,6 +58,7 @@ function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConf
       const convertedRule = {
         pattern: pattern,
         account: rule.targetAccount || ruleConfig.defaultPlusAccount,
+        targetAccount: rule.targetAccount || ruleConfig.defaultPlusAccount,
         methodAccount: rule.methodAccount || undefined,
         tags: rule.tags || [],
         payee: rule.peer,
@@ -69,6 +70,7 @@ function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConf
         type: rule.type || undefined,
         method: rule.method || undefined,
         txType: rule.txType || undefined,
+        time: rule.time || undefined,
         sep: rule.sep,
         fullMatch: rule.fullMatch,
         priority: rule.priority
@@ -84,7 +86,14 @@ function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConf
     })
   };
 
-  console.log('Final converted config:', result);
+  // 调试：只输出特定记录的规则转换信息
+  const hasDebugRules = result.rules.some(rule =>
+    rule.peer && (rule.peer.includes('金膳') || rule.peer.includes('午餐') || rule.peer.includes('晚餐'))
+  );
+
+  if (hasDebugRules) {
+    console.log('Final converted config:', result);
+  }
   return result;
 }
 
@@ -442,18 +451,25 @@ export function useDataSourceConfig() {
       console.log('处理后的数据:', processedIR);
 
       // 生成详细的测试报告
-      let testReport = `规则测试完成\n\n`;
-      testReport += `规则数量: ${providerConfig.rules.length}\n`;
-      testReport += `数据记录数: ${previewResult.data.orders.length}\n\n`;
+      let testReport = '';
+      testReport += '==========================\n';
+      testReport += '🌟 规则测试报告\n';
+      testReport += '==========================\n\n';
 
-      testReport += `=== 规则匹配统计 ===\n`;
-      let totalMatched = 0;
+      testReport += '【基础统计】\n';
+      testReport += '--------------------------\n';
+      testReport += `规则总数：${providerConfig.rules.length}\n`;
+      testReport += `数据记录数：${previewResult.data.orders.length}\n`;
+      testReport += `总匹配记录：${stats.reduce((sum: number, stat: any) => sum + stat.count, 0)}\n`;
+      testReport += `未匹配记录：${previewResult.data.orders.length - stats.reduce((sum: number, stat: any) => sum + stat.count, 0)}\n`;
+      testReport += `匹配率：${((stats.reduce((sum: number, stat: any) => sum + stat.count, 0) / previewResult.data.orders.length) * 100).toFixed(1)}%\n\n`;
+
+      testReport += '【规则匹配统计】\n';
+      testReport += '--------------------------\n';
       stats.forEach((stat, index) => {
-        totalMatched += stat.count;
-        testReport += `${index + 1}. ${stat.rule.pattern || '未命名规则'}\n`;
-        testReport += `   匹配数量: ${stat.count} 条\n`;
-
-        // 显示规则的具体匹配字段
+        testReport += `${index + 1}. 规则名：${stat.rule.pattern || '未命名规则'}\n`;
+        testReport += `   匹配数量：${stat.count}\n`;
+        // 匹配字段
         const matchedFields = [];
         if (stat.rule.peer) matchedFields.push(`peer: ${stat.rule.peer}`);
         if (stat.rule.item) matchedFields.push(`item: ${stat.rule.item}`);
@@ -461,80 +477,66 @@ export function useDataSourceConfig() {
         if (stat.rule.method) matchedFields.push(`method: ${stat.rule.method}`);
         if (stat.rule.category) matchedFields.push(`category: ${stat.rule.category}`);
         if (stat.rule.txType) matchedFields.push(`txType: ${stat.rule.txType}`);
-
+        if (stat.rule.time) matchedFields.push(`time: ${stat.rule.time}`);
         if (matchedFields.length > 0) {
-          testReport += `   匹配字段: ${matchedFields.join(', ')}\n`;
+          testReport += `   匹配字段：${matchedFields.join(', ')}\n`;
         }
-
         if (stat.examples.length > 0) {
-          testReport += `   示例: ${stat.examples.join(', ')}\n`;
+          testReport += `   示例：${stat.examples.map(e => `【${e}】`).join('，')}\n`;
         }
         if (stat.rule.account) {
-          testReport += `   目标账户: ${stat.rule.account}\n`;
+          testReport += `   目标账户：${stat.rule.account}\n`;
         }
         if (stat.rule.methodAccount) {
-          testReport += `   方法账户: ${stat.rule.methodAccount}\n`;
+          testReport += `   方法账户：${stat.rule.methodAccount}\n`;
         }
         if (stat.rule.priority !== undefined) {
-          testReport += `   优先级: ${stat.rule.priority}\n`;
+          testReport += `   优先级：${stat.rule.priority}\n`;
         }
-        testReport += `\n`;
+        testReport += '\n';
       });
 
-      testReport += `=== 匹配详情 ===\n`;
-      testReport += `总匹配记录: ${totalMatched} 条\n`;
-      testReport += `未匹配记录: ${previewResult.data.orders.length - totalMatched} 条\n`;
-      testReport += `匹配率: ${((totalMatched / previewResult.data.orders.length) * 100).toFixed(1)}%\n\n`;
-
-      // 修正：用规则引擎判断未匹配订单
+      testReport += '【未匹配记录示例】\n';
+      testReport += '--------------------------\n';
       const unmatchedOrders = previewResult.data.orders.filter((order: any) => {
         return ruleEngine.findAllMatchingRulesSorted(order).length === 0;
       });
-
       if (unmatchedOrders.length > 0) {
-        testReport += `=== 未匹配记录示例 ===\n`;
         unmatchedOrders.slice(0, 5).forEach((order: any, index: number) => {
-          testReport += `${index + 1}. ${order.peer || '未知'} - ${order.item || '无描述'}\n`;
-          testReport += `   金额: ${order.money} ${order.currency}\n`;
-          testReport += `   类型: ${order.type}\n`;
-          testReport += `   方法: ${order.method || '未知'}\n`;
-          if (order.category) {
-            testReport += `   分类: ${order.category}\n`;
-          }
-          if (order.txTypeOriginal) {
-            testReport += `   交易类型: ${order.txTypeOriginal}\n`;
-          }
-          testReport += `\n`;
+          testReport += `${index + 1}. 对方：${order.peer || '未知'} | 摘要：${order.item || '无描述'} | 金额：${order.money} ${order.currency} | 类型：${order.type} | 方法：${order.method || '未知'}\n`;
         });
         if (unmatchedOrders.length > 5) {
           testReport += `... 还有 ${unmatchedOrders.length - 5} 条未匹配记录\n`;
         }
+      } else {
+        testReport += '无未匹配记录\n';
+      }
+      testReport += '\n';
 
-        // 字段聚合统计与推荐规则，基于所有未匹配订单
-        const fieldStats: Record<string, Record<string, number>> = {
-          peer: {}, item: {}, type: {}, method: {}, category: {}
-        };
-        unmatchedOrders.forEach((order: any) => {
-          ['peer', 'item', 'type', 'method', 'category'].forEach(field => {
-            const val = order[field] || '';
-            if (val) {
-              fieldStats[field][val] = (fieldStats[field][val] || 0) + 1;
-            }
-          });
-        });
-        testReport += `=== 未匹配字段聚合统计 ===\n`;
-        Object.entries(fieldStats).forEach(([field, stat]) => {
-          const sorted = Object.entries(stat).sort((a, b) => b[1] - a[1]);
-          if (sorted.length > 0) {
-            testReport += `【${field}】出现最多：\n`;
-            sorted.slice(0, 3).forEach(([val, count]) => {
-              testReport += `   ${val}：${count} 次\n`;
-              // 推荐规则
-              testReport += `   推荐规则：{ \"${field}\": \"${val}\" }\n`;
-            });
+      testReport += '【未匹配字段聚合统计与推荐规则】\n';
+      testReport += '--------------------------\n';
+      const fieldStats: Record<string, Record<string, number>> = {
+        peer: {}, item: {}, type: {}, method: {}, category: {}
+      };
+      unmatchedOrders.forEach((order: any) => {
+        ['peer', 'item', 'type', 'method', 'category'].forEach(field => {
+          const val = order[field] || '';
+          if (val) {
+            fieldStats[field][val] = (fieldStats[field][val] || 0) + 1;
           }
         });
-      }
+      });
+      Object.entries(fieldStats).forEach(([field, stat]) => {
+        const sorted = Object.entries(stat).sort((a, b) => b[1] - a[1]);
+        if (sorted.length > 0) {
+          testReport += `${field} 出现最多：\n`;
+          sorted.slice(0, 3).forEach(([val, count]) => {
+            testReport += `   ${val}：${count} 次\n`;
+            testReport += `   ⭐ 推荐规则：{ "${field}": "${val}" }\n`;
+          });
+        }
+      });
+      testReport += '\n==========================\n';
 
       // 显示结果（只存到ruleTestResult，不覆盖processingResult）
       ruleTestResult.value = {
@@ -544,7 +546,7 @@ export function useDataSourceConfig() {
           rules: providerConfig.rules,
           stats: stats,
           processedIR: processedIR,
-          totalMatched: totalMatched,
+          totalMatched: stats.reduce((sum: number, stat: any) => sum + stat.count, 0),
           totalRecords: previewResult.data.orders.length,
           unmatchedOrders: unmatchedOrders.slice(0, 10) // 只保存前10条未匹配记录
         },
@@ -626,18 +628,25 @@ export function useDataSourceConfig() {
       console.log('规则统计:', stats);
 
       // 生成详细的测试报告
-      let testReport = `规则测试完成（使用缓存数据）\n\n`;
-      testReport += `规则数量: ${providerConfig.rules.length}\n`;
-      testReport += `数据记录数: ${cachedData.orders.length}\n\n`;
+      let testReport = '';
+      testReport += '==========================\n';
+      testReport += '🌟 规则测试报告\n';
+      testReport += '==========================\n\n';
 
-      testReport += `=== 规则匹配统计 ===\n`;
-      let totalMatched = 0;
+      testReport += '【基础统计】\n';
+      testReport += '--------------------------\n';
+      testReport += `规则总数：${providerConfig.rules.length}\n`;
+      testReport += `数据记录数：${cachedData.orders.length}\n`;
+      testReport += `总匹配记录：${stats.reduce((sum: number, stat: any) => sum + stat.count, 0)}\n`;
+      testReport += `未匹配记录：${cachedData.orders.length - stats.reduce((sum: number, stat: any) => sum + stat.count, 0)}\n`;
+      testReport += `匹配率：${((stats.reduce((sum: number, stat: any) => sum + stat.count, 0) / cachedData.orders.length) * 100).toFixed(1)}%\n\n`;
+
+      testReport += '【规则匹配统计】\n';
+      testReport += '--------------------------\n';
       stats.forEach((stat, index) => {
-        totalMatched += stat.count;
-        testReport += `${index + 1}. ${stat.rule.pattern || '未命名规则'}\n`;
-        testReport += `   匹配数量: ${stat.count} 条\n`;
-
-        // 显示规则的具体匹配字段
+        testReport += `${index + 1}. 规则名：${stat.rule.pattern || '未命名规则'}\n`;
+        testReport += `   匹配数量：${stat.count}\n`;
+        // 匹配字段
         const matchedFields = [];
         if (stat.rule.peer) matchedFields.push(`peer: ${stat.rule.peer}`);
         if (stat.rule.item) matchedFields.push(`item: ${stat.rule.item}`);
@@ -645,80 +654,66 @@ export function useDataSourceConfig() {
         if (stat.rule.method) matchedFields.push(`method: ${stat.rule.method}`);
         if (stat.rule.category) matchedFields.push(`category: ${stat.rule.category}`);
         if (stat.rule.txType) matchedFields.push(`txType: ${stat.rule.txType}`);
-
+        if (stat.rule.time) matchedFields.push(`time: ${stat.rule.time}`);
         if (matchedFields.length > 0) {
-          testReport += `   匹配字段: ${matchedFields.join(', ')}\n`;
+          testReport += `   匹配字段：${matchedFields.join(', ')}\n`;
         }
-
         if (stat.examples.length > 0) {
-          testReport += `   示例: ${stat.examples.join(', ')}\n`;
+          testReport += `   示例：${stat.examples.map(e => `【${e}】`).join('，')}\n`;
         }
         if (stat.rule.account) {
-          testReport += `   目标账户: ${stat.rule.account}\n`;
+          testReport += `   目标账户：${stat.rule.account}\n`;
         }
         if (stat.rule.methodAccount) {
-          testReport += `   方法账户: ${stat.rule.methodAccount}\n`;
+          testReport += `   方法账户：${stat.rule.methodAccount}\n`;
         }
         if (stat.rule.priority !== undefined) {
-          testReport += `   优先级: ${stat.rule.priority}\n`;
+          testReport += `   优先级：${stat.rule.priority}\n`;
         }
-        testReport += `\n`;
+        testReport += '\n';
       });
 
-      testReport += `=== 匹配详情 ===\n`;
-      testReport += `总匹配记录: ${totalMatched} 条\n`;
-      testReport += `未匹配记录: ${cachedData.orders.length - totalMatched} 条\n`;
-      testReport += `匹配率: ${((totalMatched / cachedData.orders.length) * 100).toFixed(1)}%\n\n`;
-
-      // 修正：用规则引擎判断未匹配订单
+      testReport += '【未匹配记录示例】\n';
+      testReport += '--------------------------\n';
       const unmatchedOrders = cachedData.orders.filter((order: any) => {
         return ruleEngine.findAllMatchingRulesSorted(order).length === 0;
       });
-
       if (unmatchedOrders.length > 0) {
-        testReport += `=== 未匹配记录示例 ===\n`;
         unmatchedOrders.slice(0, 5).forEach((order: any, index: number) => {
-          testReport += `${index + 1}. ${order.peer || '未知'} - ${order.item || '无描述'}\n`;
-          testReport += `   金额: ${order.money} ${order.currency}\n`;
-          testReport += `   类型: ${order.type}\n`;
-          testReport += `   方法: ${order.method || '未知'}\n`;
-          if (order.category) {
-            testReport += `   分类: ${order.category}\n`;
-          }
-          if (order.txTypeOriginal) {
-            testReport += `   交易类型: ${order.txTypeOriginal}\n`;
-          }
-          testReport += `\n`;
+          testReport += `${index + 1}. 对方：${order.peer || '未知'} | 摘要：${order.item || '无描述'} | 金额：${order.money} ${order.currency} | 类型：${order.type} | 方法：${order.method || '未知'}\n`;
         });
         if (unmatchedOrders.length > 5) {
           testReport += `... 还有 ${unmatchedOrders.length - 5} 条未匹配记录\n`;
         }
+      } else {
+        testReport += '无未匹配记录\n';
+      }
+      testReport += '\n';
 
-        // 字段聚合统计与推荐规则，基于所有未匹配订单
-        const fieldStats: Record<string, Record<string, number>> = {
-          peer: {}, item: {}, type: {}, method: {}, category: {}
-        };
-        unmatchedOrders.forEach((order: any) => {
-          ['peer', 'item', 'type', 'method', 'category'].forEach(field => {
-            const val = order[field] || '';
-            if (val) {
-              fieldStats[field][val] = (fieldStats[field][val] || 0) + 1;
-            }
-          });
-        });
-        testReport += `=== 未匹配字段聚合统计 ===\n`;
-        Object.entries(fieldStats).forEach(([field, stat]) => {
-          const sorted = Object.entries(stat).sort((a, b) => b[1] - a[1]);
-          if (sorted.length > 0) {
-            testReport += `【${field}】出现最多：\n`;
-            sorted.slice(0, 3).forEach(([val, count]) => {
-              testReport += `   ${val}：${count} 次\n`;
-              // 推荐规则
-              testReport += `   推荐规则：{ \"${field}\": \"${val}\" }\n`;
-            });
+      testReport += '【未匹配字段聚合统计与推荐规则】\n';
+      testReport += '--------------------------\n';
+      const fieldStats: Record<string, Record<string, number>> = {
+        peer: {}, item: {}, type: {}, method: {}, category: {}
+      };
+      unmatchedOrders.forEach((order: any) => {
+        ['peer', 'item', 'type', 'method', 'category'].forEach(field => {
+          const val = order[field] || '';
+          if (val) {
+            fieldStats[field][val] = (fieldStats[field][val] || 0) + 1;
           }
         });
-      }
+      });
+      Object.entries(fieldStats).forEach(([field, stat]) => {
+        const sorted = Object.entries(stat).sort((a, b) => b[1] - a[1]);
+        if (sorted.length > 0) {
+          testReport += `${field} 出现最多：\n`;
+          sorted.slice(0, 3).forEach(([val, count]) => {
+            testReport += `   ${val}：${count} 次\n`;
+            testReport += `   ⭐ 推荐规则：{ "${field}": "${val}" }\n`;
+          });
+        }
+      });
+      testReport += '\n==========================\n';
 
       // 显示结果（只存到ruleTestResult，不覆盖processingResult）
       ruleTestResult.value = {
@@ -728,7 +723,7 @@ export function useDataSourceConfig() {
           rules: providerConfig.rules,
           stats: stats,
           processedIR: processedIR,
-          totalMatched: totalMatched,
+          totalMatched: stats.reduce((sum: number, stat: any) => sum + stat.count, 0),
           totalRecords: cachedData.orders.length,
           unmatchedOrders: unmatchedOrders.slice(0, 10) // 只保存前10条未匹配记录
         },

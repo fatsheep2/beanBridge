@@ -156,6 +156,13 @@ export class CCBProvider extends BaseProvider {
             tags: []
         };
 
+        if (order.plusAccount) {
+            order.extraAccounts[Account.PlusAccount] = order.plusAccount;
+        }
+        if (order.minusAccount) {
+            order.extraAccounts[Account.MinusAccount] = order.minusAccount;
+        }
+
         return order;
     }
 

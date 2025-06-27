@@ -48,7 +48,31 @@ export class RuleEngine {
   }
 
   applyRules(order: Order): Order {
+    // 调试：只输出特定记录的规则处理信息
+    const isDebugRecord = order.peer.includes('金膳') || order.peer.includes('午餐') || order.peer.includes('晚餐');
+    if (isDebugRecord) {
+      console.log(`[规则引擎] 开始处理订单: ${order.peer} | 原始peer: ${order.metadata?.originalPeer || order.peer}`);
+    }
+
     const matchedRules = this.findAllMatchingRulesSorted(order);
+
+    // 新增：检查是否有多个规则匹配但没有时间区分
+    if (matchedRules.length > 1) {
+      const rulesWithoutTime = matchedRules.filter(rule => !rule.time);
+      const rulesWithTime = matchedRules.filter(rule => rule.time);
+
+      if (rulesWithoutTime.length > 1 && rulesWithTime.length === 0) {
+        console.warn(`[规则引擎警告] 订单 "${order.peer}" 匹配了 ${matchedRules.length} 个规则，但没有时间区分：`, {
+          order: `${order.peer} ${order.item} ${order.typeOriginal} ${order.method}`,
+          matchedRules: matchedRules.map(r => ({
+            pattern: r.pattern,
+            account: r.account,
+            time: r.time
+          })),
+          suggestion: '建议为这些规则添加时间字段以区分不同时段的交易'
+        });
+      }
+    }
 
     let updatedOrder = {
       ...order,
@@ -58,25 +82,31 @@ export class RuleEngine {
     };
 
     if (matchedRules.length > 0) {
-      console.log('Order matched rules:', {
-        order: `${order.peer} ${order.item} ${order.typeOriginal} ${order.method}`,
-        matchedRules: matchedRules.map(r => ({
-          pattern: r.pattern,
-          account: r.account,
-          methodAccount: r.methodAccount,
-          item: r.item,
-          type: r.type,
-          method: r.method
-        }))
-      });
+      // 调试：只输出特定记录的订单匹配信息
+      if (isDebugRecord) {
+        console.log('Order matched rules:', {
+          order: `${order.peer} ${order.item} ${order.typeOriginal} ${order.method}`,
+          matchedRules: matchedRules.map(r => ({
+            pattern: r.pattern,
+            account: r.account,
+            methodAccount: r.methodAccount,
+            item: r.item,
+            type: r.type,
+            method: r.method
+          }))
+        });
+      }
 
       // 按优先级和精确度排序的规则，依次应用
       for (const matchedRule of matchedRules) {
-        console.log('Applying rule:', {
-          pattern: matchedRule.pattern,
-          account: matchedRule.account,
-          methodAccount: matchedRule.methodAccount
-        });
+        // 调试：只输出特定记录的规则应用信息
+        if (isDebugRecord) {
+          console.log('Applying rule:', {
+            pattern: matchedRule.pattern,
+            account: matchedRule.account,
+            methodAccount: matchedRule.methodAccount
+          });
+        }
 
         // 合并标签
         if (matchedRule.tags) {
@@ -88,56 +118,79 @@ export class RuleEngine {
           // 设置 MinusAccount（资金账户）
           if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
             updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.methodAccount;
-            console.log('Set MinusAccount from rule:', matchedRule.methodAccount);
+            updatedOrder.minusAccount = matchedRule.methodAccount;
+            if (isDebugRecord) console.log('Set MinusAccount from rule:', matchedRule.methodAccount);
           } else if (!updatedOrder.extraAccounts[Account.MinusAccount]) {
-            // 如果规则没有设置 methodAccount，使用默认账户
             updatedOrder.extraAccounts[Account.MinusAccount] = this.defaultMinusAccount;
-            console.log('Set MinusAccount from default:', this.defaultMinusAccount);
+            updatedOrder.minusAccount = this.defaultMinusAccount;
+            if (isDebugRecord) console.log('Set MinusAccount from default:', this.defaultMinusAccount);
           }
 
-          // 设置 PlusAccount（目标账户）
-          if (matchedRule.account && matchedRule.account !== 'Expenses:FIXME') {
-            updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.account;
-            console.log('Set PlusAccount from rule:', matchedRule.account);
+          // 设置 PlusAccount（目标账户）- 支持 targetAccount 和 account 字段
+          const targetAccount = (matchedRule as any).targetAccount || matchedRule.account;
+          if (targetAccount && targetAccount !== 'Expenses:FIXME') {
+            updatedOrder.extraAccounts[Account.PlusAccount] = targetAccount;
+            updatedOrder.plusAccount = targetAccount;
+            if (isDebugRecord) console.log('Set PlusAccount from rule:', targetAccount);
+
+            // 调试：只输出特定记录的账户设置信息
+            if (order.peer.includes('金膳') || order.peer.includes('午餐') || order.peer.includes('晚餐')) {
+              console.log(`[规则引擎调试] 订单: ${order.peer} | 设置账户: ${targetAccount} | 规则: ${matchedRule.pattern}`);
+            }
           } else if (!updatedOrder.extraAccounts[Account.PlusAccount]) {
-            // 如果规则没有设置 account，使用默认账户
             updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultPlusAccount;
-            console.log('Set PlusAccount from default:', this.defaultPlusAccount);
+            updatedOrder.plusAccount = this.defaultPlusAccount;
+            if (isDebugRecord) console.log('Set PlusAccount from default:', this.defaultPlusAccount);
           }
         } else if (order.type === 'Recv') {
-          // 设置 MinusAccount（来源账户）
-          if (matchedRule.account && matchedRule.account !== 'Expenses:FIXME') {
-            updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.account;
+          // 设置 MinusAccount（来源账户）- 支持 targetAccount 和 account 字段
+          const targetAccount = (matchedRule as any).targetAccount || matchedRule.account;
+          if (targetAccount && targetAccount !== 'Expenses:FIXME') {
+            updatedOrder.extraAccounts[Account.MinusAccount] = targetAccount;
+            updatedOrder.minusAccount = targetAccount;
           } else if (!updatedOrder.extraAccounts[Account.MinusAccount]) {
             updatedOrder.extraAccounts[Account.MinusAccount] = 'Income:Other';
+            updatedOrder.minusAccount = 'Income:Other';
           }
 
           // 设置 PlusAccount（资金账户）
           if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
             updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.methodAccount;
+            updatedOrder.plusAccount = matchedRule.methodAccount;
           } else if (!updatedOrder.extraAccounts[Account.PlusAccount]) {
             updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultMinusAccount;
+            updatedOrder.plusAccount = this.defaultMinusAccount;
           }
         }
       }
 
-      console.log('Final account mapping:', updatedOrder.extraAccounts);
+      if (isDebugRecord) {
+        console.log('Final account mapping:', updatedOrder.extraAccounts);
+      }
     } else {
       // 如果没有匹配的规则，设置默认账户
       if (order.type === 'Send') {
         updatedOrder.extraAccounts[Account.MinusAccount] = this.defaultMinusAccount;
         updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultPlusAccount;
-        console.log('Set default accounts for unmatched Send order:', {
-          minusAccount: this.defaultMinusAccount,
-          plusAccount: this.defaultPlusAccount
-        });
+        updatedOrder.minusAccount = this.defaultMinusAccount;
+        updatedOrder.plusAccount = this.defaultPlusAccount;
+        if (isDebugRecord) {
+          console.log('Set default accounts for unmatched Send order:', {
+            minusAccount: this.defaultMinusAccount,
+            plusAccount: this.defaultPlusAccount
+          });
+        }
       } else if (order.type === 'Recv') {
         updatedOrder.extraAccounts[Account.MinusAccount] = 'Income:Other';
         updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultMinusAccount;
-        console.log('Set default accounts for unmatched Recv order:', {
-          minusAccount: 'Income:Other',
-          plusAccount: this.defaultMinusAccount
-        });
+        updatedOrder.minusAccount = 'Income:Other';
+        updatedOrder.plusAccount = this.defaultMinusAccount;
+        if (isDebugRecord) {
+          console.log('Set default accounts for unmatched Recv order:', {
+            minusAccount: 'Income:Other',
+            plusAccount: this.defaultMinusAccount
+          });
+        }
       }
     }
 
@@ -205,39 +258,80 @@ export class RuleEngine {
 
   private hasFieldMatching(rule: ConfigRule): boolean {
     const hasFields = !!(rule.peer || rule.item || rule.type || rule.method || rule.category || rule.txType);
-    console.log('Rule field matching check:', {
-      pattern: rule.pattern,
-      peer: rule.peer,
-      item: rule.item,
-      type: rule.type,
-      method: rule.method,
-      category: rule.category,
-      txType: rule.txType,
-      hasFields: hasFields
-    });
     return hasFields;
   }
 
   // 新增：更精确的字段匹配方法
   private matchesRuleFields(order: Order, rule: ConfigRule): boolean {
+    // 调试：只输出特定记录的规则匹配信息
+    const isDebugRecord = order.peer.includes('金膳') || order.peer.includes('午餐') || order.peer.includes('晚餐');
+    let debugInfo = [];
+
     // 检查各个字段的匹配 - 所有非空字段都必须匹配
-    if (rule.peer && !this.matchesFieldValue(this.getOrderValue(order, 'peer'), rule.peer, rule.sep, rule.fullMatch)) {
-      return false;
+    if (rule.peer) {
+      const matches = this.matchesFieldValue(this.getOrderValue(order, 'peer'), rule.peer, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:peer] 规则值:${rule.peer} 订单值:${this.getOrderValue(order, 'peer')} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
     }
-    if (rule.item && !this.matchesFieldValue(this.getOrderValue(order, 'item'), rule.item, rule.sep, rule.fullMatch)) {
-      return false;
+
+    if (rule.item) {
+      const matches = this.matchesFieldValue(this.getOrderValue(order, 'item'), rule.item, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:item] 规则值:${rule.item} 订单值:${this.getOrderValue(order, 'item')} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
     }
-    if (rule.type && !this.matchesFieldValue(this.getOrderValue(order, 'type'), rule.type, rule.sep, rule.fullMatch)) {
-      return false;
+
+    if (rule.type) {
+      const matches = this.matchesFieldValue(this.getOrderValue(order, 'type'), rule.type, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:type] 规则值:${rule.type} 订单值:${this.getOrderValue(order, 'type')} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
     }
-    if (rule.method && !this.matchesFieldValue(this.getOrderValue(order, 'method'), rule.method, rule.sep, rule.fullMatch)) {
-      return false;
+
+    if (rule.method) {
+      const matches = this.matchesFieldValue(this.getOrderValue(order, 'method'), rule.method, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:method] 规则值:${rule.method} 订单值:${this.getOrderValue(order, 'method')} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
     }
-    if (rule.category && !this.matchesFieldValue(this.getOrderValue(order, 'category'), rule.category, rule.sep, rule.fullMatch)) {
-      return false;
+
+    if (rule.category) {
+      const matches = this.matchesFieldValue(this.getOrderValue(order, 'category'), rule.category, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:category] 规则值:${rule.category} 订单值:${this.getOrderValue(order, 'category')} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
     }
-    if (rule.txType && !this.matchesFieldValue(this.getOrderValue(order, 'txType'), rule.txType, rule.sep, rule.fullMatch)) {
-      return false;
+
+    if (rule.txType) {
+      const matches = this.matchesFieldValue(this.getOrderValue(order, 'txType'), rule.txType, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:txType] 规则值:${rule.txType} 订单值:${this.getOrderValue(order, 'txType')} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
     }
 
     // 新增：判断时间段匹配
@@ -256,21 +350,34 @@ export class RuleEngine {
       const [endH, endM] = end.split(':').map(Number);
       const startMinutes = startH * 60 + (startM || 0);
       const endMinutes = endH * 60 + (endM || 0);
-      if (!(payMinutes >= startMinutes && payMinutes < endMinutes)) {
+      const timeMatch = (payMinutes >= startMinutes && payMinutes < endMinutes);
+
+      if (isDebugRecord) {
+        const payTimeStr = `${payDate.getHours().toString().padStart(2, '0')}:${payDate.getMinutes().toString().padStart(2, '0')}`;
+        debugInfo.push(`[时间] 规则区间:${rule.time} 订单时间:${payTimeStr} 匹配:${timeMatch} (订单分钟:${payMinutes}, 区间:${startMinutes}-${endMinutes})`);
+      }
+
+      if (!timeMatch) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
         return false;
       }
     }
 
+    if (isDebugRecord) {
+      console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:true\n${debugInfo.join('\n')}`);
+    }
     return true;
   }
 
   private getOrderValue(order: Order, field: string): string {
     switch (field) {
-      case 'peer': return order.peer || '';
-      case 'item': return order.item || '';
+      case 'peer': return order.metadata?.originalPeer || order.peer || '';
+      case 'item': return order.metadata?.originalItem || order.item || '';
       case 'type': return order.typeOriginal || '';
       case 'method': return order.method || '';
-      case 'category': return order.category || '';
+      case 'category': return order.metadata?.originalCategory || order.category || '';
       case 'txType': return order.txTypeOriginal || '';
       default: return '';
     }
@@ -314,6 +421,27 @@ export class RuleEngine {
 
   // 批量应用规则到 IR
   applyRulesToIR(ir: IR): IR {
+    console.log(`[规则引擎] 开始批量处理 ${ir.orders.length} 条订单，规则数量: ${this.rules.length}`);
+
+    // 测试：检查是否有包含"金膳"的订单
+    const debugOrders = ir.orders.filter(order =>
+      order.peer.includes('金膳') || order.peer.includes('午餐') || order.peer.includes('晚餐')
+    );
+    if (debugOrders.length > 0) {
+      console.log(`[规则引擎] 发现 ${debugOrders.length} 条调试订单:`, debugOrders.map(o => o.peer));
+    }
+
+    // 调试：只输出特定记录的规则列表信息
+    const hasDebugRecords = ir.orders.some(order =>
+      order.peer.includes('金膳') || order.peer.includes('午餐') || order.peer.includes('晚餐')
+    );
+
+    if (hasDebugRecords) {
+      this.rules.forEach((rule, index) => {
+        console.log(`[规则引擎] 规则${index + 1}: ${rule.pattern} | peer: ${rule.peer} | time: ${rule.time} | targetAccount: ${(rule as any).targetAccount} | account: ${rule.account}`);
+      });
+    }
+
     return {
       orders: ir.orders.map(order => this.applyRules(order))
     };

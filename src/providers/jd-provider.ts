@@ -67,7 +67,7 @@ export class JdProvider extends BaseProvider {
 
     // 京东CSV格式字段映射
     const fieldMap = this.mapFields(headers);
-    
+
     const dateStr = row[fieldMap.date] || '';
     const merchant = row[fieldMap.merchant] || '';
     const description = row[fieldMap.description] || '';
@@ -128,15 +128,22 @@ export class JdProvider extends BaseProvider {
       tags: ['ecommerce', 'jd']
     };
 
+    if (order.plusAccount) {
+      order.extraAccounts[Account.PlusAccount] = order.plusAccount;
+    }
+    if (order.minusAccount) {
+      order.extraAccounts[Account.MinusAccount] = order.minusAccount;
+    }
+
     return order;
   }
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('时间') || lowerHeader.includes('交易时间')) {
         fieldMap.date = index;
       } else if (lowerHeader.includes('商户名称') || lowerHeader.includes('商家')) {
@@ -165,7 +172,7 @@ export class JdProvider extends BaseProvider {
 
   private parseType(typeStr: string): Type {
     const lowerType = typeStr.toLowerCase();
-    
+
     if (lowerType.includes('支出')) {
       return Type.Send;
     } else if (lowerType.includes('收入')) {
@@ -180,23 +187,23 @@ export class JdProvider extends BaseProvider {
   protected postProcess(ir: IR): IR {
     // 京东特有的后处理逻辑
     const processedOrders: Order[] = [];
-    
+
     for (const order of ir.orders) {
       // 过滤掉无效交易和不计收支的交易
       if (order.money === 0 || order.type === Type.Unknown) {
         console.log(`[orderId ${order.orderID}] 跳过不计收支交易`);
         continue;
       }
-      
+
       // 过滤掉退款成功的交易
       if (order.metadata.status === '退款成功') {
         console.log(`[orderId ${order.orderID}] 跳过退款交易`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };

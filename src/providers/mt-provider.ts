@@ -67,7 +67,7 @@ export class MtProvider extends BaseProvider {
 
     // 美团CSV格式字段映射
     const fieldMap = this.mapFields(headers);
-    
+
     const createTimeStr = row[fieldMap.createTime] || '';
     const successTimeStr = row[fieldMap.successTime] || '';
     const typeStr = row[fieldMap.type] || '';
@@ -130,15 +130,22 @@ export class MtProvider extends BaseProvider {
       tags: ['food-delivery', 'meituan']
     };
 
+    if (order.plusAccount) {
+      order.extraAccounts[Account.PlusAccount] = order.plusAccount;
+    }
+    if (order.minusAccount) {
+      order.extraAccounts[Account.MinusAccount] = order.minusAccount;
+    }
+
     return order;
   }
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('创建时间') || lowerHeader.includes('交易创建时间')) {
         fieldMap.createTime = index;
       } else if (lowerHeader.includes('成功时间') || lowerHeader.includes('交易成功时间')) {
@@ -167,7 +174,7 @@ export class MtProvider extends BaseProvider {
 
   private parseType(typeStr: string): Type {
     const lowerType = typeStr.toLowerCase();
-    
+
     if (lowerType.includes('支出')) {
       return Type.Send;
     } else if (lowerType.includes('收入')) {
@@ -180,23 +187,23 @@ export class MtProvider extends BaseProvider {
   protected postProcess(ir: IR): IR {
     // 美团特有的后处理逻辑
     const processedOrders: Order[] = [];
-    
+
     for (const order of ir.orders) {
       // 过滤掉无效交易
       if (order.money === 0) {
         console.log(`[orderId ${order.orderID}] 金额为0，跳过`);
         continue;
       }
-      
+
       // 过滤掉还款交易
       if (order.metadata.transactionType === '还款') {
         console.log(`[orderId ${order.orderID}] 跳过还款交易`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };

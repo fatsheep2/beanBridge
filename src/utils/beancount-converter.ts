@@ -118,6 +118,11 @@ export class BeancountConverter {
       postings.push(`  ${targetAccount}  -${amount} ${currency}`);
     }
 
+    // 调试：只输出特定记录的导出账户信息
+    if (order.peer.includes('金膳') || order.peer.includes('午餐') || order.peer.includes('晚餐')) {
+      console.log(`[导出调试] 订单: ${order.peer} | 时间: ${order.payTime} | 导出账户: ${mainAccount} -> ${targetAccount} | extraAccounts: ${JSON.stringify(order.extraAccounts)}`);
+    }
+
     // 处理手续费
     if (order.commission && order.commission > 0) {
       const commissionAccount = order.extraAccounts[Account.CommissionAccount] || config?.defaultCommissionAccount || 'Expenses:Commission:FIXME';

@@ -76,30 +76,24 @@ export class WechatProvider extends BaseProvider {
         const money = this.parseAmount(moneyStr);
         const type = this.parseType(typeStr);
 
-        // 保存原始时间字符串到元数据
-        const metadata: Record<string, string> = {
-            status,
-            dealNo,
-            method,
-            originalPeer: peer, // 保存原始的交易对方信息
-            originalItem: itemName, // 保存原始的商品信息
-            originalDate: dateStr, // 保存原始日期字符串
-            originalType: typeStr, // 保存原始的交易类型
-            originalCategory: category, // 保存原始的分类
-            originalMoney: moneyStr, // 保存原始的金额字符串
-            // 保存完整的原始CSV行数据
-            originalCsvData: JSON.stringify({
-                date: dateStr,
-                type: typeStr,
-                peer: peer,
-                item: itemName,
-                method: method,
-                money: moneyStr,
-                status: status,
-                category: category,
-                dealNo: dealNo
-            })
-        };
+        // 保存推荐元数据字段
+        const metadata: Record<string, string> = {};
+        if (itemName) metadata.note = itemName;
+        if (dealNo) metadata.orderId = dealNo;
+        if (method) metadata.method = method;
+        if (dateStr) metadata.payTime = dateStr;
+        if (typeStr) metadata.type = typeStr;
+        if (status) metadata.status = status;
+        if (peer) metadata.peer = peer;
+        if (moneyStr) metadata.amount = moneyStr;
+        metadata.currency = 'CNY';
+        metadata.source = '微信支付';
+        // 保存原始字段值，供规则引擎使用
+        metadata.originalPeer = peer;
+        metadata.originalItem = itemName;
+        metadata.originalCategory = category;
+        // 兼容部分商户号字段（如有）
+        if (row[fieldMap.merchantId]) metadata.merchantId = row[fieldMap.merchantId];
 
         const order: Order = {
             orderType: OrderType.Normal,
@@ -166,6 +160,8 @@ export class WechatProvider extends BaseProvider {
                 fieldMap.category = index;
             } else if (lowerHeader.includes('交易单号') || lowerHeader.includes('订单号')) {
                 fieldMap.dealNo = index;
+            } else if (lowerHeader.includes('商户号')) {
+                fieldMap.merchantId = index;
             }
         });
 
@@ -195,112 +191,16 @@ export class WechatProvider extends BaseProvider {
                 continue;
             }
 
-            // 应用规则匹配
-            const processedOrder = this.applyRules(order);
-            processedOrders.push(processedOrder);
+            // 确保使用原始的 peer 和 item 值
+            order.peer = order.metadata.originalPeer || order.peer;
+            order.item = order.metadata.originalItem || order.item;
+            order.category = order.metadata.originalCategory || order.category;
+
+            processedOrders.push(order);
         }
 
         return {
             orders: processedOrders
         };
-    }
-
-    private applyRules(order: Order): Order {
-        // 获取当前配置
-        const config = this.getCurrentConfig();
-        if (!config) {
-            // 如果没有配置，使用默认值
-            order.minusAccount = 'Assets:Unknown';
-            order.plusAccount = 'Expenses:Unknown';
-            // 确保使用原始的 peer 和 item 值
-            order.peer = order.metadata.originalPeer || order.peer;
-            order.item = order.metadata.originalItem || order.item;
-            order.category = order.metadata.originalCategory || order.category;
-            return order;
-        }
-
-        // 设置默认账户
-        order.minusAccount = config.defaultMinusAccount || 'Assets:Unknown';
-        order.plusAccount = config.defaultPlusAccount || 'Expenses:Unknown';
-
-        // 应用规则匹配
-        if (config.rules && config.rules.length > 0) {
-            for (const rule of config.rules) {
-                if (this.matchesRule(order, rule)) {
-                    // 应用规则，但不修改原始的 peer 和 item
-                    if (rule.targetAccount) {
-                        order.plusAccount = rule.targetAccount;
-                    }
-                    if (rule.methodAccount) {
-                        order.minusAccount = rule.methodAccount;
-                    }
-                    if (rule.tags && rule.tags.length > 0) {
-                        order.tags = [...(order.tags || []), ...rule.tags];
-                    }
-                    // 不修改原始的 peer 和 item，保持原始数据
-                    break;
-                }
-            }
-        }
-
-        // 确保在应用规则后，peer 和 item 字段始终使用原始值
-        order.peer = order.metadata.originalPeer || order.peer;
-        order.item = order.metadata.originalItem || order.item;
-        order.category = order.metadata.originalCategory || order.category;
-
-        return order;
-    }
-
-    private matchesRule(order: Order, rule: any): boolean {
-        // 检查各个字段的匹配
-        const fields = ['peer', 'item', 'type', 'method', 'category', 'txType'];
-
-        for (const field of fields) {
-            if (rule[field]) {
-                const ruleValue = rule[field];
-                const orderValue = this.getOrderValue(order, field);
-
-                if (rule.sep && ruleValue.includes(rule.sep)) {
-                    // 使用分隔符分割规则值
-                    const ruleValues = ruleValue.split(rule.sep).map((v: string) => v.trim());
-                    const matches = ruleValues.some((v: string) =>
-                        rule.fullMatch ? orderValue === v : orderValue.includes(v)
-                    );
-                    if (!matches) return false;
-                } else {
-                    // 单个值匹配
-                    const matches = rule.fullMatch ?
-                        orderValue === ruleValue :
-                        orderValue.includes(ruleValue);
-                    if (!matches) return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    private getOrderValue(order: Order, field: string): string {
-        switch (field) {
-            case 'peer':
-                return order.metadata.originalPeer || order.peer || '';
-            case 'item':
-                return order.metadata.originalItem || order.item || '';
-            case 'type':
-                return order.typeOriginal || '';
-            case 'method':
-                return order.method || '';
-            case 'category':
-                return order.metadata.originalCategory || order.category || '';
-            case 'txType':
-                return order.txTypeOriginal || '';
-            default:
-                return '';
-        }
-    }
-
-    private getCurrentConfig(): any {
-        // 从配置服务获取当前配置
-        return ruleConfigService.getConfig(this.getProviderType());
     }
 } 

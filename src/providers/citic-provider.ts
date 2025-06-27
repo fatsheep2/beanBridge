@@ -63,7 +63,7 @@ export class CiticProvider extends BaseProvider {
     if (row.length < 5) return null;
 
     const fieldMap = this.mapFields(headers);
-    
+
     const dateStr = row[fieldMap.date] || '';
     const timeStr = row[fieldMap.time] || '';
     const amountStr = row[fieldMap.amount] || '';
@@ -125,15 +125,22 @@ export class CiticProvider extends BaseProvider {
       tags: ['bank', 'citic']
     };
 
+    if (order.plusAccount) {
+      order.extraAccounts[Account.PlusAccount] = order.plusAccount;
+    }
+    if (order.minusAccount) {
+      order.extraAccounts[Account.MinusAccount] = order.minusAccount;
+    }
+
     return order;
   }
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('日期') || lowerHeader.includes('交易日期')) {
         fieldMap.date = index;
       } else if (lowerHeader.includes('时间') || lowerHeader.includes('交易时间')) {
@@ -170,16 +177,16 @@ export class CiticProvider extends BaseProvider {
 
   protected postProcess(ir: IR): IR {
     const processedOrders: Order[] = [];
-    
+
     for (const order of ir.orders) {
       if (order.money === 0) {
         console.log(`[orderId ${order.orderID}] 金额为0，跳过`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };
