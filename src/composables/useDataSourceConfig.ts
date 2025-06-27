@@ -486,11 +486,9 @@ export function useDataSourceConfig() {
       testReport += `未匹配记录: ${previewResult.data.orders.length - totalMatched} 条\n`;
       testReport += `匹配率: ${((totalMatched / previewResult.data.orders.length) * 100).toFixed(1)}%\n\n`;
 
-      // 显示未匹配的记录示例
+      // 修正：用规则引擎判断未匹配订单
       const unmatchedOrders = previewResult.data.orders.filter((order: any) => {
-        return !stats.some(stat => stat.examples.some(example =>
-          example.includes(order.peer || '') || example.includes(order.item || '')
-        ));
+        return ruleEngine.findAllMatchingRulesSorted(order).length === 0;
       });
 
       if (unmatchedOrders.length > 0) {
@@ -511,6 +509,31 @@ export function useDataSourceConfig() {
         if (unmatchedOrders.length > 5) {
           testReport += `... 还有 ${unmatchedOrders.length - 5} 条未匹配记录\n`;
         }
+
+        // 字段聚合统计与推荐规则，基于所有未匹配订单
+        const fieldStats: Record<string, Record<string, number>> = {
+          peer: {}, item: {}, type: {}, method: {}, category: {}
+        };
+        unmatchedOrders.forEach((order: any) => {
+          ['peer', 'item', 'type', 'method', 'category'].forEach(field => {
+            const val = order[field] || '';
+            if (val) {
+              fieldStats[field][val] = (fieldStats[field][val] || 0) + 1;
+            }
+          });
+        });
+        testReport += `=== 未匹配字段聚合统计 ===\n`;
+        Object.entries(fieldStats).forEach(([field, stat]) => {
+          const sorted = Object.entries(stat).sort((a, b) => b[1] - a[1]);
+          if (sorted.length > 0) {
+            testReport += `【${field}】出现最多：\n`;
+            sorted.slice(0, 3).forEach(([val, count]) => {
+              testReport += `   ${val}：${count} 次\n`;
+              // 推荐规则
+              testReport += `   推荐规则：{ \"${field}\": \"${val}\" }\n`;
+            });
+          }
+        });
       }
 
       // 显示结果（只存到ruleTestResult，不覆盖processingResult）
@@ -647,11 +670,9 @@ export function useDataSourceConfig() {
       testReport += `未匹配记录: ${cachedData.orders.length - totalMatched} 条\n`;
       testReport += `匹配率: ${((totalMatched / cachedData.orders.length) * 100).toFixed(1)}%\n\n`;
 
-      // 显示未匹配的记录示例
+      // 修正：用规则引擎判断未匹配订单
       const unmatchedOrders = cachedData.orders.filter((order: any) => {
-        return !stats.some(stat => stat.examples.some(example =>
-          example.includes(order.peer || '') || example.includes(order.item || '')
-        ));
+        return ruleEngine.findAllMatchingRulesSorted(order).length === 0;
       });
 
       if (unmatchedOrders.length > 0) {
@@ -672,6 +693,31 @@ export function useDataSourceConfig() {
         if (unmatchedOrders.length > 5) {
           testReport += `... 还有 ${unmatchedOrders.length - 5} 条未匹配记录\n`;
         }
+
+        // 字段聚合统计与推荐规则，基于所有未匹配订单
+        const fieldStats: Record<string, Record<string, number>> = {
+          peer: {}, item: {}, type: {}, method: {}, category: {}
+        };
+        unmatchedOrders.forEach((order: any) => {
+          ['peer', 'item', 'type', 'method', 'category'].forEach(field => {
+            const val = order[field] || '';
+            if (val) {
+              fieldStats[field][val] = (fieldStats[field][val] || 0) + 1;
+            }
+          });
+        });
+        testReport += `=== 未匹配字段聚合统计 ===\n`;
+        Object.entries(fieldStats).forEach(([field, stat]) => {
+          const sorted = Object.entries(stat).sort((a, b) => b[1] - a[1]);
+          if (sorted.length > 0) {
+            testReport += `【${field}】出现最多：\n`;
+            sorted.slice(0, 3).forEach(([val, count]) => {
+              testReport += `   ${val}：${count} 次\n`;
+              // 推荐规则
+              testReport += `   推荐规则：{ \"${field}\": \"${val}\" }\n`;
+            });
+          }
+        });
       }
 
       // 显示结果（只存到ruleTestResult，不覆盖processingResult）

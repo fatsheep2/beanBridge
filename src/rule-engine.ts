@@ -145,7 +145,7 @@ export class RuleEngine {
   }
 
   // 找到所有匹配的规则，并按优先级和精确度排序
-  private findAllMatchingRulesSorted(order: Order): ConfigRule[] {
+  public findAllMatchingRulesSorted(order: Order): ConfigRule[] {
     const matchedRules: ConfigRule[] = [];
 
     for (const rule of this.rules) {
@@ -238,6 +238,27 @@ export class RuleEngine {
     }
     if (rule.txType && !this.matchesFieldValue(this.getOrderValue(order, 'txType'), rule.txType, rule.sep, rule.fullMatch)) {
       return false;
+    }
+
+    // 新增：判断时间段匹配
+    if (rule.time && rule.time.includes('-') && order.payTime) {
+      // 兼容字符串和Date对象
+      let payDate: Date;
+      if (typeof order.payTime === 'string') {
+        // 兼容 '2025-01-08 13:40:00' 和 '2025-01-08T13:40:00'
+        payDate = new Date((order.payTime as string).replace(' ', 'T'));
+      } else {
+        payDate = order.payTime as Date;
+      }
+      const payMinutes = payDate.getHours() * 60 + payDate.getMinutes();
+      const [start, end] = rule.time.split('-').map(s => s.trim());
+      const [startH, startM] = start.split(':').map(Number);
+      const [endH, endM] = end.split(':').map(Number);
+      const startMinutes = startH * 60 + (startM || 0);
+      const endMinutes = endH * 60 + (endM || 0);
+      if (!(payMinutes >= startMinutes && payMinutes < endMinutes)) {
+        return false;
+      }
     }
 
     return true;

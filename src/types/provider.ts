@@ -102,6 +102,7 @@ export interface ConfigRule {
   sep?: string;
   fullMatch?: boolean;
   priority?: number;
+  time?: string;
 }
 
 // 支持的解析器类型
