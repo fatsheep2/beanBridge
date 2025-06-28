@@ -223,9 +223,9 @@ export class CCBProvider extends BaseProvider {
             // 直接使用Date构造函数传入参数，避免时区转换
             const date = new Date(year, month, day, hour, minute, second, 0);
 
-            console.log('[Provider-CCB] 创建的时间对象:', date);
-            console.log('[Provider-CCB] 本地时间字符串:', date.toString());
-            console.log('[Provider-CCB] ISO字符串:', date.toISOString());
+            // console.log('[Provider-CCB] 创建的时间对象:', date);
+            // console.log('[Provider-CCB] 本地时间字符串:', date.toString());
+            // console.log('[Provider-CCB] ISO字符串:', date.toISOString());
 
             return date;
         }
