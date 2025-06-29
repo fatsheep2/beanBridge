@@ -88,6 +88,173 @@ export const providers: ProviderInfo[] = [
     ]
   },
   {
+    type: ProviderType.Ethereum,
+    name: '以太坊',
+    formats: ['API'],
+    description: '以太坊区块链交易记录解析器',
+    category: 'crypto',
+    color: '#627EEA',
+    icon: getIconPath('ethereum.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币', mappedField: 'token', description: '代币符号' },
+      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
+      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
+      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
+      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
+    ]
+  },
+  {
+    type: ProviderType.BinanceSmartChain,
+    name: '币安智能链',
+    formats: ['API'],
+    description: '币安智能链交易记录解析器',
+    category: 'crypto',
+    color: '#F3BA2F',
+    icon: getIconPath('bsc.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币', mappedField: 'token', description: '代币符号' },
+      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
+      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
+      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
+      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
+    ]
+  },
+  {
+    type: ProviderType.Polygon,
+    name: 'Polygon',
+    formats: ['API'],
+    description: 'Polygon网络交易记录解析器',
+    category: 'crypto',
+    color: '#8247E5',
+    icon: getIconPath('polygon.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币', mappedField: 'token', description: '代币符号' },
+      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
+      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
+      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
+      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
+    ]
+  },
+  {
+    type: ProviderType.Arbitrum,
+    name: 'Arbitrum',
+    formats: ['API'],
+    description: 'Arbitrum网络交易记录解析器',
+    category: 'crypto',
+    color: '#28A0F0',
+    icon: getIconPath('arbitrum.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币', mappedField: 'token', description: '代币符号' },
+      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
+      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
+      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
+      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
+    ]
+  },
+  {
+    type: ProviderType.Optimism,
+    name: 'Optimism',
+    formats: ['API'],
+    description: 'Optimism网络交易记录解析器',
+    category: 'crypto',
+    color: '#FF0420',
+    icon: getIconPath('optimism.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币', mappedField: 'token', description: '代币符号' },
+      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
+      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
+      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
+      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
+    ]
+  },
+  {
+    type: ProviderType.Avalanche,
+    name: 'Avalanche',
+    formats: ['API'],
+    description: 'Avalanche网络交易记录解析器',
+    category: 'crypto',
+    color: '#E84142',
+    icon: getIconPath('avalanche.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币', mappedField: 'token', description: '代币符号' },
+      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
+      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
+      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
+      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
+    ]
+  },
+  {
+    type: ProviderType.Solana,
+    name: 'Solana',
+    formats: ['API'],
+    description: 'Solana网络交易记录解析器',
+    category: 'crypto',
+    color: '#14F195',
+    icon: getIconPath('solana.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币', mappedField: 'token', description: '代币符号' },
+      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
+      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
+      { originalField: '交易费', mappedField: 'gasFee', description: '交易费金额' },
+      { originalField: '交易费代币', mappedField: 'gasToken', description: '交易费代币' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
+    ]
+  },
+  {
+    type: ProviderType.Bitcoin,
+    name: 'Bitcoin',
+    formats: ['API'],
+    description: 'Bitcoin网络交易记录解析器',
+    category: 'crypto',
+    color: '#F7931A',
+    icon: getIconPath('bitcoin.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币', mappedField: 'token', description: '代币符号' },
+      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
+      { originalField: '交易费', mappedField: 'gasFee', description: '交易费金额' },
+      { originalField: '交易费代币', mappedField: 'gasToken', description: '交易费代币' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
+    ]
+  },
+  {
     type: ProviderType.Htsec,
     name: '华泰证券',
     formats: ['CSV', 'Excel'],
@@ -201,14 +368,14 @@ export const providers: ProviderInfo[] = [
       { originalField: '交易摘要', mappedField: 'item', description: '交易摘要' },
       { originalField: '对方户名', mappedField: 'peer', description: '交易对方户名' },
       { originalField: '对方账号', mappedField: 'peerAccount', description: '交易对方账号' },
-      { originalField: '账户余额', mappedField: 'balance', description: '账户余额' },
-      { originalField: '交易流水号', mappedField: 'orderID', description: '交易流水号' }
+      { originalField: '余额', mappedField: 'balance', description: '账户余额' },
+      { originalField: '流水号', mappedField: 'orderID', description: '交易流水号' }
     ]
   },
   {
     type: ProviderType.HsbcHK,
     name: '汇丰香港',
-    formats: ['CSV', 'PDF'],
+    formats: ['CSV', 'Excel'],
     description: '汇丰香港交易记录解析器',
     category: 'bank',
     color: '#DB0011',
@@ -218,54 +385,75 @@ export const providers: ProviderInfo[] = [
       { originalField: '交易时间', mappedField: 'time', description: '交易时间' },
       { originalField: '交易金额', mappedField: 'money', description: '交易金额' },
       { originalField: '交易类型', mappedField: 'type', description: '业务类型' },
-      { originalField: '交易摘要', mappedField: 'item', description: '交易摘要' },
+      { originalField: '交易描述', mappedField: 'item', description: '交易描述' },
       { originalField: '对方户名', mappedField: 'peer', description: '交易对方户名' },
       { originalField: '对方账号', mappedField: 'peerAccount', description: '交易对方账号' },
-      { originalField: '账户余额', mappedField: 'balance', description: '账户余额' },
-      { originalField: '交易流水号', mappedField: 'orderID', description: '交易流水号' }
+      { originalField: '余额', mappedField: 'balance', description: '账户余额' },
+      { originalField: '参考号', mappedField: 'orderID', description: '交易参考号' }
     ]
   },
   {
     type: ProviderType.MT,
     name: '美团',
     formats: ['CSV', 'Excel'],
-    description: '美团生活平台交易记录解析器',
+    description: '美团交易记录解析器',
     category: 'payment',
-    color: '#059669',
+    color: '#FFC300',
     icon: getIconPath('美团.png'),
     fieldMappings: [
-      { originalField: '创建时间', mappedField: 'createTime', description: '订单创建时间' },
-      { originalField: '成功时间', mappedField: 'payTime', description: '交易成功时间' },
-      { originalField: '收/支', mappedField: 'type', description: '收入/支出类型' },
-      { originalField: '标题', mappedField: 'item', description: '交易标题' },
-      { originalField: '流向', mappedField: 'flowType', description: '资金流向' },
+      { originalField: '交易创建时间', mappedField: 'payTime', description: '交易创建时间' },
+      { originalField: '交易成功时间', mappedField: 'successTime', description: '交易成功时间' },
+      { originalField: '交易类型', mappedField: 'type', description: '交易类型' },
+      { originalField: '订单标题', mappedField: 'item', description: '订单标题' },
+      { originalField: '收/支', mappedField: 'direction', description: '收入/支出' },
       { originalField: '支付方式', mappedField: 'method', description: '支付方式' },
-      { originalField: '订单金额', mappedField: 'orderAmount', description: '订单金额' },
-      { originalField: '实际金额', mappedField: 'money', description: '实际支付金额' },
-      { originalField: '订单号', mappedField: 'orderID', description: '美团订单号' },
-      { originalField: '商家订单号', mappedField: 'merchantOrderID', description: '商家订单号' }
+      { originalField: '订单金额', mappedField: 'money', description: '订单金额' },
+      { originalField: '实付金额', mappedField: 'actualMoney', description: '实付金额' },
+      { originalField: '交易单号', mappedField: 'orderID', description: '交易单号' },
+      { originalField: '商家单号', mappedField: 'merchantOrderID', description: '商家单号' }
+    ]
+  },
+  {
+    type: ProviderType.Hxsec,
+    name: '华兴证券',
+    formats: ['CSV', 'Excel'],
+    description: '华兴证券交易记录解析器',
+    category: 'securities',
+    color: '#1E40AF',
+    icon: getIconPath('华兴证券.png'),
+    fieldMappings: [
+      { originalField: '交易日期', mappedField: 'payTime', description: '交易日期' },
+      { originalField: '交易时间', mappedField: 'time', description: '交易时间' },
+      { originalField: '证券代码', mappedField: 'symbol', description: '证券代码' },
+      { originalField: '证券名称', mappedField: 'item', description: '证券名称' },
+      { originalField: '交易类型', mappedField: 'type', description: '买入/卖出' },
+      { originalField: '成交数量', mappedField: 'amount', description: '成交数量' },
+      { originalField: '成交价格', mappedField: 'price', description: '成交价格' },
+      { originalField: '成交金额', mappedField: 'money', description: '成交金额' },
+      { originalField: '手续费', mappedField: 'commission', description: '交易手续费' },
+      { originalField: '印花税', mappedField: 'stampTax', description: '印花税' },
+      { originalField: '过户费', mappedField: 'transferFee', description: '过户费' },
+      { originalField: '委托编号', mappedField: 'orderID', description: '委托编号' }
     ]
   },
   {
     type: ProviderType.CCB,
     name: '建设银行',
-    formats: ['XLS'],
+    formats: ['CSV', 'Excel'],
     description: '建设银行交易记录解析器',
     category: 'bank',
     color: '#1E40AF',
     icon: getIconPath('建设银行.png'),
     fieldMappings: [
-      { originalField: '记账日', mappedField: 'recordDate', description: '记账日期' },
       { originalField: '交易日期', mappedField: 'payTime', description: '交易日期' },
       { originalField: '交易时间', mappedField: 'time', description: '交易时间' },
-      { originalField: '支出', mappedField: 'expense', description: '支出金额' },
-      { originalField: '收入', mappedField: 'income', description: '收入金额' },
-      { originalField: '账户余额', mappedField: 'balance', description: '账户余额' },
-      { originalField: '币种', mappedField: 'currency', description: '交易币种' },
-      { originalField: '摘要', mappedField: 'item', description: '交易摘要' },
-      { originalField: '对方账号', mappedField: 'peerAccount', description: '交易对方账号' },
+      { originalField: '交易金额', mappedField: 'money', description: '交易金额' },
+      { originalField: '交易类型', mappedField: 'type', description: '业务类型' },
+      { originalField: '交易摘要', mappedField: 'item', description: '交易摘要' },
       { originalField: '对方户名', mappedField: 'peer', description: '交易对方户名' },
-      { originalField: '交易地点', mappedField: 'method', description: '交易地点(映射为支付方式)' }
+      { originalField: '对方账号', mappedField: 'peerAccount', description: '交易对方账号' },
+      { originalField: '余额', mappedField: 'balance', description: '账户余额' },
+      { originalField: '流水号', mappedField: 'orderID', description: '交易流水号' }
     ]
   }
 ];

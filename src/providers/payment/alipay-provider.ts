@@ -1,6 +1,6 @@
-import { BaseProvider } from './base-provider';
-import type { Order, IR, FileData } from '../types/provider';
-import { OrderType, Type, ProviderType, Unit, Account } from '../types/provider';
+import { BaseProvider } from '../base/base-provider';
+import type { Order, IR, FileData } from '../../types/provider';
+import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provider';
 
 export class AlipayProvider extends BaseProvider {
   getProviderName(): string {
@@ -72,7 +72,7 @@ export class AlipayProvider extends BaseProvider {
 
     // 支付宝CSV格式字段映射
     const fieldMap = this.mapFields(headers);
-    
+
     const dateStr = row[fieldMap.date] || '';
     const typeStr = row[fieldMap.type] || '';
     const peer = row[fieldMap.peer] || '';
@@ -138,10 +138,10 @@ export class AlipayProvider extends BaseProvider {
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('记录时间') || lowerHeader.includes('交易时间') || lowerHeader.includes('时间') || lowerHeader.includes('日期')) {
         fieldMap.date = index;
       } else if (lowerHeader.includes('收支类型') || lowerHeader.includes('收/支') || lowerHeader.includes('类型')) {
@@ -170,7 +170,7 @@ export class AlipayProvider extends BaseProvider {
 
   private parseType(typeStr: string): Type {
     const lowerType = typeStr.toLowerCase();
-    
+
     if (lowerType.includes('支出') || lowerType.includes('付款')) {
       return Type.Send;
     } else if (lowerType.includes('收入') || lowerType.includes('收款')) {
@@ -183,10 +183,10 @@ export class AlipayProvider extends BaseProvider {
   protected postProcess(ir: IR): IR {
     // 处理退款和交易关闭
     const processedOrders: Order[] = [];
-    
+
     for (let i = 0; i < ir.orders.length; i++) {
       const order = ir.orders[i];
-      
+
       // 处理退款
       if (order.metadata.status === '退款成功' && order.category === '退款') {
         // 查找对应的原交易
@@ -196,16 +196,16 @@ export class AlipayProvider extends BaseProvider {
           continue; // 跳过退款记录
         }
       }
-      
+
       // 处理交易关闭
       if (order.metadata.status === '交易关闭' && order.metadata.type === '不计收支') {
         console.log(`[orderId ${order.orderID}] 交易已取消`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };
@@ -214,18 +214,18 @@ export class AlipayProvider extends BaseProvider {
   private findOriginalOrder(orders: Order[], refundOrder: Order, refundIndex: number): Order | null {
     for (let i = 0; i < orders.length; i++) {
       if (i === refundIndex) continue;
-      
+
       const order = orders[i];
-      
+
       // 检查是否为对应的原交易
-      if (order.orderID && 
-          refundOrder.orderID && 
-          refundOrder.orderID.startsWith(order.orderID) &&
-          Math.abs(order.money) === Math.abs(refundOrder.money)) {
+      if (order.orderID &&
+        refundOrder.orderID &&
+        refundOrder.orderID.startsWith(order.orderID) &&
+        Math.abs(order.money) === Math.abs(refundOrder.money)) {
         return order;
       }
     }
-    
+
     return null;
   }
 } 

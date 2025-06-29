@@ -257,7 +257,10 @@ export class RuleEngine {
   }
 
   private hasFieldMatching(rule: ConfigRule): boolean {
-    const hasFields = !!(rule.peer || rule.item || rule.type || rule.method || rule.category || rule.txType);
+    const hasFields = !!(
+      rule.peer || rule.item || rule.type || rule.method || rule.category || rule.txType ||
+      rule.chain || rule.token || rule.transactionType || rule.gasToken || rule.fromAddress || rule.toAddress
+    );
     return hasFields;
   }
 
@@ -326,6 +329,97 @@ export class RuleEngine {
     if (rule.txType) {
       const matches = this.matchesFieldValue(this.getOrderValue(order, 'txType'), rule.txType, rule.sep, rule.fullMatch);
       if (isDebugRecord) debugInfo.push(`[字段:txType] 规则值:${rule.txType} 订单值:${this.getOrderValue(order, 'txType')} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
+    }
+
+    // 新增：区块链相关字段匹配
+    if (rule.chain) {
+      const matches = this.matchesFieldValue(order.chain || '', rule.chain, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:chain] 规则值:${rule.chain} 订单值:${order.chain || ''} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
+    }
+
+    if (rule.token) {
+      const matches = this.matchesFieldValue(order.token || '', rule.token, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:token] 规则值:${rule.token} 订单值:${order.token || ''} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
+    }
+
+    if (rule.transactionType) {
+      const matches = this.matchesFieldValue(order.transactionType || '', rule.transactionType, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:transactionType] 规则值:${rule.transactionType} 订单值:${order.transactionType || ''} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
+    }
+
+    if (rule.gasToken) {
+      const matches = this.matchesFieldValue(order.gasToken || '', rule.gasToken, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:gasToken] 规则值:${rule.gasToken} 订单值:${order.gasToken || ''} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
+    }
+
+    // 矿工费范围匹配
+    if (rule.minGasFee !== undefined && order.gasFee !== undefined) {
+      if (order.gasFee < rule.minGasFee) {
+        if (isDebugRecord) debugInfo.push(`[字段:minGasFee] 规则值:${rule.minGasFee} 订单值:${order.gasFee} 匹配:false`);
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
+      if (isDebugRecord) debugInfo.push(`[字段:minGasFee] 规则值:${rule.minGasFee} 订单值:${order.gasFee} 匹配:true`);
+    }
+
+    if (rule.maxGasFee !== undefined && order.gasFee !== undefined) {
+      if (order.gasFee > rule.maxGasFee) {
+        if (isDebugRecord) debugInfo.push(`[字段:maxGasFee] 规则值:${rule.maxGasFee} 订单值:${order.gasFee} 匹配:false`);
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
+      if (isDebugRecord) debugInfo.push(`[字段:maxGasFee] 规则值:${rule.maxGasFee} 订单值:${order.gasFee} 匹配:true`);
+    }
+
+    // 地址匹配
+    if (rule.fromAddress) {
+      const matches = this.matchesFieldValue(order.fromAddress || '', rule.fromAddress, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:fromAddress] 规则值:${rule.fromAddress} 订单值:${order.fromAddress || ''} 匹配:${matches}`);
+      if (!matches) {
+        if (isDebugRecord) {
+          console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);
+        }
+        return false;
+      }
+    }
+
+    if (rule.toAddress) {
+      const matches = this.matchesFieldValue(order.toAddress || '', rule.toAddress, rule.sep, rule.fullMatch);
+      if (isDebugRecord) debugInfo.push(`[字段:toAddress] 规则值:${rule.toAddress} 订单值:${order.toAddress || ''} 匹配:${matches}`);
       if (!matches) {
         if (isDebugRecord) {
           console.log(`[规则调试] 规则:${rule.pattern} 匹配结果:false\n${debugInfo.join('\n')}`);

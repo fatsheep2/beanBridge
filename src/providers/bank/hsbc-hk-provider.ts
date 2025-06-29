@@ -1,10 +1,10 @@
-import { BaseProvider } from './base-provider';
-import type { Order, IR, FileData } from '../types/provider';
-import { OrderType, Type, ProviderType, Unit, Account } from '../types/provider';
+import { BaseProvider } from '../base/base-provider';
+import type { Order, IR, FileData } from '../../types/provider';
+import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provider';
 
-export class IcbcProvider extends BaseProvider {
+export class HsbcHkProvider extends BaseProvider {
   getProviderName(): string {
-    return '工商银行';
+    return '汇丰香港';
   }
 
   getSupportedFormats(): string[] {
@@ -12,21 +12,20 @@ export class IcbcProvider extends BaseProvider {
   }
 
   protected getProviderType(): ProviderType {
-    return ProviderType.Icbc;
+    return ProviderType.HsbcHK;
   }
 
   protected getHeaderPatterns(): RegExp[] {
-    // 工商银行特定的表头识别模式
     return [
-      /交易日期|日期|记账日期/,
+      /交易日期|日期/,
       /交易时间|时间/,
-      /交易金额|金额|发生额/,
-      /交易类型|业务类型|交易类型/,
-      /交易摘要|摘要|备注/,
-      /对方户名|对方账户|交易对方/,
+      /交易金额|金额/,
+      /交易类型|类型/,
+      /交易摘要|摘要/,
+      /对方户名|对方账户/,
       /对方账号|对方卡号/,
       /余额|账户余额/,
-      /交易流水号|流水号|交易序号/
+      /交易流水号|流水号/
     ];
   }
 
@@ -34,14 +33,13 @@ export class IcbcProvider extends BaseProvider {
     const { headers, rows } = fileData;
     const orders: Order[] = [];
 
-    // 调试：显示字段映射
     const fieldMap = this.mapFields(headers);
-    console.log('[Provider-Icbc] 字段映射:', fieldMap);
-    console.log('[Provider-Icbc] 表头:', headers);
+    console.log('[Provider-HSBC-HK] 字段映射:', fieldMap);
+    console.log('[Provider-HSBC-HK] 表头:', headers);
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
-      this.lineNum = i + 1; // 行号从1开始
+      this.lineNum = i + 1;
 
       try {
         const order = this.parseOrder(row, headers);
@@ -49,7 +47,7 @@ export class IcbcProvider extends BaseProvider {
           orders.push(order);
           this.updateStatistics(order);
         } else {
-          console.warn(`[Provider-Icbc] 第 ${this.lineNum} 行解析失败，跳过`);
+          console.warn(`[Provider-HSBC-HK] 第 ${this.lineNum} 行解析失败，跳过`);
         }
       } catch (error) {
         console.warn(`第 ${this.lineNum} 行解析失败:`, error);
@@ -57,14 +55,13 @@ export class IcbcProvider extends BaseProvider {
       }
     }
 
-    console.log(`[Provider-Icbc] 成功解析 ${orders.length} 条记录`);
+    console.log(`[Provider-HSBC-HK] 成功解析 ${orders.length} 条记录`);
     return orders;
   }
 
   private parseOrder(row: string[], headers: string[]): Order | null {
     if (row.length < 5) return null;
 
-    // 工商银行CSV格式字段映射
     const fieldMap = this.mapFields(headers);
 
     const dateStr = row[fieldMap.date] || '';
@@ -86,7 +83,7 @@ export class IcbcProvider extends BaseProvider {
 
     const order: Order = {
       orderType: OrderType.Normal,
-      peer: peerName || '工商银行',
+      peer: peerName || '汇丰香港',
       item: summary || typeStr,
       category: typeStr,
       merchantOrderID: undefined,
@@ -97,15 +94,15 @@ export class IcbcProvider extends BaseProvider {
       type,
       typeOriginal: typeStr,
       txTypeOriginal: typeStr,
-      method: '工商银行',
+      method: '汇丰香港',
       amount: Math.abs(amount),
       price: 1,
-      currency: 'CNY',
+      currency: 'HKD',
       commission: 0,
       units: {
         [Unit.BaseUnit]: '',
-        [Unit.TargetUnit]: 'CNY',
-        [Unit.CommissionUnit]: 'CNY'
+        [Unit.TargetUnit]: 'HKD',
+        [Unit.CommissionUnit]: 'HKD'
       },
       extraAccounts: {
         [Account.CashAccount]: '',
@@ -125,15 +122,8 @@ export class IcbcProvider extends BaseProvider {
         orderId,
         summary
       },
-      tags: ['bank', 'icbc']
+      tags: ['bank', 'hsbc-hk']
     };
-
-    if (order.plusAccount) {
-      order.extraAccounts[Account.PlusAccount] = order.plusAccount;
-    }
-    if (order.minusAccount) {
-      order.extraAccounts[Account.MinusAccount] = order.minusAccount;
-    }
 
     return order;
   }
@@ -144,23 +134,23 @@ export class IcbcProvider extends BaseProvider {
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
 
-      if (lowerHeader.includes('日期') || lowerHeader.includes('交易日期') || lowerHeader.includes('记账日期')) {
+      if (lowerHeader.includes('日期') || lowerHeader.includes('交易日期')) {
         fieldMap.date = index;
       } else if (lowerHeader.includes('时间') || lowerHeader.includes('交易时间')) {
         fieldMap.time = index;
-      } else if (lowerHeader.includes('金额') || lowerHeader.includes('交易金额') || lowerHeader.includes('发生额')) {
+      } else if (lowerHeader.includes('金额') || lowerHeader.includes('交易金额')) {
         fieldMap.amount = index;
-      } else if (lowerHeader.includes('类型') || lowerHeader.includes('业务类型') || lowerHeader.includes('交易类型')) {
+      } else if (lowerHeader.includes('类型') || lowerHeader.includes('交易类型')) {
         fieldMap.type = index;
-      } else if (lowerHeader.includes('摘要') || lowerHeader.includes('交易摘要') || lowerHeader.includes('备注')) {
+      } else if (lowerHeader.includes('摘要') || lowerHeader.includes('交易摘要')) {
         fieldMap.summary = index;
-      } else if (lowerHeader.includes('对方户名') || lowerHeader.includes('对方账户') || lowerHeader.includes('交易对方')) {
+      } else if (lowerHeader.includes('对方户名') || lowerHeader.includes('对方账户')) {
         fieldMap.peerName = index;
       } else if (lowerHeader.includes('对方账号') || lowerHeader.includes('对方卡号')) {
         fieldMap.peerAccount = index;
       } else if (lowerHeader.includes('余额') || lowerHeader.includes('账户余额')) {
         fieldMap.balance = index;
-      } else if (lowerHeader.includes('流水号') || lowerHeader.includes('交易流水号') || lowerHeader.includes('交易序号')) {
+      } else if (lowerHeader.includes('流水号') || lowerHeader.includes('交易流水号')) {
         fieldMap.orderId = index;
       }
     });
@@ -169,7 +159,6 @@ export class IcbcProvider extends BaseProvider {
   }
 
   private parseType(amount: number): Type {
-    // 工商银行通常正数表示收入，负数表示支出
     if (amount > 0) {
       return Type.Recv;
     } else if (amount < 0) {
@@ -180,11 +169,9 @@ export class IcbcProvider extends BaseProvider {
   }
 
   protected postProcess(ir: IR): IR {
-    // 工商银行特有的后处理逻辑
     const processedOrders: Order[] = [];
 
     for (const order of ir.orders) {
-      // 过滤掉无效交易
       if (order.money === 0) {
         console.log(`[orderId ${order.orderID}] 金额为0，跳过`);
         continue;

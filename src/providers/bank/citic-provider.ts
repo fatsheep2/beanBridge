@@ -1,10 +1,10 @@
-import { BaseProvider } from './base-provider';
-import type { Order, IR, FileData } from '../types/provider';
-import { OrderType, Type, ProviderType, Unit, Account } from '../types/provider';
+import { BaseProvider } from '../base/base-provider';
+import type { Order, IR, FileData } from '../../types/provider';
+import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provider';
 
-export class HsbcHkProvider extends BaseProvider {
+export class CiticProvider extends BaseProvider {
   getProviderName(): string {
-    return '汇丰香港';
+    return '中信银行';
   }
 
   getSupportedFormats(): string[] {
@@ -12,7 +12,7 @@ export class HsbcHkProvider extends BaseProvider {
   }
 
   protected getProviderType(): ProviderType {
-    return ProviderType.HsbcHK;
+    return ProviderType.Citic;
   }
 
   protected getHeaderPatterns(): RegExp[] {
@@ -34,8 +34,8 @@ export class HsbcHkProvider extends BaseProvider {
     const orders: Order[] = [];
 
     const fieldMap = this.mapFields(headers);
-    console.log('[Provider-HSBC-HK] 字段映射:', fieldMap);
-    console.log('[Provider-HSBC-HK] 表头:', headers);
+    console.log('[Provider-CITIC] 字段映射:', fieldMap);
+    console.log('[Provider-CITIC] 表头:', headers);
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -47,7 +47,7 @@ export class HsbcHkProvider extends BaseProvider {
           orders.push(order);
           this.updateStatistics(order);
         } else {
-          console.warn(`[Provider-HSBC-HK] 第 ${this.lineNum} 行解析失败，跳过`);
+          console.warn(`[Provider-CITIC] 第 ${this.lineNum} 行解析失败，跳过`);
         }
       } catch (error) {
         console.warn(`第 ${this.lineNum} 行解析失败:`, error);
@@ -55,7 +55,7 @@ export class HsbcHkProvider extends BaseProvider {
       }
     }
 
-    console.log(`[Provider-HSBC-HK] 成功解析 ${orders.length} 条记录`);
+    console.log(`[Provider-CITIC] 成功解析 ${orders.length} 条记录`);
     return orders;
   }
 
@@ -63,7 +63,7 @@ export class HsbcHkProvider extends BaseProvider {
     if (row.length < 5) return null;
 
     const fieldMap = this.mapFields(headers);
-    
+
     const dateStr = row[fieldMap.date] || '';
     const timeStr = row[fieldMap.time] || '';
     const amountStr = row[fieldMap.amount] || '';
@@ -83,7 +83,7 @@ export class HsbcHkProvider extends BaseProvider {
 
     const order: Order = {
       orderType: OrderType.Normal,
-      peer: peerName || '汇丰香港',
+      peer: peerName || '中信银行',
       item: summary || typeStr,
       category: typeStr,
       merchantOrderID: undefined,
@@ -94,15 +94,15 @@ export class HsbcHkProvider extends BaseProvider {
       type,
       typeOriginal: typeStr,
       txTypeOriginal: typeStr,
-      method: '汇丰香港',
+      method: '中信银行',
       amount: Math.abs(amount),
       price: 1,
-      currency: 'HKD',
+      currency: 'CNY',
       commission: 0,
       units: {
         [Unit.BaseUnit]: '',
-        [Unit.TargetUnit]: 'HKD',
-        [Unit.CommissionUnit]: 'HKD'
+        [Unit.TargetUnit]: 'CNY',
+        [Unit.CommissionUnit]: 'CNY'
       },
       extraAccounts: {
         [Account.CashAccount]: '',
@@ -122,18 +122,25 @@ export class HsbcHkProvider extends BaseProvider {
         orderId,
         summary
       },
-      tags: ['bank', 'hsbc-hk']
+      tags: ['bank', 'citic']
     };
+
+    if (order.plusAccount) {
+      order.extraAccounts[Account.PlusAccount] = order.plusAccount;
+    }
+    if (order.minusAccount) {
+      order.extraAccounts[Account.MinusAccount] = order.minusAccount;
+    }
 
     return order;
   }
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('日期') || lowerHeader.includes('交易日期')) {
         fieldMap.date = index;
       } else if (lowerHeader.includes('时间') || lowerHeader.includes('交易时间')) {
@@ -170,16 +177,16 @@ export class HsbcHkProvider extends BaseProvider {
 
   protected postProcess(ir: IR): IR {
     const processedOrders: Order[] = [];
-    
+
     for (const order of ir.orders) {
       if (order.money === 0) {
         console.log(`[orderId ${order.orderID}] 金额为0，跳过`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };

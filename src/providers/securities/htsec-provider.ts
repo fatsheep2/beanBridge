@@ -1,6 +1,6 @@
-import { BaseProvider } from './base-provider';
-import type { Order, IR, FileData } from '../types/provider';
-import { OrderType, Type, ProviderType, Unit, Account } from '../types/provider';
+import { BaseProvider } from '../base/base-provider';
+import type { Order, IR, FileData } from '../../types/provider';
+import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provider';
 
 export class HtsecProvider extends BaseProvider {
   getProviderName(): string {
@@ -69,7 +69,7 @@ export class HtsecProvider extends BaseProvider {
 
     // 华泰证券CSV格式字段映射
     const fieldMap = this.mapFields(headers);
-    
+
     const dateStr = row[fieldMap.date] || '';
     const stockCode = row[fieldMap.stockCode] || '';
     const stockName = row[fieldMap.stockName] || '';
@@ -97,7 +97,7 @@ export class HtsecProvider extends BaseProvider {
 
     // 计算总费用
     const totalFee = fee + tax + transferFee + otherFee;
-    
+
     // 计算实际金额（买入为负，卖出为正）
     const money = type === Type.Send ? -(total + totalFee) : (total - totalFee);
 
@@ -155,10 +155,10 @@ export class HtsecProvider extends BaseProvider {
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('日期') || lowerHeader.includes('交易日期') || lowerHeader.includes('成交日期')) {
         fieldMap.date = index;
       } else if (lowerHeader.includes('代码') || lowerHeader.includes('证券代码') || lowerHeader.includes('股票代码')) {
@@ -191,7 +191,7 @@ export class HtsecProvider extends BaseProvider {
 
   private parseType(typeStr: string): Type {
     const lowerType = typeStr.toLowerCase();
-    
+
     if (lowerType.includes('买入') || lowerType.includes('证券买入')) {
       return Type.Send;
     } else if (lowerType.includes('卖出') || lowerType.includes('证券卖出')) {
@@ -208,17 +208,17 @@ export class HtsecProvider extends BaseProvider {
   protected postProcess(ir: IR): IR {
     // 华泰证券特有的后处理逻辑
     const processedOrders: Order[] = [];
-    
+
     for (const order of ir.orders) {
       // 过滤掉无效交易
       if (order.metadata.stockCode === '' || order.metadata.stockName === '') {
         console.log(`[orderId ${order.orderID}] 股票信息缺失，跳过`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };

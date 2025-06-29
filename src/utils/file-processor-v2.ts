@@ -1,4 +1,4 @@
-import { ProviderFactory } from '../providers/provider-factory';
+import { ProviderFactory } from '../providers/factories/provider-factory';
 import { RuleEngine } from '../rule-engine';
 import { BeancountConverter } from './beancount-converter';
 import type { IR, ProviderType, ProviderConfig } from '../types/provider';

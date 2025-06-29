@@ -1,6 +1,6 @@
-import { BaseProvider } from './base-provider';
-import type { Order, IR, FileData } from '../types/provider';
-import { OrderType, Type, ProviderType, Unit, Account } from '../types/provider';
+import { BaseProvider } from '../base/base-provider';
+import type { Order, IR, FileData } from '../../types/provider';
+import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provider';
 
 export class TdProvider extends BaseProvider {
   getProviderName(): string {

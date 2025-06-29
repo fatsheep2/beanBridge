@@ -1,17 +1,17 @@
-import type { ProviderInterface } from '../types/provider';
-import { ProviderType } from '../types/provider';
-import { AlipayProvider } from './alipay-provider';
-import { WechatProvider } from './wechat-provider';
-import { HuobiProvider } from './huobi-provider';
-import { HtsecProvider } from './htsec-provider';
-import { IcbcProvider } from './icbc-provider';
-import { TdProvider } from './td-provider';
-import { BmoProvider } from './bmo-provider';
-import { JdProvider } from './jd-provider';
-import { CiticProvider } from './citic-provider';
-import { HsbcHkProvider } from './hsbc-hk-provider';
-import { MtProvider } from './mt-provider';
-import { CCBProvider } from './ccb-provider';
+import type { ProviderInterface } from '../../types/provider';
+import { ProviderType } from '../../types/provider';
+import { AlipayProvider } from '../payment/alipay-provider';
+import { WechatProvider } from '../payment/wechat-provider';
+import { HuobiProvider } from '../crypto/huobi-provider';
+import { HtsecProvider } from '../securities/htsec-provider';
+import { IcbcProvider } from '../bank/icbc-provider';
+import { TdProvider } from '../bank/td-provider';
+import { BmoProvider } from '../bank/bmo-provider';
+import { JdProvider } from '../payment/jd-provider';
+import { CiticProvider } from '../bank/citic-provider';
+import { HsbcHkProvider } from '../bank/hsbc-hk-provider';
+import { MtProvider } from '../payment/mt-provider';
+import { CCBProvider } from '../bank/ccb-provider';
 // 其他 provider 文件如有实现可在此处继续导入
 
 export class ProviderFactory {

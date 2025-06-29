@@ -13,7 +13,10 @@
     "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
     "lint:eslint": "eslint . --fix",
     "lint": "run-s lint:*",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.10",
@@ -30,6 +33,7 @@
     "@tsconfig/node22": "^22.0.1",
     "@types/node": "^22.15.32",
     "@vitejs/plugin-vue": "^5.2.3",
+    "@vitest/ui": "^3.2.4",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.0",
     "@vue/tsconfig": "^0.7.0",
@@ -44,6 +48,7 @@
     "typescript": "~5.8.0",
     "vite": "^6.2.4",
     "vite-plugin-vue-devtools": "^7.7.2",
+    "vitest": "^3.2.4",
     "vue-tsc": "^2.2.8"
   }
 }

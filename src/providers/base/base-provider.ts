@@ -1,4 +1,4 @@
-import type { IR, Order, ProviderInterface, ProviderType, Statistics, FileData } from '../types/provider';
+import type { IR, Order, ProviderInterface, ProviderType, Statistics, FileData } from '../../types/provider';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 

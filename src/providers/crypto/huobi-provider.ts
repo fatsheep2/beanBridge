@@ -1,6 +1,6 @@
-import { BaseProvider } from './base-provider';
-import type { Order, IR, FileData } from '../types/provider';
-import { OrderType, Type, ProviderType, Unit, Account } from '../types/provider';
+import { BaseProvider } from '../base/base-provider';
+import type { Order, IR, FileData } from '../../types/provider';
+import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provider';
 
 export class HuobiProvider extends BaseProvider {
   getProviderName(): string {
@@ -66,7 +66,7 @@ export class HuobiProvider extends BaseProvider {
 
     // 火币CSV格式字段映射
     const fieldMap = this.mapFields(headers);
-    
+
     const dateStr = row[fieldMap.date] || '';
     const typeStr = row[fieldMap.type] || '';
     const currency = row[fieldMap.currency] || '';
@@ -140,10 +140,10 @@ export class HuobiProvider extends BaseProvider {
 
   private mapFields(headers: string[]): Record<string, number> {
     const fieldMap: Record<string, number> = {};
-    
+
     headers.forEach((header, index) => {
       const lowerHeader = header.toLowerCase();
-      
+
       if (lowerHeader.includes('时间') || lowerHeader.includes('日期') || lowerHeader.includes('创建时间')) {
         fieldMap.date = index;
       } else if (lowerHeader.includes('类型') || lowerHeader.includes('操作类型') || lowerHeader.includes('交易类型')) {
@@ -170,7 +170,7 @@ export class HuobiProvider extends BaseProvider {
 
   private parseType(typeStr: string): Type {
     const lowerType = typeStr.toLowerCase();
-    
+
     if (lowerType.includes('买入') || lowerType.includes('buy')) {
       return Type.Send;
     } else if (lowerType.includes('卖出') || lowerType.includes('sell')) {
@@ -187,17 +187,17 @@ export class HuobiProvider extends BaseProvider {
   protected postProcess(ir: IR): IR {
     // 火币特有的后处理逻辑
     const processedOrders: Order[] = [];
-    
+
     for (const order of ir.orders) {
       // 过滤掉无效交易
       if (order.metadata.status === '失败' || order.metadata.status === '已取消') {
         console.log(`[orderId ${order.orderID}] 交易无效: ${order.metadata.status}`);
         continue;
       }
-      
+
       processedOrders.push(order);
     }
-    
+
     return {
       orders: processedOrders
     };
