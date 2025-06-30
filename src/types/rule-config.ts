@@ -1,5 +1,47 @@
 import { ProviderType } from './provider';
 
+// API配置接口
+export interface ApiConfig {
+  ethereum?: {
+    apiKey?: string;
+    rpcUrl?: string;
+  };
+  bsc?: {
+    apiKey?: string;
+    rpcUrl?: string;
+  };
+  polygon?: {
+    apiKey?: string;
+    rpcUrl?: string;
+  };
+  arbitrum?: {
+    apiKey?: string;
+    rpcUrl?: string;
+  };
+  optimism?: {
+    apiKey?: string;
+    rpcUrl?: string;
+  };
+  avalanche?: {
+    apiKey?: string;
+    rpcUrl?: string;
+  };
+  solana?: {
+    apiKey?: string;
+    rpcUrl?: string;
+  };
+  bitcoin?: {
+    apiKey?: string;
+    rpcUrl?: string;
+  };
+  ethscan?: {
+    apiKey?: string;
+  };
+  tronscan?: {
+    apiKey?: string;
+  };
+}
+
 // 规则配置接口
 export interface RuleConfig {
   id: string;
@@ -8,7 +50,7 @@ export interface RuleConfig {
   description?: string;
   createdAt: string;
   updatedAt: string;
-  
+
   // 全局配置
   defaultMinusAccount: string;
   defaultPlusAccount: string;
@@ -18,7 +60,10 @@ export interface RuleConfig {
   defaultPositionAccount?: string;
   defaultPnlAccount?: string;
   defaultThirdPartyCustodyAccount?: string;
-  
+
+  // API配置
+  apiConfig?: ApiConfig;
+
   // 规则列表
   rules: Rule[];
 }
@@ -28,7 +73,7 @@ export interface Rule {
   id?: string;
   name: string;
   description?: string;
-  
+
   // 匹配条件
   peer?: string;
   item?: string;
@@ -39,12 +84,12 @@ export interface Rule {
   time?: string;
   minPrice?: number;
   maxPrice?: number;
-  
+
   // 匹配选项
   fullMatch?: boolean;
   sep?: string;
   ignore?: boolean;
-  
+
   // 账户配置
   targetAccount?: string;
   methodAccount?: string;
@@ -52,10 +97,10 @@ export interface Rule {
   positionAccount?: string;
   commissionAccount?: string;
   pnlAccount?: string;
-  
+
   // 标签
   tags?: string[];
-  
+
   // 排序权重
   priority: number;
 }

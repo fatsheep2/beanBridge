@@ -311,6 +311,62 @@ export const presetConfigs: PresetConfig[] = [
         }
       ]
     }
+  },
+  {
+    provider: ProviderType.Ethereum,
+    name: '以太坊(聚合链)基础配置',
+    description: '以太坊及其EVM兼容链账单的基础配置模板，支持ETH/BSC/Polygon等',
+    config: {
+      defaultMinusAccount: 'Assets:Crypto:Wallet',
+      defaultPlusAccount: 'Expenses:Crypto',
+      defaultCurrency: 'ETH',
+      apiConfig: {
+        ethereum: { apiKey: '' }
+      },
+      rules: [
+        {
+          name: 'ETH 转账',
+          chain: 'ETH',
+          token: 'ETH',
+          transactionType: 'transfer',
+          targetAccount: 'Assets:Crypto:ETH',
+          methodAccount: 'Assets:Crypto:ETH',
+          priority: 1
+        },
+        {
+          name: 'BSC 转账',
+          chain: 'BSC',
+          token: 'BNB',
+          transactionType: 'transfer',
+          targetAccount: 'Assets:Crypto:BNB',
+          methodAccount: 'Assets:Crypto:BNB',
+          priority: 2
+        },
+        {
+          name: 'USDT 转账',
+          token: 'USDT',
+          transactionType: 'transfer',
+          targetAccount: 'Assets:Crypto:USDT',
+          methodAccount: 'Assets:Crypto:Wallet',
+          priority: 3
+        },
+        {
+          name: 'USDC 转账',
+          token: 'USDC',
+          transactionType: 'transfer',
+          targetAccount: 'Assets:Crypto:USDC',
+          methodAccount: 'Assets:Crypto:Wallet',
+          priority: 4
+        },
+        {
+          name: 'Gas Fee',
+          transactionType: 'gas',
+          targetAccount: 'Expenses:Crypto:Gas',
+          methodAccount: 'Assets:Crypto:Wallet',
+          priority: 5
+        }
+      ]
+    }
   }
 ];
 

@@ -19,11 +19,10 @@ export interface FieldMapping {
 }
 
 // 获取正确的图标路径
-const getIconPath = (filename: string): string => {
-  // 在生产环境中，需要考虑 base 路径
+function getIconPath(filename: string): string {
   const base = import.meta.env.BASE_URL || '/';
   return `${base}assets/icons/${filename}`;
-};
+}
 
 export const providers: ProviderInfo[] = [
   {
@@ -85,173 +84,6 @@ export const providers: ProviderInfo[] = [
       { originalField: '总额', mappedField: 'total', description: '交易总额' },
       { originalField: '状态', mappedField: 'status', description: '交易状态' },
       { originalField: '订单号', mappedField: 'orderID', description: '火币订单号' }
-    ]
-  },
-  {
-    type: ProviderType.Ethereum,
-    name: '以太坊',
-    formats: ['API'],
-    description: '以太坊区块链交易记录解析器',
-    category: 'crypto',
-    color: '#627EEA',
-    icon: getIconPath('ethereum.png'),
-    fieldMappings: [
-      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
-      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
-      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
-      { originalField: '代币', mappedField: 'token', description: '代币符号' },
-      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
-      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
-      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
-      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
-      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
-      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
-    ]
-  },
-  {
-    type: ProviderType.BinanceSmartChain,
-    name: '币安智能链',
-    formats: ['API'],
-    description: '币安智能链交易记录解析器',
-    category: 'crypto',
-    color: '#F3BA2F',
-    icon: getIconPath('bsc.png'),
-    fieldMappings: [
-      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
-      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
-      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
-      { originalField: '代币', mappedField: 'token', description: '代币符号' },
-      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
-      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
-      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
-      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
-      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
-      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
-    ]
-  },
-  {
-    type: ProviderType.Polygon,
-    name: 'Polygon',
-    formats: ['API'],
-    description: 'Polygon网络交易记录解析器',
-    category: 'crypto',
-    color: '#8247E5',
-    icon: getIconPath('polygon.png'),
-    fieldMappings: [
-      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
-      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
-      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
-      { originalField: '代币', mappedField: 'token', description: '代币符号' },
-      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
-      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
-      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
-      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
-      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
-      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
-    ]
-  },
-  {
-    type: ProviderType.Arbitrum,
-    name: 'Arbitrum',
-    formats: ['API'],
-    description: 'Arbitrum网络交易记录解析器',
-    category: 'crypto',
-    color: '#28A0F0',
-    icon: getIconPath('arbitrum.png'),
-    fieldMappings: [
-      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
-      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
-      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
-      { originalField: '代币', mappedField: 'token', description: '代币符号' },
-      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
-      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
-      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
-      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
-      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
-      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
-    ]
-  },
-  {
-    type: ProviderType.Optimism,
-    name: 'Optimism',
-    formats: ['API'],
-    description: 'Optimism网络交易记录解析器',
-    category: 'crypto',
-    color: '#FF0420',
-    icon: getIconPath('optimism.png'),
-    fieldMappings: [
-      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
-      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
-      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
-      { originalField: '代币', mappedField: 'token', description: '代币符号' },
-      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
-      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
-      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
-      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
-      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
-      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
-    ]
-  },
-  {
-    type: ProviderType.Avalanche,
-    name: 'Avalanche',
-    formats: ['API'],
-    description: 'Avalanche网络交易记录解析器',
-    category: 'crypto',
-    color: '#E84142',
-    icon: getIconPath('avalanche.png'),
-    fieldMappings: [
-      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
-      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
-      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
-      { originalField: '代币', mappedField: 'token', description: '代币符号' },
-      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
-      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
-      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
-      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
-      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
-      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
-    ]
-  },
-  {
-    type: ProviderType.Solana,
-    name: 'Solana',
-    formats: ['API'],
-    description: 'Solana网络交易记录解析器',
-    category: 'crypto',
-    color: '#14F195',
-    icon: getIconPath('solana.png'),
-    fieldMappings: [
-      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
-      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
-      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
-      { originalField: '代币', mappedField: 'token', description: '代币符号' },
-      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
-      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
-      { originalField: '交易费', mappedField: 'gasFee', description: '交易费金额' },
-      { originalField: '交易费代币', mappedField: 'gasToken', description: '交易费代币' },
-      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
-      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
-    ]
-  },
-  {
-    type: ProviderType.Bitcoin,
-    name: 'Bitcoin',
-    formats: ['API'],
-    description: 'Bitcoin网络交易记录解析器',
-    category: 'crypto',
-    color: '#F7931A',
-    icon: getIconPath('bitcoin.png'),
-    fieldMappings: [
-      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
-      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
-      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
-      { originalField: '代币', mappedField: 'token', description: '代币符号' },
-      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
-      { originalField: '交易费', mappedField: 'gasFee', description: '交易费金额' },
-      { originalField: '交易费代币', mappedField: 'gasToken', description: '交易费代币' },
-      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
-      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
     ]
   },
   {
@@ -454,6 +286,27 @@ export const providers: ProviderInfo[] = [
       { originalField: '对方账号', mappedField: 'peerAccount', description: '交易对方账号' },
       { originalField: '余额', mappedField: 'balance', description: '账户余额' },
       { originalField: '流水号', mappedField: 'orderID', description: '交易流水号' }
+    ]
+  },
+  {
+    type: ProviderType.Ethereum,
+    name: '以太坊(聚合链)',
+    formats: ['API'],
+    description: '以太坊及其EVM兼容链账单解析器，支持ETH/BSC/Polygon等',
+    category: 'crypto',
+    color: '#627EEA',
+    icon: getIconPath('ethereum.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币', mappedField: 'token', description: '代币符号' },
+      { originalField: '代币地址', mappedField: 'tokenAddress', description: '代币合约地址' },
+      { originalField: '交易类型', mappedField: 'transactionType', description: '交易类别' },
+      { originalField: '矿工费', mappedField: 'gasFee', description: '矿工费金额' },
+      { originalField: '矿工费代币', mappedField: 'gasToken', description: '矿工费代币' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' }
     ]
   }
 ];

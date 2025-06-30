@@ -82,7 +82,20 @@ const dataSources = ref<DataSource[]>([
     name: '工商银行',
     description: '工商银行交易记录解析器',
     supportedFormats: ['.csv']
-  }
+  },
+  {
+    id: 'ethereum',
+    name: '以太坊(聚合链)',
+    description: '以太坊及其EVM兼容链账单解析器，支持ETH/BSC/Polygon等',
+    supportedFormats: ['API']
+  },
+  // 如有TRON解析器可加如下内容：
+  // {
+  //   id: 'tron',
+  //   name: '波场(Tron)',
+  //   description: '波场链账单解析器',
+  //   supportedFormats: ['API']
+  // },
 ]);
 
 const handleDataSourceSelected = (source: DataSource) => {

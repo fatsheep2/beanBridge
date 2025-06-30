@@ -27,7 +27,7 @@
     <!-- 解析器卡片 -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <div 
-        v-for="provider in filteredProviders" 
+        v-for="provider in paginatedProviders" 
         :key="provider.type"
         class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-start hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 cursor-pointer group"
         @click="selectProvider(provider.type)"
@@ -56,6 +56,53 @@
         </div>
       </div>
     </div>
+
+    <!-- 分页控件 -->
+    <div v-if="totalPages > 1" class="mt-8 flex items-center justify-center">
+      <div class="flex items-center space-x-2">
+        <!-- 上一页 -->
+        <button
+          @click="currentPage = Math.max(1, currentPage - 1)"
+          :disabled="currentPage === 1"
+          class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+        >
+          上一页
+        </button>
+
+        <!-- 页码 -->
+        <div class="flex items-center space-x-1">
+          <button
+            v-for="page in visiblePages"
+            :key="page"
+            @click="currentPage = page"
+            :class="[
+              'px-3 py-2 text-sm font-medium rounded-md',
+              page === currentPage
+                ? 'bg-indigo-600 text-white'
+                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600'
+            ]"
+          >
+            {{ page }}
+          </button>
+        </div>
+
+        <!-- 下一页 -->
+        <button
+          @click="currentPage = Math.min(totalPages, currentPage + 1)"
+          :disabled="currentPage === totalPages"
+          class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+        >
+          下一页
+        </button>
+      </div>
+
+      <!-- 页面信息 -->
+      <div class="ml-4 text-sm text-gray-500 dark:text-gray-400">
+        第 {{ currentPage }} 页，共 {{ totalPages }} 页
+        <span class="mx-2">|</span>
+        共 {{ filteredProviders.length }} 个解析器
+      </div>
+    </div>
     
     <!-- 已选择的解析器信息 -->
     <div v-if="selectedProvider" class="mt-4 p-4 bg-indigo-50 rounded-lg dark:bg-gray-800">
@@ -76,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { ProviderType } from '../types/provider';
 import { providers, categories, getProviderByType } from '../data/providers';
 
@@ -103,12 +150,59 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const selectedCategory = ref<string>('all');
+const currentPage = ref(1);
+const itemsPerPage = ref(6); // 每页显示6个解析器
 
+// 过滤后的提供者
 const filteredProviders = computed(() => {
   if (selectedCategory.value === 'all') {
     return props.supportedProviders;
   }
   return props.supportedProviders.filter(provider => provider.category === selectedCategory.value);
+});
+
+// 分页计算
+const totalPages = computed(() => {
+  return Math.ceil(filteredProviders.value.length / itemsPerPage.value);
+});
+
+const paginatedProviders = computed(() => {
+  const startIndex = (currentPage.value - 1) * itemsPerPage.value;
+  const endIndex = startIndex + itemsPerPage.value;
+  return filteredProviders.value.slice(startIndex, endIndex);
+});
+
+// 可见页码（最多显示5个页码）
+const visiblePages = computed(() => {
+  const pages: number[] = [];
+  const maxVisible = 5;
+  
+  if (totalPages.value <= maxVisible) {
+    // 如果总页数少于等于5，显示所有页码
+    for (let i = 1; i <= totalPages.value; i++) {
+      pages.push(i);
+    }
+  } else {
+    // 如果总页数大于5，显示当前页附近的页码
+    let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages.value, start + maxVisible - 1);
+    
+    // 调整起始位置，确保显示maxVisible个页码
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+  }
+  
+  return pages;
+});
+
+// 监听分类变化，重置页码
+watch(selectedCategory, () => {
+  currentPage.value = 1;
 });
 
 const selectProvider = (providerType: ProviderType) => {

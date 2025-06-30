@@ -7,6 +7,9 @@ import { providers } from '../data/providers';
 import { ruleConfigService } from '../services/rule-config-service';
 import type { RuleConfig } from '../types/rule-config';
 import { RuleEngine } from '../rule-engine';
+import { CryptoProviderFactory } from '../providers/factories/crypto-provider-factory';
+import type { FetchParams, IR } from '../types/provider';
+import { BeancountConverter } from '../utils/beancount-converter';
 
 // 将RuleConfig转换为ProviderConfig的适配器
 function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConfig {
@@ -97,6 +100,16 @@ function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConf
   return result;
 }
 
+// 区块链数据源配置接口
+interface BlockchainDataSourceConfig {
+  chain: string;
+  address: string;
+  apiKey?: string;
+  startDate?: Date;
+  endDate?: Date;
+  tokens?: string[];
+}
+
 export function useDataSourceConfig() {
   const fileProcessor = new FileProcessorV2();
   const { currentConfig, currentProvider, loadConfig, updateConfig } = useConfigStorage();
@@ -108,6 +121,9 @@ export function useDataSourceConfig() {
   const error = ref<string | null>(null);
   const ruleTestResult = ref<any>(null);
 
+  // 新增：区块链数据源配置
+  const blockchainDataSourceConfig = ref<BlockchainDataSourceConfig | null>(null);
+
   const supportedProviders = computed(() => {
     return providers;
   });
@@ -116,21 +132,30 @@ export function useDataSourceConfig() {
     return detectedProvider.value || (currentProvider.value as ProviderType);
   });
 
+  // 检查是否为加密货币提供者
+  const isCryptoProvider = computed(() => {
+    return selectedProvider.value ? CryptoProviderFactory.isCryptoProvider(selectedProvider.value) : false;
+  });
+
   const canProcess = computed(() => {
+    if (isCryptoProvider.value) {
+      return blockchainDataSourceConfig.value && !isProcessing.value;
+    }
     // 如果有文件且解析器，或者有缓存的处理结果，都可以处理
     return (selectedFile.value && selectedProvider.value && !isProcessing.value) ||
       (processingResult.value && selectedProvider.value && !isProcessing.value);
   });
 
-  // 检查是否有可用的数据源（文件或缓存结果）
+  // 检查是否有可用的数据源（文件、缓存结果或区块链配置）
   const hasDataSource = computed(() => {
-    return selectedFile.value || processingResult.value;
+    return selectedFile.value || processingResult.value || blockchainDataSourceConfig.value;
   });
 
   const handleFileSelect = async (file: File) => {
     selectedFile.value = file;
     error.value = null;
     processingResult.value = null;
+    blockchainDataSourceConfig.value = null; // 清除区块链配置
 
     try {
       // 自动检测解析器类型
@@ -146,9 +171,23 @@ export function useDataSourceConfig() {
     }
   };
 
+  // 新增：处理区块链数据源配置
+  const handleBlockchainDataSource = (config: BlockchainDataSourceConfig) => {
+    blockchainDataSourceConfig.value = config;
+    selectedFile.value = null; // 清除文件选择
+    error.value = null;
+    processingResult.value = null;
+    console.log('区块链数据源配置:', config);
+  };
+
   const setProvider = (provider: ProviderType) => {
     detectedProvider.value = provider;
     loadConfig(provider);
+
+    // 如果切换到非加密货币提供者，清除区块链配置
+    if (!CryptoProviderFactory.isCryptoProvider(provider)) {
+      blockchainDataSourceConfig.value = null;
+    }
   };
 
   const validateFile = () => {
@@ -159,6 +198,148 @@ export function useDataSourceConfig() {
     return fileProcessor.validateFile(selectedFile.value, selectedProvider.value);
   };
 
+  // 新增：验证区块链数据源
+  const validateBlockchainDataSource = () => {
+    if (!blockchainDataSourceConfig.value || !selectedProvider.value) {
+      return { valid: false, error: '请配置区块链数据源和选择解析器' };
+    }
+
+    const config = blockchainDataSourceConfig.value;
+    if (!config.chain || !config.address) {
+      return { valid: false, error: '请选择区块链网络并输入钱包地址' };
+    }
+
+    // 验证地址格式
+    const addressRegex = {
+      ETH: /^0x[a-fA-F0-9]{40}$/,
+      BSC: /^0x[a-fA-F0-9]{40}$/,
+      POLYGON: /^0x[a-fA-F0-9]{40}$/,
+      ARBITRUM: /^0x[a-fA-F0-9]{40}$/,
+      OPTIMISM: /^0x[a-fA-F0-9]{40}$/,
+      AVALANCHE: /^0x[a-fA-F0-9]{40}$/,
+      SOLANA: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+      BTC: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/
+    };
+
+    const regex = addressRegex[config.chain as keyof typeof addressRegex];
+    if (!regex || !regex.test(config.address)) {
+      return { valid: false, error: `请输入有效的${config.chain}地址格式` };
+    }
+
+    return { valid: true };
+  };
+
+  // 新增：处理区块链API数据
+  const processBlockchainData = async (selectedMetadata?: string[]) => {
+    if (!selectedProvider.value || !blockchainDataSourceConfig.value) {
+      error.value = '请选择解析器并配置区块链数据源';
+      return;
+    }
+
+    const validation = validateBlockchainDataSource();
+    if (!validation.valid) {
+      error.value = validation.error || '区块链数据源验证失败';
+      return;
+    }
+
+    isProcessing.value = true;
+    error.value = null;
+
+    try {
+      // 每次都刷新最新规则配置
+      await loadConfig(selectedProvider.value);
+
+      // 获取规则配置中的API密钥
+      const ruleConfig = ruleConfigService.getConfig(selectedProvider.value);
+      let apiKey = blockchainDataSourceConfig.value.apiKey;
+
+      // 如果用户没有提供API密钥，尝试从规则配置中获取
+      if (!apiKey && ruleConfig?.apiConfig) {
+        const chain = blockchainDataSourceConfig.value.chain.toLowerCase();
+        switch (chain) {
+          case 'eth':
+          case 'ethereum':
+            apiKey = ruleConfig.apiConfig.ethereum?.apiKey;
+            break;
+          case 'bsc':
+          case 'binancesmartchain':
+            apiKey = ruleConfig.apiConfig.bsc?.apiKey;
+            break;
+          case 'polygon':
+            apiKey = ruleConfig.apiConfig.polygon?.apiKey;
+            break;
+          case 'arbitrum':
+            apiKey = ruleConfig.apiConfig.arbitrum?.apiKey;
+            break;
+          case 'optimism':
+            apiKey = ruleConfig.apiConfig.optimism?.apiKey;
+            break;
+          case 'avalanche':
+            apiKey = ruleConfig.apiConfig.avalanche?.apiKey;
+            break;
+          case 'solana':
+            apiKey = ruleConfig.apiConfig.solana?.apiKey;
+            break;
+          case 'btc':
+          case 'bitcoin':
+            apiKey = ruleConfig.apiConfig.bitcoin?.apiKey;
+            break;
+        }
+      }
+
+      // 创建区块链数据提供者
+      const provider = CryptoProviderFactory.create(selectedProvider.value, apiKey);
+
+      // 构建API参数
+      const params: FetchParams = {
+        chain: blockchainDataSourceConfig.value.chain,
+        address: blockchainDataSourceConfig.value.address,
+        startDate: blockchainDataSourceConfig.value.startDate,
+        endDate: blockchainDataSourceConfig.value.endDate
+      };
+
+      // 获取区块链数据
+      const data: IR = await provider.fetchData(params);
+
+      // 获取规则配置并转换
+      const providerConfig = ruleConfig
+        ? convertRuleConfigToProviderConfig(ruleConfig)
+        : currentConfig.value || undefined;
+
+      // 应用规则
+      const ruleEngine = new RuleEngine(
+        providerConfig?.rules || [],
+        providerConfig?.defaultMinusAccount || 'Assets:FIXME',
+        providerConfig?.defaultPlusAccount || 'Expenses:FIXME'
+      );
+
+      const processedData = ruleEngine.applyRulesToIR(data);
+
+      // 生成Beancount格式
+      const beancountConverter = new BeancountConverter();
+      const beancountData = beancountConverter.convertToBeancount(processedData, providerConfig, selectedMetadata);
+
+      processingResult.value = {
+        success: true,
+        data: beancountData,
+        statistics: {
+          processedIR: processedData,
+          originalIR: data,
+          totalRecords: processedData.orders.length,
+          provider: selectedProvider.value,
+          blockchainConfig: blockchainDataSourceConfig.value
+        }
+      };
+
+      saveFileState(); // 保存状态
+    } catch (err) {
+      console.error('区块链数据处理失败:', err);
+      error.value = `区块链数据处理失败: ${err instanceof Error ? err.message : '未知错误'}`;
+    } finally {
+      isProcessing.value = false;
+    }
+  };
+
   const processFile = async (selectedMetadata?: string[]) => {
     if (!selectedProvider.value) {
       error.value = '请选择解析器';
@@ -167,6 +348,12 @@ export function useDataSourceConfig() {
 
     // 清除测试规则结果，确保只显示Beancount结果
     ruleTestResult.value = null;
+
+    // 如果是区块链提供者，使用区块链数据处理
+    if (isCryptoProvider.value) {
+      await processBlockchainData(selectedMetadata);
+      return;
+    }
 
     // 每次都刷新最新规则配置
     await loadConfig(selectedProvider.value);
@@ -828,6 +1015,7 @@ export function useDataSourceConfig() {
     setProvider,
     restoreFileState,
     saveFileState,
-    clearFileState
+    clearFileState,
+    handleBlockchainDataSource
   };
 } 

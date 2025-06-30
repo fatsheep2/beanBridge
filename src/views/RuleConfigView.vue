@@ -162,6 +162,19 @@
                 @input="autoSaveConfig"
               />
             </div>
+            <!-- 以太坊API Key配置，仅ETH聚合链显示 -->
+            <div v-if="selectedProvider === 'ethereum'">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Etherscan API Key</label>
+              <input
+                v-model="ethereumApiKey"
+                @blur="syncEthereumApiKey"
+                @keyup.enter="syncEthereumApiKey"
+                type="text"
+                class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                placeholder="请输入Etherscan API Key"
+              />
+              <p class="text-xs text-gray-500 mt-1">用于提升以太坊及EVM链数据获取速率和稳定性，可在 <a href='https://etherscan.io/myapikey' target='_blank' class='underline text-blue-600'>Etherscan官网</a> 免费申请。</p>
+            </div>
             <div v-if="currentConfig.defaultCashAccount">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认现金账户</label>
               <input
@@ -530,6 +543,36 @@ const showConfigEditor = ref(false);
 const sortOrder = ref<'asc' | 'desc'>('asc');
 const showAutoSaveMessage = ref(false);
 
+// API配置响应式数据
+const apiConfig = ref({
+  ethereum: { apiKey: '', rpcUrl: '' },
+  bsc: { apiKey: '', rpcUrl: '' },
+  polygon: { apiKey: '', rpcUrl: '' },
+  arbitrum: { apiKey: '', rpcUrl: '' },
+  optimism: { apiKey: '', rpcUrl: '' },
+  avalanche: { apiKey: '', rpcUrl: '' },
+  solana: { apiKey: '', rpcUrl: '' },
+  bitcoin: { apiKey: '', rpcUrl: '' },
+  ethscan: { apiKey: '' },
+  tronscan: { apiKey: '' }
+});
+
+// 新增本地变量用于ETH API Key输入
+const ethereumApiKey = ref('');
+
+watch([currentConfig, selectedProvider], () => {
+  if (selectedProvider.value === 'ethereum' && currentConfig.value && currentConfig.value.apiConfig && currentConfig.value.apiConfig.ethereum) {
+    ethereumApiKey.value = currentConfig.value.apiConfig.ethereum.apiKey || '';
+  }
+}, { immediate: true });
+
+function syncEthereumApiKey() {
+  if (selectedProvider.value === 'ethereum' && currentConfig.value && currentConfig.value.apiConfig && currentConfig.value.apiConfig.ethereum) {
+    currentConfig.value.apiConfig.ethereum.apiKey = ethereumApiKey.value;
+    autoSaveConfig();
+  }
+}
+
 // 计算属性
 const supportedProviders = computed(() => providers);
 
@@ -580,9 +623,27 @@ const setProvider = (provider: ProviderType) => {
 
 const loadConfig = () => {
   if (!selectedProvider.value) return;
-  
   const config = ruleConfigService.getConfig(selectedProvider.value);
+  if (config) {
+    if (!config.apiConfig) config.apiConfig = { ethereum: { apiKey: '' } };
+    if (!config.apiConfig.ethereum) config.apiConfig.ethereum = { apiKey: '' };
+  }
   currentConfig.value = config;
+  // 加载API配置
+  if (config?.apiConfig) {
+    apiConfig.value = {
+      ethereum: { apiKey: config.apiConfig.ethereum?.apiKey || '', rpcUrl: config.apiConfig.ethereum?.rpcUrl || '' },
+      bsc: { apiKey: config.apiConfig.bsc?.apiKey || '', rpcUrl: config.apiConfig.bsc?.rpcUrl || '' },
+      polygon: { apiKey: config.apiConfig.polygon?.apiKey || '', rpcUrl: config.apiConfig.polygon?.rpcUrl || '' },
+      arbitrum: { apiKey: config.apiConfig.arbitrum?.apiKey || '', rpcUrl: config.apiConfig.arbitrum?.rpcUrl || '' },
+      optimism: { apiKey: config.apiConfig.optimism?.apiKey || '', rpcUrl: config.apiConfig.optimism?.rpcUrl || '' },
+      avalanche: { apiKey: config.apiConfig.avalanche?.apiKey || '', rpcUrl: config.apiConfig.avalanche?.rpcUrl || '' },
+      solana: { apiKey: config.apiConfig.solana?.apiKey || '', rpcUrl: config.apiConfig.solana?.rpcUrl || '' },
+      bitcoin: { apiKey: config.apiConfig.bitcoin?.apiKey || '', rpcUrl: config.apiConfig.bitcoin?.rpcUrl || '' },
+      ethscan: { apiKey: config.apiConfig.ethscan?.apiKey || '' },
+      tronscan: { apiKey: config.apiConfig.tronscan?.apiKey || '' }
+    };
+  }
 };
 
 // 从URL参数初始化Provider
@@ -733,14 +794,22 @@ const deleteHistory = (historyId: string) => {
 };
 
 const autoSaveConfig = () => {
-  if (currentConfig.value) {
-    ruleConfigService.saveConfig(currentConfig.value);
-    // 不弹出提示，避免频繁打扰用户
-    showAutoSaveMessage.value = true;
-    setTimeout(() => {
-      showAutoSaveMessage.value = false;
-    }, 3000);
+  if (!currentConfig.value) return;
+  // 确保apiConfig存在
+  if (!currentConfig.value.apiConfig) {
+    currentConfig.value.apiConfig = { ethereum: { apiKey: '' } };
   }
+  if (!currentConfig.value.apiConfig.ethereum) {
+    currentConfig.value.apiConfig.ethereum = { apiKey: '' };
+  }
+  // 触发响应式
+  currentConfig.value = { ...currentConfig.value };
+  ruleConfigService.saveConfig(currentConfig.value);
+  // 显示自动保存提示
+  showAutoSaveMessage.value = true;
+  setTimeout(() => {
+    showAutoSaveMessage.value = false;
+  }, 2000);
 };
 
 const toggleSortOrder = () => {

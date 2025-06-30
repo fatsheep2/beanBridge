@@ -17,6 +17,11 @@ const routes = [
     component: () => import('../views/RuleConfigView.vue'),
   },
   // {
+  //   path: '/blockchain-demo',
+  //   name: 'blockchain-demo',
+  //   component: () => import('../views/BlockchainDemoView.vue'),
+  // },
+  // {
   //   path: '/about',
   //   name: 'about',
   //   // route level code-splitting

@@ -3,13 +3,6 @@
     <div class="bg-white shadow-2xl rounded-2xl border border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 p-10">
       <h1 class="text-3xl font-extrabold mb-8">账单处理</h1>
       
-      <!-- 文件上传组件 -->
-      <FileUploadSection
-        :selected-file="selectedFile"
-        :detected-provider="detectedProvider"
-        @file-selected="handleFileSelect"
-      />
-
       <!-- 解析器选择组件 -->
       <ProviderSelector
         :supported-providers="providers"
@@ -17,8 +10,27 @@
         @provider-selected="setProvider"
       />
 
+      <!-- 数据源输入组件 -->
+      <div v-if="selectedProvider">
+        <!-- 区块链数据源输入 -->
+        <BlockchainDataSourceInput
+          v-if="isCryptoProvider"
+          :selected-provider="selectedProvider"
+          @data-source-configured="handleBlockchainDataSource"
+          ref="blockchainDataSourceRef"
+        />
+
+        <!-- 文件上传组件 -->
+        <FileUploadSection
+          v-else
+          :selected-file="selectedFile"
+          :detected-provider="detectedProvider"
+          @file-selected="handleFileSelect"
+        />
+      </div>
+
       <!-- 元数据选项 -->
-      <div class="mb-8">
+      <div class="mb-8" v-if="hasDataSource || selectedProvider">
         <h2 class="text-xl font-bold mb-2">元数据选项</h2>
         <div class="flex flex-wrap gap-4">
           <label v-for="opt in metadataOptions" :key="opt.key" class="flex items-center space-x-2">
@@ -35,14 +47,14 @@
           <div class="flex gap-6">
             <button
               @click="previewFile(selectedMetadata)"
-              :disabled="isProcessing"
+              :disabled="isProcessing || !canProcess"
               class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold shadow-md disabled:opacity-50 text-lg"
             >
               {{ isProcessing ? '处理中...' : '预览' }}
             </button>
             <button
               @click="processFile(selectedMetadata)"
-              :disabled="isProcessing"
+              :disabled="isProcessing || !canProcess"
               class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-semibold shadow-md disabled:opacity-50 text-lg"
             >
               {{ isProcessing ? '处理中...' : '生成 Beancount' }}
@@ -58,7 +70,7 @@
             </button>
             <button
               @click="testRules"
-              :disabled="isProcessing"
+              :disabled="isProcessing || !canProcess"
               class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md disabled:opacity-50 text-lg"
             >
               <span class="material-icons mr-3">bug_report</span>
@@ -111,8 +123,10 @@ import { useRouter, useRoute } from 'vue-router';
 import { useDataSourceConfig } from '../composables/useDataSourceConfig';
 import FileUploadSection from '../components/FileUploadSection.vue';
 import ProviderSelector from '../components/ProviderSelector.vue';
+import BlockchainDataSourceInput from '../components/BlockchainDataSourceInput.vue';
 import ResultDisplay from '../components/ResultDisplay.vue';
 import { onMounted, ref, computed } from 'vue';
+import { CryptoProviderFactory } from '../providers/factories/crypto-provider-factory';
 
 const router = useRouter();
 const route = useRoute();
@@ -132,8 +146,26 @@ const {
   hasDataSource,
   handleFileSelect,
   setProvider,
-  clearFileState
+  clearFileState,
+  handleBlockchainDataSource
 } = useDataSourceConfig();
+
+// 区块链数据源引用
+const blockchainDataSourceRef = ref();
+
+// 检查是否为加密货币提供者
+const isCryptoProvider = computed(() => {
+  return selectedProvider.value ? CryptoProviderFactory.isCryptoProvider(selectedProvider.value) : false;
+});
+
+// 检查是否可以处理
+const canProcess = computed(() => {
+  if (isCryptoProvider.value) {
+    return blockchainDataSourceRef.value?.getConfig() && !isProcessing.value;
+  }
+  return (selectedFile.value && selectedProvider.value && !isProcessing.value) ||
+    (processingResult.value && selectedProvider.value && !isProcessing.value);
+});
 
 // 元数据选项
 const metadataOptions = [

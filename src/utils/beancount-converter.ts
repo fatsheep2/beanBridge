@@ -1,5 +1,5 @@
 import type { IR, Order } from '../types/provider';
-import { Account } from '../types/provider';
+import { Account, OrderType, CryptoTransactionType } from '../types/provider';
 
 export class BeancountConverter {
   convertToBeancount(ir: IR, config?: any, selectedMetadata?: string[]): string {
@@ -10,21 +10,234 @@ export class BeancountConverter {
     lines.push('; 生成时间: ' + new Date().toISOString());
     lines.push('');
 
-    // 按日期分组交易
-    const groupedOrders = this.groupOrdersByDate(ir.orders);
+    // 检查是否为加密货币数据
+    const hasCryptoOrders = ir.orders.some(order =>
+      order.orderType === OrderType.CryptoTransfer ||
+      order.orderType === OrderType.CryptoGas
+    );
 
-    // 生成交易记录
-    for (const [date, orders] of Object.entries(groupedOrders)) {
-      for (const order of orders) {
-        const transaction = this.convertOrderToBeancount(order, config, selectedMetadata);
-        if (transaction) {
-          lines.push(transaction);
-          lines.push('');
+    if (hasCryptoOrders) {
+      // 加密货币数据：合并主交易和矿工费
+      const mergedTransactions = this.mergeCryptoTransactions(ir.orders);
+      const groupedTransactions = this.groupTransactionsByDate(mergedTransactions);
+
+      for (const [date, transactions] of Object.entries(groupedTransactions)) {
+        for (const transaction of transactions) {
+          const beancountTransaction = this.convertCryptoTransactionToBeancount(transaction, config, selectedMetadata);
+          if (beancountTransaction) {
+            lines.push(beancountTransaction);
+            lines.push('');
+          }
+        }
+      }
+    } else {
+      // 传统数据：按原有逻辑处理
+      const groupedOrders = this.groupOrdersByDate(ir.orders);
+
+      for (const [date, orders] of Object.entries(groupedOrders)) {
+        for (const order of orders) {
+          const transaction = this.convertOrderToBeancount(order, config, selectedMetadata);
+          if (transaction) {
+            lines.push(transaction);
+            lines.push('');
+          }
         }
       }
     }
 
     return lines.join('\n');
+  }
+
+  // 合并加密货币交易（主交易 + 矿工费）
+  private mergeCryptoTransactions(orders: Order[]): any[] {
+    const mainTransactions = orders.filter(order =>
+      order.orderType === OrderType.CryptoTransfer && !order.isGasTransaction
+    );
+    const gasTransactions = orders.filter(order =>
+      order.orderType === OrderType.CryptoGas || order.isGasTransaction
+    );
+
+    const merged: any[] = [];
+
+    for (const mainTx of mainTransactions) {
+      const gasTx = gasTransactions.find(gas =>
+        gas.transactionHash === mainTx.transactionHash ||
+        gas.relatedTransactionHash === mainTx.transactionHash
+      );
+
+      merged.push({
+        mainTransaction: mainTx,
+        gasTransaction: gasTx,
+        transactionHash: mainTx.transactionHash,
+        payTime: mainTx.payTime,
+        chain: mainTx.chain,
+        token: mainTx.token
+      });
+    }
+
+    // 处理独立的矿工费交易（没有关联的主交易）
+    const unassociatedGas = gasTransactions.filter(gas =>
+      !mainTransactions.some(main =>
+        main.transactionHash === gas.transactionHash ||
+        main.transactionHash === gas.relatedTransactionHash
+      )
+    );
+
+    for (const gasTx of unassociatedGas) {
+      merged.push({
+        mainTransaction: null,
+        gasTransaction: gasTx,
+        transactionHash: gasTx.transactionHash,
+        payTime: gasTx.payTime,
+        chain: gasTx.chain,
+        token: gasTx.token
+      });
+    }
+
+    return merged;
+  }
+
+  // 转换加密货币交易为Beancount格式
+  private convertCryptoTransactionToBeancount(transaction: any, config?: any, selectedMetadata?: string[]): string | null {
+    const { mainTransaction, gasTransaction } = transaction;
+    const date = this.formatDate(transaction.payTime);
+    const time = this.formatTime(transaction.payTime);
+
+    // 构建交易描述
+    let narration = 'Cryptocurrency Transaction';
+    if (mainTransaction) {
+      narration = mainTransaction.item || `Transfer ${mainTransaction.token}`;
+    } else if (gasTransaction) {
+      narration = 'Gas Fee';
+    }
+
+    // 构建标签
+    const tags = ['crypto', transaction.chain.toLowerCase()];
+    if (mainTransaction?.tags) {
+      tags.push(...mainTransaction.tags);
+    }
+
+    // 构建元数据
+    const metadata = this.buildCryptoMetadata(transaction, selectedMetadata);
+
+    // 构建账户和金额
+    const postings = this.buildCryptoPostings(transaction, config);
+
+    if (postings.length === 0) {
+      return null;
+    }
+
+    // 组装完整的交易记录
+    const lines = [
+      `${date} * "${narration}" #${tags.join(' #')}`,
+      ...metadata,
+      ...postings
+    ];
+
+    return lines.join('\n  ');
+  }
+
+  // 构建加密货币元数据
+  private buildCryptoMetadata(transaction: any, selectedMetadata?: string[]): string[] {
+    const metadata: string[] = [];
+    const { mainTransaction, gasTransaction, transactionHash, chain, token } = transaction;
+
+    // 强制包含的元数据
+    metadata.push(`  transaction-hash: "${transactionHash}"`);
+    metadata.push(`  chain: "${chain}"`);
+    metadata.push(`  token: "${token}"`);
+
+    // 主交易元数据
+    if (mainTransaction) {
+      metadata.push(`  transaction-type: "${mainTransaction.transactionType || 'transfer'}"`);
+      metadata.push(`  from-address: "${mainTransaction.fromAddress}"`);
+      metadata.push(`  to-address: "${mainTransaction.toAddress}"`);
+      metadata.push(`  amount: "${mainTransaction.money}"`);
+      metadata.push(`  currency: "${mainTransaction.currency}"`);
+
+      if (mainTransaction.blockNumber) {
+        metadata.push(`  block-number: "${mainTransaction.blockNumber}"`);
+      }
+    }
+
+    // 矿工费元数据
+    if (gasTransaction) {
+      metadata.push(`  gas-fee: "${gasTransaction.gasFee || 0}"`);
+      metadata.push(`  gas-token: "${gasTransaction.gasToken || token}"`);
+      metadata.push(`  gas-price: "${gasTransaction.gasPrice || 0}"`);
+      metadata.push(`  gas-used: "${gasTransaction.gasUsed || 0}"`);
+    }
+
+    // 时间信息
+    metadata.push(`  timestamp: "${transaction.payTime.toISOString()}"`);
+
+    return metadata;
+  }
+
+  // 构建加密货币账户和金额
+  private buildCryptoPostings(transaction: any, config?: any): string[] {
+    const postings: string[] = [];
+    const { mainTransaction, gasTransaction, chain, token } = transaction;
+
+    // 主交易账户
+    if (mainTransaction) {
+      const amount = Math.abs(mainTransaction.money);
+      const currency = mainTransaction.currency || token;
+
+      if (mainTransaction.type === 'Send') {
+        // 发送：资产账户减少，目标账户增加
+        const assetAccount = `Assets:Crypto:${chain}:${token}`;
+        const targetAccount = mainTransaction.extraAccounts[Account.PlusAccount] ||
+          config?.defaultPlusAccount ||
+          `Expenses:Crypto:${chain}`;
+
+        postings.push(`  ${assetAccount}  -${amount} ${currency}`);
+        postings.push(`  ${targetAccount}  ${amount} ${currency}`);
+      } else if (mainTransaction.type === 'Recv') {
+        // 接收：目标账户增加，收入账户减少
+        const assetAccount = `Assets:Crypto:${chain}:${token}`;
+        const incomeAccount = mainTransaction.extraAccounts[Account.MinusAccount] ||
+          `Income:Crypto:${chain}`;
+
+        postings.push(`  ${assetAccount}  ${amount} ${currency}`);
+        postings.push(`  ${incomeAccount}  -${amount} ${currency}`);
+      }
+    }
+
+    // 矿工费账户
+    if (gasTransaction) {
+      const gasFee = gasTransaction.gasFee || 0;
+      const gasToken = gasTransaction.gasToken || token;
+
+      if (gasFee > 0) {
+        // 矿工费：资产账户减少，手续费账户增加
+        const assetAccount = `Assets:Crypto:${chain}:${gasToken}`;
+        const gasAccount = `Expenses:Crypto:${chain}:Gas`;
+
+        postings.push(`  ${assetAccount}  -${gasFee} ${gasToken}`);
+        postings.push(`  ${gasAccount}  ${gasFee} ${gasToken}`);
+      }
+    }
+
+    return postings;
+  }
+
+  // 按日期分组交易
+  private groupTransactionsByDate(transactions: any[]): Record<string, any[]> {
+    const grouped: Record<string, any[]> = {};
+
+    for (const transaction of transactions) {
+      const date = this.formatDate(transaction.payTime);
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(transaction);
+    }
+
+    // 按日期排序
+    return Object.fromEntries(
+      Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b))
+    );
   }
 
   private convertOrderToBeancount(order: Order, config?: any, selectedMetadata?: string[]): string | null {
@@ -89,11 +302,6 @@ export class BeancountConverter {
     // 添加金额信息
     metadata.push(`  amount: "${order.money}"`);
     metadata.push(`  currency: "${order.currency || 'CNY'}"`);
-
-    // pay-time 只在用户勾选时输出，不再强制输出
-    // if (selectedMetadata && selectedMetadata.includes('payTime') && order.payTime) {
-    //   metadata.push(`  pay-time: "${order.payTime.toISOString()}"`);
-    // }
 
     return metadata;
   }
