@@ -71,7 +71,8 @@ export class CryptoProviderFactory {
 
     static isCryptoProvider(providerType: ProviderType): boolean {
         return [
-            ProviderType.Ethereum
+            ProviderType.Ethereum,
+            ProviderType.BinanceSmartChain
         ].includes(providerType);
     }
 

@@ -142,34 +142,26 @@ export class BeancountConverter {
     const metadata: string[] = [];
     const { mainTransaction, gasTransaction, transactionHash, chain, token } = transaction;
 
-    // 强制包含的元数据
-    metadata.push(`  transaction-hash: "${transactionHash}"`);
+    // 核心元数据 - 这些是必须保留的
+    metadata.push(`  txhash: "${transactionHash}"`);
     metadata.push(`  chain: "${chain}"`);
-    metadata.push(`  token: "${token}"`);
 
-    // 主交易元数据
+    // 主交易元数据 - 只保留关键信息
     if (mainTransaction) {
-      metadata.push(`  transaction-type: "${mainTransaction.transactionType || 'transfer'}"`);
-      metadata.push(`  from-address: "${mainTransaction.fromAddress}"`);
-      metadata.push(`  to-address: "${mainTransaction.toAddress}"`);
-      metadata.push(`  amount: "${mainTransaction.money}"`);
-      metadata.push(`  currency: "${mainTransaction.currency}"`);
+      metadata.push(`  from: "${mainTransaction.fromAddress}"`);
+      metadata.push(`  to: "${mainTransaction.toAddress}"`);
+      metadata.push(`  token: "${mainTransaction.token}"`);
 
+      // 只有在有区块号时才添加
       if (mainTransaction.blockNumber) {
-        metadata.push(`  block-number: "${mainTransaction.blockNumber}"`);
+        metadata.push(`  block: "${mainTransaction.blockNumber}"`);
       }
     }
 
-    // 矿工费元数据
-    if (gasTransaction) {
-      metadata.push(`  gas-fee: "${gasTransaction.gasFee || 0}"`);
-      metadata.push(`  gas-token: "${gasTransaction.gasToken || token}"`);
-      metadata.push(`  gas-price: "${gasTransaction.gasPrice || 0}"`);
-      metadata.push(`  gas-used: "${gasTransaction.gasUsed || 0}"`);
+    // 矿工费元数据 - 只保留总费用
+    if (gasTransaction && gasTransaction.gasFee > 0) {
+      metadata.push(`  gas: "${gasTransaction.gasFee}"`);
     }
-
-    // 时间信息
-    metadata.push(`  timestamp: "${transaction.payTime.toISOString()}"`);
 
     return metadata;
   }
@@ -179,7 +171,7 @@ export class BeancountConverter {
     const postings: string[] = [];
     const { mainTransaction, gasTransaction, chain, token } = transaction;
 
-    // 主交易账户
+    // 主交易账户（代币转账）
     if (mainTransaction) {
       const amount = Math.abs(mainTransaction.money);
       const currency = mainTransaction.currency || token;
@@ -189,7 +181,7 @@ export class BeancountConverter {
         const assetAccount = `Assets:Crypto:${chain}:${token}`;
         const targetAccount = mainTransaction.extraAccounts[Account.PlusAccount] ||
           config?.defaultPlusAccount ||
-          `Expenses:Crypto:${chain}`;
+          `Expenses:Life:Entertainment:Digital:数字娱乐`;
 
         postings.push(`  ${assetAccount}  -${amount} ${currency}`);
         postings.push(`  ${targetAccount}  ${amount} ${currency}`);
@@ -197,26 +189,24 @@ export class BeancountConverter {
         // 接收：目标账户增加，收入账户减少
         const assetAccount = `Assets:Crypto:${chain}:${token}`;
         const incomeAccount = mainTransaction.extraAccounts[Account.MinusAccount] ||
-          `Income:Crypto:${chain}`;
+          `Income:Crypto:${chain}:Transfer`;
 
         postings.push(`  ${assetAccount}  ${amount} ${currency}`);
         postings.push(`  ${incomeAccount}  -${amount} ${currency}`);
       }
     }
 
-    // 矿工费账户
-    if (gasTransaction) {
-      const gasFee = gasTransaction.gasFee || 0;
-      const gasToken = gasTransaction.gasToken || token;
+    // 矿工费账户（如果有矿工费且是支出交易）
+    if (gasTransaction && gasTransaction.gasFee > 0 && mainTransaction?.type === 'Send') {
+      const gasFee = gasTransaction.gasFee;
+      const gasToken = gasTransaction.gasToken || 'ETH'; // 矿工费通常是ETH
 
-      if (gasFee > 0) {
-        // 矿工费：资产账户减少，手续费账户增加
-        const assetAccount = `Assets:Crypto:${chain}:${gasToken}`;
-        const gasAccount = `Expenses:Crypto:${chain}:Gas`;
+      // 矿工费：资产账户减少，手续费账户增加
+      const assetAccount = `Assets:Crypto:${chain}:${gasToken}`;
+      const gasAccount = `Expenses:Life:crypto:Commission:手续费`;
 
-        postings.push(`  ${assetAccount}  -${gasFee} ${gasToken}`);
-        postings.push(`  ${gasAccount}  ${gasFee} ${gasToken}`);
-      }
+      postings.push(`  ${assetAccount}  -${gasFee} ${gasToken}`);
+      postings.push(`  ${gasAccount}  ${gasFee} ${gasToken}`);
     }
 
     return postings;

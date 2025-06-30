@@ -78,7 +78,7 @@ export class BscProvider extends BaseCryptoProvider {
     private async fetchTransactions(params: FetchParams): Promise<BscScanTransaction[]> {
         const url = new URL(this.baseUrl);
         url.searchParams.set('module', 'account');
-        url.searchParams.set('action', 'txlist');
+        url.searchParams.set('action', 'tokentx');
         url.searchParams.set('address', params.address);
         url.searchParams.set('startblock', '0');
         url.searchParams.set('endblock', '99999999');

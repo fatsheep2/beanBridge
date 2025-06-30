@@ -18,6 +18,14 @@ interface EtherscanTransaction {
     contractAddress: string;
     cumulativeGasUsed: string;
     confirmations: string;
+    nonce?: string;
+    blockHash?: string;
+    tokenName?: string;
+    tokenSymbol?: string;
+    tokenDecimal?: string;
+    transactionIndex?: string;
+    methodId?: string;
+    functionName?: string;
 }
 
 interface EtherscanResponse {
@@ -28,7 +36,7 @@ interface EtherscanResponse {
 
 export class EthereumProvider extends BaseCryptoProvider {
     private apiKey: string = '';
-    private baseUrl: string = 'https://api.etherscan.io/api';
+    private baseUrl: string = 'https://api.etherscan.io/v2/api';
 
     constructor(apiKey?: string) {
         super();
@@ -61,10 +69,24 @@ export class EthereumProvider extends BaseCryptoProvider {
 
         try {
             const transactions = await this.fetchTransactions(params);
+            console.log(`[DEBUG] 获取到 ${transactions.length} 笔交易`);
+            if (transactions.length > 0) {
+                for (const tx of transactions) {
+                    console.log('[DEBUG] 原始交易:', JSON.stringify(tx));
+                }
+            }
+
             const orders = this.parseTransactions(transactions, params);
+            console.log(`[DEBUG] 解析出 ${orders.length} 条记录`);
+            if (orders.length > 0) {
+                for (const order of orders) {
+                    console.log('[DEBUG] 订单:', JSON.stringify(order));
+                }
+            }
 
             // 关联矿工费交易
             const associatedOrders = this.associateGasTransactions(orders);
+            console.log(`[DEBUG] 关联后共有 ${associatedOrders.length} 条记录`);
 
             return {
                 orders: associatedOrders
@@ -76,9 +98,31 @@ export class EthereumProvider extends BaseCryptoProvider {
     }
 
     private async fetchTransactions(params: FetchParams): Promise<EtherscanTransaction[]> {
+        // chainid映射表
+        const chainIdMap: Record<string, string> = {
+            ETH: '1', // Ethereum Mainnet
+            SEPOLIA: '11155111',
+            BSC: '56',
+            POLYGON: '137',
+            ARBITRUM: '42161',
+            OPTIMISM: '10',
+            AVALANCHE: '43114',
+            // 可根据需要继续扩展
+        };
+        const chainKey = (params.chain || '').toUpperCase();
+        const chainId = chainIdMap[chainKey] || '1';
+
+        // 只使用v2 API的tokentx接口，它包含了所有需要的信息
+        const tokenTxs = await this.fetchTokenTransactions(params, chainId);
+
+        return tokenTxs;
+    }
+
+    private async fetchTokenTransactions(params: FetchParams, chainId: string): Promise<EtherscanTransaction[]> {
         const url = new URL(this.baseUrl);
+        url.searchParams.set('chainid', chainId);
         url.searchParams.set('module', 'account');
-        url.searchParams.set('action', 'txlist');
+        url.searchParams.set('action', 'tokentx');
         url.searchParams.set('address', params.address);
         url.searchParams.set('startblock', '0');
         url.searchParams.set('endblock', '99999999');
@@ -98,14 +142,29 @@ export class EthereumProvider extends BaseCryptoProvider {
             url.searchParams.set('endtime', endTimestamp.toString());
         }
 
+        console.log('[DEBUG] API请求URL:', url.toString());
+        console.log('[DEBUG] API Key:', this.apiKey ? '已设置' : '未设置');
+
         const response = await fetch(url.toString());
+        console.log('[DEBUG] API响应状态:', response.status, response.statusText);
+
         const data: EtherscanResponse = await response.json();
+        console.log('[DEBUG] API响应数据:', JSON.stringify(data, null, 2));
 
         if (data.status !== '1') {
+            console.error('[DEBUG] API错误:', data.message);
             throw new Error(`Etherscan API error: ${data.message}`);
         }
 
-        return data.result.filter(tx => tx.isError === '0' && tx.txreceipt_status === '1');
+        const filteredResult = data.result.filter(tx => {
+            // v2 API可能没有isError和txreceipt_status字段，需要兼容处理
+            const isError = tx.isError === '0' || tx.isError === undefined;
+            const txReceiptStatus = tx.txreceipt_status === '1' || tx.txreceipt_status === undefined;
+            return isError && txReceiptStatus;
+        });
+        console.log('[DEBUG] 过滤后交易数量:', filteredResult.length);
+
+        return filteredResult;
     }
 
     private parseTransactions(transactions: EtherscanTransaction[], params: FetchParams): Order[] {
@@ -113,13 +172,13 @@ export class EthereumProvider extends BaseCryptoProvider {
 
         for (const tx of transactions) {
             try {
-                // 解析主交易
-                const mainOrder = this.parseMainTransaction(tx, params);
-                if (mainOrder) {
-                    orders.push(mainOrder);
+                // 只处理代币转账（v2 API的tokentx接口）
+                const tokenOrder = this.parseTokenTransaction(tx, params);
+                if (tokenOrder) {
+                    orders.push(tokenOrder);
                 }
 
-                // 解析矿工费交易
+                // 为支出交易生成矿工费记录
                 const gasOrder = this.parseGasTransaction(tx, params);
                 if (gasOrder) {
                     orders.push(gasOrder);
@@ -133,53 +192,70 @@ export class EthereumProvider extends BaseCryptoProvider {
         return orders;
     }
 
-    private parseMainTransaction(tx: EtherscanTransaction, params: FetchParams): Order | null {
+    private isTokenTransfer(tx: EtherscanTransaction): boolean {
+        // v2 API: 检查是否有tokenSymbol字段
+        if (tx.tokenSymbol) {
+            return true;
+        }
+
+        // 兼容v1 API: 检查是否为代币转账
+        return !!(tx.input &&
+            tx.input.length > 10 &&
+            tx.contractAddress &&
+            tx.contractAddress !== '0x0000000000000000000000000000000000000000');
+    }
+
+    private parseTokenTransaction(tx: EtherscanTransaction, params: FetchParams): Order | null {
         const isIncoming = tx.to.toLowerCase() === params.address.toLowerCase();
         const isOutgoing = tx.from.toLowerCase() === params.address.toLowerCase();
 
+        // 调试日志
+        console.log('[DEBUG] 解析交易:', {
+            hash: tx.hash,
+            from: tx.from,
+            to: tx.to,
+            address: params.address,
+            isIncoming,
+            isOutgoing,
+            value: tx.value,
+            tokenSymbol: tx.tokenSymbol,
+            tokenDecimal: tx.tokenDecimal
+        });
+
         if (!isIncoming && !isOutgoing) {
+            console.log('[DEBUG] 跳过非本地址相关交易:', tx.hash);
             return null;
         }
 
-        const value = this.formatTokenAmount(tx.value, 18); // ETH has 18 decimals
+        // 解析代币信息（优先使用v2 API信息）
+        const tokenInfo = this.parseTokenInfo(tx);
+        const value = this.formatTokenAmount(tx.value, tokenInfo.decimals);
         const payTime = new Date(parseInt(tx.timeStamp) * 1000);
 
-        // 判断是否为代币转账（通过input数据）
-        const isTokenTransfer = tx.input && tx.input.length > 10 && tx.contractAddress;
-
-        let token = 'ETH';
-        let tokenAddress = '';
-        let transactionType: CryptoTransactionType = CryptoTransactionType.Transfer;
-        let item = 'Ethereum Transfer';
-        let category = 'Cryptocurrency';
-
-        if (isTokenTransfer) {
-            // 这里可以解析ERC20代币转账
-            // 简化处理，实际应该解析input数据
-            token = 'UNKNOWN_TOKEN';
-            tokenAddress = tx.contractAddress;
-            item = 'Token Transfer';
-            category = 'Token Transfer';
+        // 过滤掉小额交易（可选）
+        if (value < 0.001) {
+            console.log('[DEBUG] 跳过小额交易:', tx.hash, value);
+            return null;
         }
 
         return this.createOrder({
             orderType: OrderType.CryptoTransfer,
             peer: isIncoming ? tx.from : tx.to,
-            item: item,
-            category: category,
+            item: `${tokenInfo.symbol} Transfer`,
+            category: 'Token Transfer',
             money: value,
-            note: `Transaction: ${tx.hash}`,
+            note: `Token transfer: ${tx.hash}`,
             payTime: payTime,
             type: isIncoming ? Type.Recv : Type.Send,
             typeOriginal: isIncoming ? 'Receive' : 'Send',
             method: 'Ethereum',
-            currency: token,
+            currency: tokenInfo.symbol,
             chain: BlockchainNetwork.Ethereum,
-            token: token,
-            tokenAddress: tokenAddress,
-            tokenDecimals: 18,
+            token: tokenInfo.symbol,
+            tokenAddress: tokenInfo.address,
+            tokenDecimals: tokenInfo.decimals,
             transactionHash: tx.hash,
-            transactionType: transactionType,
+            transactionType: CryptoTransactionType.Transfer,
             gasPrice: parseInt(tx.gasPrice),
             gasUsed: parseInt(tx.gasUsed),
             blockNumber: parseInt(tx.blockNumber),
@@ -189,7 +265,26 @@ export class EthereumProvider extends BaseCryptoProvider {
         });
     }
 
+    private parseTokenInfo(tx: EtherscanTransaction): { symbol: string; address: string; decimals: number } {
+        // v2 API: 使用准确的代币信息
+        if (tx.tokenSymbol && tx.tokenDecimal) {
+            return {
+                symbol: tx.tokenSymbol,
+                address: tx.contractAddress,
+                decimals: parseInt(tx.tokenDecimal)
+            };
+        }
+
+        // 兼容v1 API: 返回合约地址作为标识
+        return {
+            symbol: `TOKEN_${tx.contractAddress.slice(2, 8).toUpperCase()}`,
+            address: tx.contractAddress,
+            decimals: 18
+        };
+    }
+
     private parseGasTransaction(tx: EtherscanTransaction, params: FetchParams): Order | null {
+        // 只有支出交易才需要支付矿工费
         const isOutgoing = tx.from.toLowerCase() === params.address.toLowerCase();
 
         if (!isOutgoing) {
@@ -198,8 +293,14 @@ export class EthereumProvider extends BaseCryptoProvider {
 
         const gasUsed = parseInt(tx.gasUsed);
         const gasPrice = parseInt(tx.gasPrice);
-        const gasFee = this.formatTokenAmount((gasUsed * gasPrice).toString(), 18);
+        // 修复精度问题：直接计算，不使用formatTokenAmount
+        const gasFee = (gasUsed * gasPrice) / Math.pow(10, 18);
         const payTime = new Date(parseInt(tx.timeStamp) * 1000);
+
+        // 过滤掉极小的矿工费（可选）
+        if (gasFee < 0.000001) {
+            return null;
+        }
 
         return this.createOrder({
             orderType: OrderType.CryptoGas,
@@ -228,6 +329,12 @@ export class EthereumProvider extends BaseCryptoProvider {
             isGasTransaction: true,
             relatedTransactionHash: tx.hash
         });
+    }
+
+    // 关联矿工费交易（保持向后兼容）
+    protected associateGasTransactions(orders: Order[]): Order[] {
+        // 现在矿工费已经在parseTransactions中处理，这里直接返回
+        return orders;
     }
 
     // 设置API密钥

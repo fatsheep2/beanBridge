@@ -256,35 +256,13 @@ export function useDataSourceConfig() {
       // 如果用户没有提供API密钥，尝试从规则配置中获取
       if (!apiKey && ruleConfig?.apiConfig) {
         const chain = blockchainDataSourceConfig.value.chain.toLowerCase();
-        switch (chain) {
-          case 'eth':
-          case 'ethereum':
-            apiKey = ruleConfig.apiConfig.ethereum?.apiKey;
-            break;
-          case 'bsc':
-          case 'binancesmartchain':
-            apiKey = ruleConfig.apiConfig.bsc?.apiKey;
-            break;
-          case 'polygon':
-            apiKey = ruleConfig.apiConfig.polygon?.apiKey;
-            break;
-          case 'arbitrum':
-            apiKey = ruleConfig.apiConfig.arbitrum?.apiKey;
-            break;
-          case 'optimism':
-            apiKey = ruleConfig.apiConfig.optimism?.apiKey;
-            break;
-          case 'avalanche':
-            apiKey = ruleConfig.apiConfig.avalanche?.apiKey;
-            break;
-          case 'solana':
-            apiKey = ruleConfig.apiConfig.solana?.apiKey;
-            break;
-          case 'btc':
-          case 'bitcoin':
-            apiKey = ruleConfig.apiConfig.bitcoin?.apiKey;
-            break;
-        }
+        apiKey = getApiKeyForChain(ruleConfig.apiConfig, chain);
+      }
+
+      // 验证API密钥
+      if (!apiKey) {
+        error.value = '请提供API密钥或配置规则中的API密钥';
+        return;
       }
 
       // 创建区块链数据提供者
@@ -337,6 +315,33 @@ export function useDataSourceConfig() {
       error.value = `区块链数据处理失败: ${err instanceof Error ? err.message : '未知错误'}`;
     } finally {
       isProcessing.value = false;
+    }
+  };
+
+  // 新增：根据链获取API密钥的辅助方法
+  const getApiKeyForChain = (apiConfig: any, chain: string): string | undefined => {
+    switch (chain) {
+      case 'eth':
+      case 'ethereum':
+        return apiConfig.ethereum?.apiKey;
+      case 'bsc':
+      case 'binancesmartchain':
+        return apiConfig.bsc?.apiKey;
+      case 'polygon':
+        return apiConfig.polygon?.apiKey;
+      case 'arbitrum':
+        return apiConfig.arbitrum?.apiKey;
+      case 'optimism':
+        return apiConfig.optimism?.apiKey;
+      case 'avalanche':
+        return apiConfig.avalanche?.apiKey;
+      case 'solana':
+        return apiConfig.solana?.apiKey;
+      case 'btc':
+      case 'bitcoin':
+        return apiConfig.bitcoin?.apiKey;
+      default:
+        return undefined;
     }
   };
 
