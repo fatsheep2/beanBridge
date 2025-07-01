@@ -1,6 +1,7 @@
 import { BaseCryptoProvider } from '../base/base-crypto-provider';
 import type { FetchParams, IR, Order } from '../../types/provider';
-import { ProviderType, Type, OrderType, BlockchainNetwork, CryptoTransactionType } from '../../types/provider';
+import { ProviderType, Type, OrderType, BlockchainNetwork, CryptoTransactionType, Unit, Account } from '../../types/provider';
+import { ruleConfigService } from '../../services/rule-config-service';
 
 interface EtherscanTransaction {
     hash: string;
@@ -47,6 +48,10 @@ export class EthereumProvider extends BaseCryptoProvider {
 
     getProviderName(): string {
         return 'Ethereum';
+    }
+
+    protected getProviderType(): ProviderType {
+        return ProviderType.Ethereum;
     }
 
     getSupportedChains(): string[] {
@@ -345,5 +350,117 @@ export class EthereumProvider extends BaseCryptoProvider {
     // 设置自定义RPC URL（用于备用）
     setRpcUrl(url: string): void {
         this.baseUrl = url;
+    }
+
+    // 创建标准的Order对象 - 重写基类方法以支持以太坊特定的账户逻辑
+    protected createOrder(params: {
+        orderType: string;
+        peer: string;
+        item: string;
+        category: string;
+        money: number;
+        note: string;
+        payTime: Date;
+        type: Type;
+        typeOriginal: string;
+        method: string;
+        currency: string;
+        chain?: string;
+        token?: string;
+        tokenAddress?: string;
+        tokenDecimals?: number;
+        transactionHash?: string;
+        transactionType?: CryptoTransactionType;
+        gasFee?: number;
+        gasToken?: string;
+        gasPrice?: number;
+        gasUsed?: number;
+        blockNumber?: number;
+        fromAddress?: string;
+        toAddress?: string;
+        isGasTransaction?: boolean;
+        relatedTransactionHash?: string;
+    }): Order {
+        // 从规则配置中获取账户配置
+        const ruleConfig = this.getRuleConfig();
+        const defaultMinusAccount = ruleConfig?.defaultMinusAccount || 'Assets:Crypto:ETH';
+        const defaultPlusAccount = ruleConfig?.defaultPlusAccount || 'Expenses:Crypto';
+        const defaultCommissionAccount = ruleConfig?.defaultCommissionAccount || 'Expenses:Life:crypto:Commission:手续费';
+        const defaultPositionAccount = ruleConfig?.defaultPositionAccount || 'Assets:Crypto:ETH';
+
+        // 根据交易类型和是否为矿工费交易确定账户
+        let minusAccount = defaultMinusAccount;
+        let plusAccount = defaultPlusAccount;
+
+        if (params.isGasTransaction) {
+            // 矿工费交易：从钱包扣除，计入手续费账户
+            minusAccount = defaultPositionAccount; // 默认手续费支出账户（钱包）
+            plusAccount = defaultCommissionAccount; // 默认手续费扣除账户
+        } else {
+            // 代币转账交易
+            if (params.type === Type.Send) {
+                // 支出：从钱包扣除，计入支出账户
+                minusAccount = defaultPositionAccount; // 使用用户配置的钱包账户
+                plusAccount = defaultPlusAccount; // 默认支出账户
+            } else {
+                // 收入：从收入账户扣除，计入钱包
+                minusAccount = 'Income:Crypto';
+                plusAccount = defaultPositionAccount; // 使用用户配置的钱包账户
+            }
+        }
+
+        const order: Order = {
+            orderType: params.orderType as any,
+            peer: params.peer,
+            item: params.item,
+            category: params.category,
+            money: params.money,
+            note: params.note,
+            payTime: params.payTime,
+            type: params.type,
+            typeOriginal: params.typeOriginal,
+            txTypeOriginal: params.typeOriginal,
+            method: params.method,
+            amount: params.money,
+            price: params.money,
+            currency: params.currency,
+            commission: 0,
+            units: {
+                [Unit.BaseUnit]: params.currency,
+                [Unit.TargetUnit]: params.currency,
+                [Unit.CommissionUnit]: params.currency
+            },
+            extraAccounts: {
+                [Account.CashAccount]: defaultMinusAccount,
+                [Account.PositionAccount]: defaultPositionAccount,
+                [Account.CommissionAccount]: defaultCommissionAccount,
+                [Account.PnlAccount]: 'Income:FIXME',
+                [Account.ThirdPartyCustodyAccount]: defaultMinusAccount,
+                [Account.PlusAccount]: plusAccount,
+                [Account.MinusAccount]: minusAccount
+            },
+            minusAccount: minusAccount,
+            plusAccount: plusAccount,
+            metadata: {},
+            tags: [],
+            chain: params.chain,
+            token: params.token,
+            tokenAddress: params.tokenAddress,
+            tokenDecimals: params.tokenDecimals,
+            transactionHash: params.transactionHash,
+            transactionType: params.transactionType,
+            gasFee: params.gasFee,
+            gasToken: params.gasToken,
+            gasPrice: params.gasPrice,
+            gasUsed: params.gasUsed,
+            blockNumber: params.blockNumber,
+            fromAddress: params.fromAddress,
+            toAddress: params.toAddress,
+            isGasTransaction: params.isGasTransaction,
+            relatedTransactionHash: params.relatedTransactionHash
+        };
+
+        this.updateStatistics(order);
+        return order;
     }
 } 

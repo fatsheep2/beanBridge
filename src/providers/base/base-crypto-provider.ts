@@ -7,6 +7,8 @@ import type {
     CryptoTransactionType
 } from '../../types/provider';
 import { BlockchainNetwork, Type, Unit, Account } from '../../types/provider';
+import { ruleConfigService } from '../../services/rule-config-service';
+import { ProviderType } from '../../types/provider';
 
 export abstract class BaseCryptoProvider implements DataProviderInterface {
     protected statistics: Statistics = {
@@ -27,6 +29,22 @@ export abstract class BaseCryptoProvider implements DataProviderInterface {
     abstract getSupportedChains(): string[];
     abstract getSupportedTokens(chain: string): string[];
     abstract fetchData(params: FetchParams): Promise<IR>;
+
+    // 获取提供者类型，用于加载规则配置
+    protected getProviderType(): ProviderType {
+        // 子类可以重写这个方法
+        return ProviderType.Ethereum;
+    }
+
+    // 获取规则配置
+    protected getRuleConfig() {
+        try {
+            return ruleConfigService.getConfig(this.getProviderType());
+        } catch (error) {
+            console.warn(`Failed to load rule config for ${this.getProviderName()} provider:`, error);
+            return null;
+        }
+    }
 
     getStatistics(): Statistics {
         return { ...this.statistics };
@@ -158,6 +176,13 @@ export abstract class BaseCryptoProvider implements DataProviderInterface {
         isGasTransaction?: boolean;
         relatedTransactionHash?: string;
     }): Order {
+        // 从规则配置中获取账户配置
+        const ruleConfig = this.getRuleConfig();
+        const defaultMinusAccount = ruleConfig?.defaultMinusAccount || 'Assets:FIXME';
+        const defaultPlusAccount = ruleConfig?.defaultPlusAccount || 'Expenses:FIXME';
+        const defaultCommissionAccount = ruleConfig?.defaultCommissionAccount || 'Expenses:FIXME';
+        const defaultPositionAccount = ruleConfig?.defaultPositionAccount || 'Assets:FIXME';
+
         const order: Order = {
             orderType: params.orderType as any,
             peer: params.peer,
@@ -180,16 +205,16 @@ export abstract class BaseCryptoProvider implements DataProviderInterface {
                 [Unit.CommissionUnit]: params.currency
             },
             extraAccounts: {
-                [Account.CashAccount]: 'Assets:FIXME',
-                [Account.PositionAccount]: 'Assets:FIXME',
-                [Account.CommissionAccount]: 'Expenses:FIXME',
+                [Account.CashAccount]: defaultMinusAccount,
+                [Account.PositionAccount]: defaultPositionAccount,
+                [Account.CommissionAccount]: defaultCommissionAccount,
                 [Account.PnlAccount]: 'Income:FIXME',
-                [Account.ThirdPartyCustodyAccount]: 'Assets:FIXME',
-                [Account.PlusAccount]: 'Expenses:FIXME',
-                [Account.MinusAccount]: 'Assets:FIXME'
+                [Account.ThirdPartyCustodyAccount]: defaultMinusAccount,
+                [Account.PlusAccount]: defaultPlusAccount,
+                [Account.MinusAccount]: defaultMinusAccount
             },
-            minusAccount: 'Assets:FIXME',
-            plusAccount: 'Expenses:FIXME',
+            minusAccount: defaultMinusAccount,
+            plusAccount: defaultPlusAccount,
             metadata: {},
             tags: [],
             chain: params.chain,

@@ -133,7 +133,7 @@
           
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认负账户(一般是资产账户)</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认扣除账户(一般是资产账户)</label>
               <input
                 v-model="currentConfig.defaultMinusAccount"
                 type="text"
@@ -143,12 +143,32 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认增加账户(一般是支出账户)</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认支出账户(一般是支出账户)</label>
               <input
                 v-model="currentConfig.defaultPlusAccount"
                 type="text"
                 class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                 placeholder="Expenses:FIXME"
+                @input="autoSaveConfig"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认手续费扣除账户</label>
+              <input
+                v-model="currentConfig.defaultCommissionAccount"
+                type="text"
+                class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                placeholder="Expenses:Life:crypto:Commission:手续费"
+                @input="autoSaveConfig"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认手续费支出账户</label>
+              <input
+                v-model="currentConfig.defaultPositionAccount"
+                type="text"
+                class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                placeholder="Assets:Crypto:ETH"
                 @input="autoSaveConfig"
               />
             </div>
@@ -185,23 +205,23 @@
                 @input="autoSaveConfig"
               />
             </div>
-            <div v-if="currentConfig.defaultCommissionAccount">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认手续费账户</label>
+            <div v-if="currentConfig.defaultPnlAccount">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认损益账户</label>
               <input
-                v-model="currentConfig.defaultCommissionAccount"
+                v-model="currentConfig.defaultPnlAccount"
                 type="text"
                 class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
-                placeholder="Expenses:Commission"
+                placeholder="Income:FIXME"
                 @input="autoSaveConfig"
               />
             </div>
-            <div v-if="currentConfig.defaultPositionAccount">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认持仓账户</label>
+            <div v-if="currentConfig.defaultThirdPartyCustodyAccount">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">默认第三方托管账户</label>
               <input
-                v-model="currentConfig.defaultPositionAccount"
+                v-model="currentConfig.defaultThirdPartyCustodyAccount"
                 type="text"
                 class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
-                placeholder="Assets:Positions"
+                placeholder="Assets:FIXME"
                 @input="autoSaveConfig"
               />
             </div>

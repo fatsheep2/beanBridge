@@ -113,53 +113,65 @@ export class RuleEngine {
           updatedOrder.tags.push(...matchedRule.tags);
         }
 
-        // 设置账户映射
+        // 设置账户映射 - 只在账户没有被提供者设置时才设置
         if (order.type === 'Send') {
-          // 设置 MinusAccount（资金账户）
-          if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
-            updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.methodAccount;
-            updatedOrder.minusAccount = matchedRule.methodAccount;
-            if (isDebugRecord) console.log('Set MinusAccount from rule:', matchedRule.methodAccount);
-          } else if (!updatedOrder.extraAccounts[Account.MinusAccount]) {
-            updatedOrder.extraAccounts[Account.MinusAccount] = this.defaultMinusAccount;
-            updatedOrder.minusAccount = this.defaultMinusAccount;
-            if (isDebugRecord) console.log('Set MinusAccount from default:', this.defaultMinusAccount);
+          // 设置 MinusAccount（资金账户）- 只在没有设置时才设置
+          if (!updatedOrder.minusAccount || updatedOrder.minusAccount === 'Assets:FIXME') {
+            if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
+              updatedOrder.extraAccounts[Account.MinusAccount] = matchedRule.methodAccount;
+              updatedOrder.minusAccount = matchedRule.methodAccount;
+              if (isDebugRecord) console.log('Set MinusAccount from rule:', matchedRule.methodAccount);
+            } else if (!updatedOrder.extraAccounts[Account.MinusAccount]) {
+              updatedOrder.extraAccounts[Account.MinusAccount] = this.defaultMinusAccount;
+              updatedOrder.minusAccount = this.defaultMinusAccount;
+              if (isDebugRecord) console.log('Set MinusAccount from default:', this.defaultMinusAccount);
+            }
+          } else if (isDebugRecord) {
+            console.log('MinusAccount already set by provider:', updatedOrder.minusAccount);
           }
 
-          // 设置 PlusAccount（目标账户）- 支持 targetAccount 和 account 字段
-          const targetAccount = (matchedRule as any).targetAccount || matchedRule.account;
-          if (targetAccount && targetAccount !== 'Expenses:FIXME') {
-            updatedOrder.extraAccounts[Account.PlusAccount] = targetAccount;
-            updatedOrder.plusAccount = targetAccount;
-            if (isDebugRecord) console.log('Set PlusAccount from rule:', targetAccount);
+          // 设置 PlusAccount（目标账户）- 只在没有设置时才设置
+          if (!updatedOrder.plusAccount || updatedOrder.plusAccount === 'Expenses:FIXME') {
+            const targetAccount = (matchedRule as any).targetAccount || matchedRule.account;
+            if (targetAccount && targetAccount !== 'Expenses:FIXME') {
+              updatedOrder.extraAccounts[Account.PlusAccount] = targetAccount;
+              updatedOrder.plusAccount = targetAccount;
+              if (isDebugRecord) console.log('Set PlusAccount from rule:', targetAccount);
 
-            // 调试：只输出特定记录的账户设置信息
-            if (order.peer.includes('金膳') || order.peer.includes('午餐') || order.peer.includes('晚餐')) {
-              console.log(`[规则引擎调试] 订单: ${order.peer} | 设置账户: ${targetAccount} | 规则: ${matchedRule.pattern}`);
+              // 调试：只输出特定记录的账户设置信息
+              if (order.peer.includes('金膳') || order.peer.includes('午餐') || order.peer.includes('晚餐')) {
+                console.log(`[规则引擎调试] 订单: ${order.peer} | 设置账户: ${targetAccount} | 规则: ${matchedRule.pattern}`);
+              }
+            } else if (!updatedOrder.extraAccounts[Account.PlusAccount]) {
+              updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultPlusAccount;
+              updatedOrder.plusAccount = this.defaultPlusAccount;
+              if (isDebugRecord) console.log('Set PlusAccount from default:', this.defaultPlusAccount);
             }
-          } else if (!updatedOrder.extraAccounts[Account.PlusAccount]) {
-            updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultPlusAccount;
-            updatedOrder.plusAccount = this.defaultPlusAccount;
-            if (isDebugRecord) console.log('Set PlusAccount from default:', this.defaultPlusAccount);
+          } else if (isDebugRecord) {
+            console.log('PlusAccount already set by provider:', updatedOrder.plusAccount);
           }
         } else if (order.type === 'Recv') {
-          // 设置 MinusAccount（来源账户）- 支持 targetAccount 和 account 字段
-          const targetAccount = (matchedRule as any).targetAccount || matchedRule.account;
-          if (targetAccount && targetAccount !== 'Expenses:FIXME') {
-            updatedOrder.extraAccounts[Account.MinusAccount] = targetAccount;
-            updatedOrder.minusAccount = targetAccount;
-          } else if (!updatedOrder.extraAccounts[Account.MinusAccount]) {
-            updatedOrder.extraAccounts[Account.MinusAccount] = 'Income:Other';
-            updatedOrder.minusAccount = 'Income:Other';
+          // 设置 MinusAccount（来源账户）- 只在没有设置时才设置
+          if (!updatedOrder.minusAccount || updatedOrder.minusAccount === 'Income:Other') {
+            const targetAccount = (matchedRule as any).targetAccount || matchedRule.account;
+            if (targetAccount && targetAccount !== 'Expenses:FIXME') {
+              updatedOrder.extraAccounts[Account.MinusAccount] = targetAccount;
+              updatedOrder.minusAccount = targetAccount;
+            } else if (!updatedOrder.extraAccounts[Account.MinusAccount]) {
+              updatedOrder.extraAccounts[Account.MinusAccount] = 'Income:Other';
+              updatedOrder.minusAccount = 'Income:Other';
+            }
           }
 
-          // 设置 PlusAccount（资金账户）
-          if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
-            updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.methodAccount;
-            updatedOrder.plusAccount = matchedRule.methodAccount;
-          } else if (!updatedOrder.extraAccounts[Account.PlusAccount]) {
-            updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultMinusAccount;
-            updatedOrder.plusAccount = this.defaultMinusAccount;
+          // 设置 PlusAccount（资金账户）- 只在没有设置时才设置
+          if (!updatedOrder.plusAccount || updatedOrder.plusAccount === 'Assets:FIXME') {
+            if (matchedRule.methodAccount && matchedRule.methodAccount !== 'Assets:FIXME') {
+              updatedOrder.extraAccounts[Account.PlusAccount] = matchedRule.methodAccount;
+              updatedOrder.plusAccount = matchedRule.methodAccount;
+            } else if (!updatedOrder.extraAccounts[Account.PlusAccount]) {
+              updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultMinusAccount;
+              updatedOrder.plusAccount = this.defaultMinusAccount;
+            }
           }
         }
       }
@@ -168,28 +180,36 @@ export class RuleEngine {
         console.log('Final account mapping:', updatedOrder.extraAccounts);
       }
     } else {
-      // 如果没有匹配的规则，设置默认账户
+      // 如果没有匹配的规则，只在账户没有被提供者设置时才设置默认账户
       if (order.type === 'Send') {
-        updatedOrder.extraAccounts[Account.MinusAccount] = this.defaultMinusAccount;
-        updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultPlusAccount;
-        updatedOrder.minusAccount = this.defaultMinusAccount;
-        updatedOrder.plusAccount = this.defaultPlusAccount;
-        if (isDebugRecord) {
-          console.log('Set default accounts for unmatched Send order:', {
-            minusAccount: this.defaultMinusAccount,
-            plusAccount: this.defaultPlusAccount
-          });
+        if (!updatedOrder.minusAccount || updatedOrder.minusAccount === 'Assets:FIXME') {
+          updatedOrder.extraAccounts[Account.MinusAccount] = this.defaultMinusAccount;
+          updatedOrder.minusAccount = this.defaultMinusAccount;
+          if (isDebugRecord) {
+            console.log('Set default MinusAccount for unmatched Send order:', this.defaultMinusAccount);
+          }
+        }
+        if (!updatedOrder.plusAccount || updatedOrder.plusAccount === 'Expenses:FIXME') {
+          updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultPlusAccount;
+          updatedOrder.plusAccount = this.defaultPlusAccount;
+          if (isDebugRecord) {
+            console.log('Set default PlusAccount for unmatched Send order:', this.defaultPlusAccount);
+          }
         }
       } else if (order.type === 'Recv') {
-        updatedOrder.extraAccounts[Account.MinusAccount] = 'Income:Other';
-        updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultMinusAccount;
-        updatedOrder.minusAccount = 'Income:Other';
-        updatedOrder.plusAccount = this.defaultMinusAccount;
-        if (isDebugRecord) {
-          console.log('Set default accounts for unmatched Recv order:', {
-            minusAccount: 'Income:Other',
-            plusAccount: this.defaultMinusAccount
-          });
+        if (!updatedOrder.minusAccount || updatedOrder.minusAccount === 'Income:Other') {
+          updatedOrder.extraAccounts[Account.MinusAccount] = 'Income:Other';
+          updatedOrder.minusAccount = 'Income:Other';
+          if (isDebugRecord) {
+            console.log('Set default MinusAccount for unmatched Recv order:', 'Income:Other');
+          }
+        }
+        if (!updatedOrder.plusAccount || updatedOrder.plusAccount === 'Assets:FIXME') {
+          updatedOrder.extraAccounts[Account.PlusAccount] = this.defaultMinusAccount;
+          updatedOrder.plusAccount = this.defaultMinusAccount;
+          if (isDebugRecord) {
+            console.log('Set default PlusAccount for unmatched Recv order:', this.defaultMinusAccount);
+          }
         }
       }
     }
