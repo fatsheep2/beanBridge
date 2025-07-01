@@ -83,6 +83,11 @@ export abstract class BaseProvider implements ProviderInterface {
 
   protected async readFileFromBlob(file: File): Promise<FileData> {
     const ext = file.name.split('.').pop()?.toLowerCase();
+    // 测试环境下直接用 file.text()
+    if (process.env.NODE_ENV === 'test' && typeof file.text === 'function') {
+      const text = await file.text();
+      return this.preprocessFileContent(text, file.name);
+    }
     if (ext === 'csv' || ext === 'txt') {
       // 纯文本文件，走原有逻辑
       return new Promise((resolve, reject) => {

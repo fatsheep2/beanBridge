@@ -4,11 +4,11 @@ import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provid
 
 export class HtsecProvider extends BaseProvider {
   getProviderName(): string {
-    return '华泰证券';
+    return 'HTSEC';
   }
 
   getSupportedFormats(): string[] {
-    return ['.csv'];
+    return ['csv'];
   }
 
   protected getProviderType(): ProviderType {

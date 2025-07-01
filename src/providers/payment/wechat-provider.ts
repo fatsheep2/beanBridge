@@ -5,11 +5,11 @@ import { ruleConfigService } from '../../services/rule-config-service';
 
 export class WechatProvider extends BaseProvider {
     getProviderName(): string {
-        return 'WeChat';
+        return 'Wechat';
     }
 
     getSupportedFormats(): string[] {
-        return ['.csv'];
+        return ['csv'];
     }
 
     protected getProviderType(): ProviderType {

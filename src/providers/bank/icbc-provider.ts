@@ -4,11 +4,11 @@ import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provid
 
 export class IcbcProvider extends BaseProvider {
   getProviderName(): string {
-    return '工商银行';
+    return 'ICBC';
   }
 
   getSupportedFormats(): string[] {
-    return ['.csv'];
+    return ['csv'];
   }
 
   protected getProviderType(): ProviderType {

@@ -4,11 +4,11 @@ import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provid
 
 export class JdProvider extends BaseProvider {
   getProviderName(): string {
-    return '京东';
+    return 'JD';
   }
 
   getSupportedFormats(): string[] {
-    return ['.csv'];
+    return ['csv'];
   }
 
   protected getProviderType(): ProviderType {

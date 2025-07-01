@@ -4,11 +4,11 @@ import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provid
 
 export class CiticProvider extends BaseProvider {
   getProviderName(): string {
-    return '中信银行';
+    return 'CITIC';
   }
 
   getSupportedFormats(): string[] {
-    return ['.csv'];
+    return ['csv'];
   }
 
   protected getProviderType(): ProviderType {

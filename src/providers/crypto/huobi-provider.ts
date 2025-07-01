@@ -8,7 +8,7 @@ export class HuobiProvider extends BaseProvider {
   }
 
   getSupportedFormats(): string[] {
-    return ['.csv'];
+    return ['csv'];
   }
 
   protected getProviderType(): ProviderType {

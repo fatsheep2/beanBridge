@@ -4,11 +4,11 @@ import { OrderType, Type, ProviderType, Unit, Account } from '../../types/provid
 
 export class BmoProvider extends BaseProvider {
   getProviderName(): string {
-    return 'BMO Bank';
+    return 'BMO';
   }
 
   getSupportedFormats(): string[] {
-    return ['.csv'];
+    return ['csv'];
   }
 
   protected getProviderType(): ProviderType {

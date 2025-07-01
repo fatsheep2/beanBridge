@@ -137,8 +137,14 @@ export class FileProcessorV2 {
       return { valid: false, error: '不支持的解析器类型' };
     }
 
-    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
-    if (!info.formats.includes(extension)) {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (!extension) {
+      return { valid: false, error: '文件没有扩展名' };
+    }
+
+    // 检查文件扩展名是否在支持的格式列表中
+    const supportedFormats = info.formats.map(format => format.toLowerCase());
+    if (!supportedFormats.includes(extension)) {
       return {
         valid: false,
         error: `不支持的文件格式。支持的格式: ${info.formats.join(', ')}`

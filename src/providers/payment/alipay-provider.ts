@@ -8,7 +8,7 @@ export class AlipayProvider extends BaseProvider {
   }
 
   getSupportedFormats(): string[] {
-    return ['.csv'];
+    return ['csv'];
   }
 
   protected getProviderType(): ProviderType {

@@ -8,7 +8,7 @@ export class CCBProvider extends BaseProvider {
     }
 
     getSupportedFormats(): string[] {
-        return ['.xls', '.xlsx', '.csv'];
+        return ['xls', 'xlsx', 'csv'];
     }
 
     protected getProviderType(): ProviderType {
