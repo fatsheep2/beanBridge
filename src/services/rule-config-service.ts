@@ -52,8 +52,8 @@ class RuleConfigService {
   }
 
   // 从预设配置创建新配置
-  createFromPreset(provider: ProviderType, name: string): RuleConfig {
-    const preset = getPresetConfig(provider);
+  async createFromPreset(provider: ProviderType, name: string): Promise<RuleConfig> {
+    const preset = await getPresetConfig(provider);
     if (!preset) {
       throw new Error(`No preset config found for provider: ${provider}`);
     }

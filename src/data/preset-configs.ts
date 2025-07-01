@@ -1,6 +1,8 @@
 import { ProviderType } from '../types/provider';
 import type { PresetConfig } from '../types/rule-config';
+import { PresetConfigService } from '../services/preset-config-service';
 
+// 保留原有的硬编码配置作为备用
 export const presetConfigs: PresetConfig[] = [
   {
     provider: ProviderType.Alipay,
@@ -129,7 +131,6 @@ export const presetConfigs: PresetConfig[] = [
           type: '收入',
           method: '/',
           item: '/',
-          sep: ',',
           targetAccount: 'Income:Wechat:RedPacket',
           priority: 3
         },
@@ -139,7 +140,6 @@ export const presetConfigs: PresetConfig[] = [
           txType: '转入零钱通',
           peer: '/',
           item: '/',
-          sep: ',',
           targetAccount: 'Assets:Digital:Wechat:MiniFund',
           priority: 4
         },
@@ -200,182 +200,87 @@ export const presetConfigs: PresetConfig[] = [
     name: '建设银行基础配置',
     description: '建设银行交易记录的基础配置模板',
     config: {
-      defaultMinusAccount: 'Assets:Bank:CN:CCB',
+      defaultMinusAccount: 'Assets:FIXME',
       defaultPlusAccount: 'Expenses:FIXME',
       defaultCurrency: 'CNY',
       rules: [
         {
-          name: '建设银行账户',
-          description: '建设银行账户作为资金账户',
-          method: '建设银行',
-          fullMatch: true,
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 1
-        },
-        {
           name: '工资收入',
           description: '工资收入归类为工资收入',
           type: '收入',
-          item: '工资,薪金,薪金报酬',
-          sep: ',',
+          peer: '工资',
           targetAccount: 'Income:Salary',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 2
+          methodAccount: 'Assets:Bank:CN:CCB:Savings',
+          priority: 1
         },
         {
-          name: '电子汇入收入',
-          description: '电子汇入收入归类为转账收入',
+          name: '转账收入',
+          description: '转账收入归类为其他收入',
           type: '收入',
-          item: '电子汇入,银联入账',
-          sep: ',',
-          targetAccount: 'Income:Transfer',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 3
-        },
-        {
-          name: '消费支出',
-          description: '消费支出归类为日常消费',
-          type: '支出',
-          item: '消费,无卡自助交易,有卡自助消费',
-          sep: ',',
-          targetAccount: 'Expenses:Daily',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 4
+          targetAccount: 'Income:FIXME',
+          methodAccount: 'Assets:Bank:CN:CCB:Savings',
+          priority: 2
         },
         {
           name: '餐饮消费',
           description: '餐饮相关消费归类为餐饮',
+          category: '餐饮',
           type: '支出',
-          peer: '微超,便利店,餐厅,餐饮',
-          sep: ',',
           targetAccount: 'Expenses:Food',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 5
+          methodAccount: 'Assets:Bank:CN:CCB:Savings',
+          priority: 3
+        },
+        {
+          name: '购物消费',
+          description: '购物相关消费归类为购物',
+          category: '购物',
+          type: '支出',
+          targetAccount: 'Expenses:Shopping',
+          methodAccount: 'Assets:Bank:CN:CCB:Savings',
+          priority: 4
         },
         {
           name: '交通消费',
           description: '交通相关消费归类为交通',
+          category: '交通',
           type: '支出',
-          peer: '高德打车,地铁,公交,交通',
-          sep: ',',
           targetAccount: 'Expenses:Transport',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 6
-        },
-        {
-          name: '第三方支付',
-          description: '第三方支付消费归类为第三方支付',
-          type: '支出',
-          item: '微信支付,支付宝,抖音支付,财付通',
-          sep: ',',
-          targetAccount: 'Expenses:DigitalPayment',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 7
+          methodAccount: 'Assets:Bank:CN:CCB:Savings',
+          priority: 5
         },
         {
           name: '转账支出',
-          description: '转账支出归类为转账',
+          description: '转账支出归类为其他支出',
           type: '支出',
-          item: '转账,跨行转出',
-          sep: ',',
-          targetAccount: 'Expenses:Transfer',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 8
-        },
-        {
-          name: '手续费',
-          description: '手续费支出归类为手续费',
-          type: '支出',
-          item: '手续费',
-          targetAccount: 'Expenses:Fees',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 9
-        },
-        {
-          name: '利息收入',
-          description: '利息收入归类为利息收入',
-          type: '收入',
-          item: '利息存入',
-          targetAccount: 'Income:Interest',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 10
-        },
-        {
-          name: '退款收入',
-          description: '退款收入归类为退款',
-          type: '收入',
-          item: '消费退货',
-          targetAccount: 'Income:Refund',
-          methodAccount: 'Assets:Bank:CN:CCB',
-          priority: 11
-        }
-      ]
-    }
-  },
-  {
-    provider: ProviderType.Ethereum,
-    name: '以太坊(聚合链)基础配置',
-    description: '以太坊及其EVM兼容链账单的基础配置模板，支持ETH/BSC/Polygon等',
-    config: {
-      defaultMinusAccount: 'Assets:Crypto:Wallet',
-      defaultPlusAccount: 'Expenses:Crypto',
-      defaultCurrency: 'ETH',
-      apiConfig: {
-        ethereum: { apiKey: '' }
-      },
-      rules: [
-        {
-          name: 'ETH 转账',
-          chain: 'ETH',
-          token: 'ETH',
-          transactionType: 'transfer',
-          targetAccount: 'Assets:Crypto:ETH',
-          methodAccount: 'Assets:Crypto:ETH',
-          priority: 1
-        },
-        {
-          name: 'BSC 转账',
-          chain: 'BSC',
-          token: 'BNB',
-          transactionType: 'transfer',
-          targetAccount: 'Assets:Crypto:BNB',
-          methodAccount: 'Assets:Crypto:BNB',
-          priority: 2
-        },
-        {
-          name: 'USDT 转账',
-          token: 'USDT',
-          transactionType: 'transfer',
-          targetAccount: 'Assets:Crypto:USDT',
-          methodAccount: 'Assets:Crypto:Wallet',
-          priority: 3
-        },
-        {
-          name: 'USDC 转账',
-          token: 'USDC',
-          transactionType: 'transfer',
-          targetAccount: 'Assets:Crypto:USDC',
-          methodAccount: 'Assets:Crypto:Wallet',
-          priority: 4
-        },
-        {
-          name: 'Gas Fee',
-          transactionType: 'gas',
-          targetAccount: 'Expenses:Crypto:Gas',
-          methodAccount: 'Assets:Crypto:Wallet',
-          priority: 5
+          targetAccount: 'Expenses:FIXME',
+          methodAccount: 'Assets:Bank:CN:CCB:Savings',
+          priority: 6
         }
       ]
     }
   }
 ];
 
-// 获取指定Provider的预设配置
-export const getPresetConfig = (provider: ProviderType): PresetConfig | undefined => {
+// 获取指定Provider的预设配置（优先从文件系统加载）
+export const getPresetConfig = async (provider: ProviderType): Promise<PresetConfig | undefined> => {
+  // 首先尝试从文件系统加载
+  const fileConfig = await PresetConfigService.getPresetConfig(provider);
+  if (fileConfig) {
+    return fileConfig;
+  }
+
+  // 如果文件系统没有配置，则使用硬编码的备用配置
   return presetConfigs.find(config => config.provider === provider);
 };
 
-// 获取所有Provider的预设配置
-export const getPresetConfigs = (): PresetConfig[] => {
+// 获取所有Provider的预设配置（优先从文件系统加载）
+export const getPresetConfigs = async (): Promise<PresetConfig[]> => {
+  // 首先尝试从文件系统加载所有配置
+  const fileConfigs = await PresetConfigService.getAllPresetConfigs();
+  if (fileConfigs.length > 0) {
+    return fileConfigs;
+  }
+
+  // 如果文件系统没有配置，则使用硬编码的备用配置
   return presetConfigs;
 }; 

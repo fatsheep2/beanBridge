@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { TestUtils } from './test-utils';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 
 /**
  * 测试运行器 - 用于运行所有提供者的测试
@@ -133,14 +135,12 @@ option "operating_currency" "CNY"
         });
 
         it('应该验证测试用例的完整性', () => {
-            const requiredFiles = ['config.yaml', 'example-records.csv', 'example-output.beancount'];
-
             for (const testCaseName of allTestCases) {
                 try {
                     const testCase = TestUtils.loadTestData(testCaseName);
 
                     // 验证必需文件存在
-                    expect(testCase.configFile).toBe('config.yaml');
+                    expect(testCase.configFile).toBe('config.json');
                     expect(testCase.inputFile).toBeDefined();
                     expect(testCase.expectedOutputFile).toBeDefined();
 

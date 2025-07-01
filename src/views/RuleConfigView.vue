@@ -655,11 +655,11 @@ const initFromRoute = () => {
   }
 };
 
-const createFromPreset = () => {
+const createFromPreset = async () => {
   if (!selectedProvider.value) return;
   
   try {
-    const config = ruleConfigService.createFromPreset(selectedProvider.value, '我的配置');
+    const config = await ruleConfigService.createFromPreset(selectedProvider.value, '我的配置');
     currentConfig.value = config;
     ruleConfigService.saveConfig(config);
   } catch (error) {

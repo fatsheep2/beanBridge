@@ -78,7 +78,7 @@ export class TestUtils {
         }
 
         // 读取配置文件
-        const configFile = 'config.yaml';
+        const configFile = 'config.json';
         const configPath = join(providerPath, configFile);
         if (!existsSync(configPath)) {
             throw new Error(`未找到${providerName}的配置文件`);
@@ -89,8 +89,8 @@ export class TestUtils {
         const expectedOutput = readFileSync(join(providerPath, expectedOutputFile), 'utf-8');
         const configContent = readFileSync(configPath, 'utf-8');
 
-        // 解析YAML配置
-        const config = this.parseYamlConfig(configContent);
+        // 解析JSON配置
+        const config = this.parseJsonConfig(configContent);
 
         return {
             name: providerName,
@@ -105,9 +105,9 @@ export class TestUtils {
     }
 
     /**
-     * 解析YAML配置（简化版本）
+     * 解析JSON配置（简化版本）
      */
-    private static parseYamlConfig(content: string): TestConfig {
+    private static parseJsonConfig(content: string): TestConfig {
         const config: TestConfig = {
             defaultMinusAccount: 'Assets:FIXME',
             defaultPlusAccount: 'Expenses:FIXME',
@@ -115,33 +115,13 @@ export class TestUtils {
             title: '测试'
         };
 
-        const lines = content.split('\n');
-        let currentSection = '';
+        const json = JSON.parse(content);
 
-        for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine || trimmedLine.startsWith('#')) continue;
-
-            // 检查是否是新的section
-            if (trimmedLine.endsWith(':')) {
-                currentSection = trimmedLine.slice(0, -1);
-                continue;
-            }
-
-            // 解析键值对
-            const colonIndex = trimmedLine.indexOf(':');
-            if (colonIndex > 0) {
-                const key = trimmedLine.substring(0, colonIndex).trim();
-                const value = trimmedLine.substring(colonIndex + 1).trim();
-
-                if (currentSection) {
-                    if (!config[currentSection]) {
-                        config[currentSection] = {};
-                    }
-                    (config[currentSection] as any)[key] = value;
-                } else {
-                    config[key] = value;
-                }
+        for (const key in json) {
+            if (typeof json[key] === 'object' && json[key] !== null) {
+                config[key] = json[key];
+            } else {
+                config[key] = json[key];
             }
         }
 
