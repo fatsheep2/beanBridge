@@ -103,6 +103,16 @@ export interface Rule {
 
   // 排序权重
   priority: number;
+
+  // 加密货币相关字段
+  chain?: string;                    // 区块链网络
+  token?: string;                    // 代币符号
+  transactionType?: string;          // 交易类型
+  gasToken?: string;                 // 矿工费代币
+  minGasFee?: number;                // 最小矿工费
+  maxGasFee?: number;                // 最大矿工费
+  fromAddress?: string;              // 发送地址
+  toAddress?: string;                // 接收地址
 }
 
 // 规则模板

@@ -178,7 +178,9 @@ export class BeancountConverter {
 
       if (mainTransaction.type === 'Send') {
         // 发送：资产账户减少，目标账户增加
-        const assetAccount = `Assets:Crypto:${chain}:${token}`;
+        const assetAccount = mainTransaction.extraAccounts[Account.MinusAccount] ||
+          config?.defaultMinusAccount ||
+          `Assets:Crypto:${chain}:${token}`;
         const targetAccount = mainTransaction.extraAccounts[Account.PlusAccount] ||
           config?.defaultPlusAccount ||
           `Expenses:Life:Entertainment:Digital:数字娱乐`;
@@ -187,7 +189,9 @@ export class BeancountConverter {
         postings.push(`  ${targetAccount}  ${amount} ${currency}`);
       } else if (mainTransaction.type === 'Recv') {
         // 接收：目标账户增加，收入账户减少
-        const assetAccount = `Assets:Crypto:${chain}:${token}`;
+        const assetAccount = mainTransaction.extraAccounts[Account.PlusAccount] ||
+          config?.defaultMinusAccount ||
+          `Assets:Crypto:${chain}:${token}`;
         const incomeAccount = mainTransaction.extraAccounts[Account.MinusAccount] ||
           `Income:Crypto:${chain}:Transfer`;
 
@@ -202,8 +206,12 @@ export class BeancountConverter {
       const gasToken = gasTransaction.gasToken || 'ETH'; // 矿工费通常是ETH
 
       // 矿工费：资产账户减少，手续费账户增加
-      const assetAccount = `Assets:Crypto:${chain}:${gasToken}`;
-      const gasAccount = `Expenses:Life:crypto:Commission:手续费`;
+      const assetAccount = gasTransaction.extraAccounts[Account.MinusAccount] ||
+        config?.defaultMinusAccount ||
+        `Assets:Crypto:${chain}:${gasToken}`;
+      const gasAccount = gasTransaction.extraAccounts[Account.CommissionAccount] ||
+        config?.defaultCommissionAccount ||
+        `Expenses:Life:crypto:Commission:手续费`;
 
       postings.push(`  ${assetAccount}  -${gasFee} ${gasToken}`);
       postings.push(`  ${gasAccount}  ${gasFee} ${gasToken}`);

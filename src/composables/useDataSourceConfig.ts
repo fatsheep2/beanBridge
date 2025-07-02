@@ -76,13 +76,23 @@ function convertRuleConfigToProviderConfig(ruleConfig: RuleConfig): ProviderConf
         time: rule.time || undefined,
         sep: rule.sep,
         fullMatch: rule.fullMatch,
-        priority: rule.priority
+        priority: rule.priority,
+
+        // 添加加密货币相关字段
+        chain: rule.chain || undefined,
+        token: rule.token || undefined,
+        transactionType: rule.transactionType || undefined,
+        gasToken: rule.gasToken || undefined,
+        minGasFee: rule.minGasFee || undefined,
+        maxGasFee: rule.maxGasFee || undefined,
+        fromAddress: rule.fromAddress || undefined,
+        toAddress: rule.toAddress || undefined
       };
 
       console.log(`Rule ${index + 1} conversion:`, {
         original: rule,
         converted: convertedRule,
-        hasFieldMatching: !!(rule.peer || rule.item || rule.type || rule.method || rule.category || rule.txType)
+        hasFieldMatching: !!(rule.peer || rule.item || rule.type || rule.method || rule.category || rule.txType || rule.chain || rule.token || rule.transactionType)
       });
 
       return convertedRule;
