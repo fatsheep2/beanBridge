@@ -4,12 +4,11 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 lerna-debug.log*
 
 # Dependencies
 node_modules
-.pnpm-store/
+.yarn-cache/
 
 # Build outputs
 dist

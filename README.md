@@ -24,46 +24,34 @@
 
 ## 🚀 快速开始
 
-### 在线使用
-访问 [BeanBridge 在线版本](https://1677883418.github.io/beanBridge/) 即可开始使用。
+### 环境要求
 
-### GitHub Pages 部署
+- Node.js 18+
+- 现代浏览器
 
-本项目已配置 GitHub Actions 自动部署到 GitHub Pages。每次推送到 `main` 分支时，会自动构建并部署到 GitHub Pages。
+### 安装依赖
 
-**启用 GitHub Pages：**
-1. 进入仓库设置 (Settings)
-2. 找到 "Pages" 选项
-3. 在 "Source" 部分选择 "GitHub Actions"
-4. 确保仓库有适当的权限设置
+```bash
+yarn install
+```
 
-### 本地部署
+### 开发模式
 
-1. **克隆项目**
-   ```bash
-   git clone https://github.com/your-username/BeanBridge.git
-   cd BeanBridge
-   ```
+```bash
+yarn dev
+```
 
-2. **安装依赖**
-   ```bash
-   pnpm install
-   ```
+### 构建生产版本
 
-3. **启动开发服务器**
-   ```bash
-   pnpm dev
-   ```
+```bash
+yarn build
+```
 
-4. **构建生产版本**
-   ```bash
-   pnpm build
-   ```
+### 代码检查
 
-5. **代码检查**
-   ```bash
-   pnpm lint
-   ```
+```bash
+yarn lint
+```
 
 ## 📖 使用教程
 
@@ -148,7 +136,7 @@ src/
 
 - **前端框架**：Vue 3 + TypeScript
 - **构建工具**：Vite
-- **包管理器**：pnpm
+- **包管理器**：yarn
 - **样式框架**：Tailwind CSS v4
 - **状态管理**：Vue Composition API
 - **路由管理**：Vue Router
