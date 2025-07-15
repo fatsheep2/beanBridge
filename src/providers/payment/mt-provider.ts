@@ -8,7 +8,7 @@ export class MtProvider extends BaseProvider {
   }
 
   getSupportedFormats(): string[] {
-    return ['csv'];
+    return ['csv', 'xls', 'xlsx'];
   }
 
   protected getProviderType(): ProviderType {

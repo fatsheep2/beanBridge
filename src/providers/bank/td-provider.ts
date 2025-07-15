@@ -8,7 +8,7 @@ export class TdProvider extends BaseProvider {
   }
 
   getSupportedFormats(): string[] {
-    return ['csv'];
+    return ['csv', 'pdf'];
   }
 
   protected getProviderType(): ProviderType {

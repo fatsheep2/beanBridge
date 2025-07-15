@@ -8,7 +8,7 @@ export class JdProvider extends BaseProvider {
   }
 
   getSupportedFormats(): string[] {
-    return ['csv'];
+    return ['csv', 'xls', 'xlsx'];
   }
 
   protected getProviderType(): ProviderType {

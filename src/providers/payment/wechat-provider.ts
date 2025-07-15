@@ -9,7 +9,7 @@ export class WechatProvider extends BaseProvider {
     }
 
     getSupportedFormats(): string[] {
-        return ['csv'];
+        return ['csv', 'xls', 'xlsx'];
     }
 
     protected getProviderType(): ProviderType {

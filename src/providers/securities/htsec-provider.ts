@@ -8,7 +8,7 @@ export class HtsecProvider extends BaseProvider {
   }
 
   getSupportedFormats(): string[] {
-    return ['csv'];
+    return ['csv', 'xls', 'xlsx'];
   }
 
   protected getProviderType(): ProviderType {

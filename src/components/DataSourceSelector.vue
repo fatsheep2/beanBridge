@@ -36,7 +36,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { providers } from '../data/providers';
 
 interface DataSource {
   id: string;
@@ -52,51 +53,23 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const dataSources = ref<DataSource[]>([
-  {
-    id: 'alipay',
-    name: '支付宝',
-    description: '支付宝交易记录解析器',
-    supportedFormats: ['.csv']
-  },
-  {
-    id: 'wechat',
-    name: '微信支付',
-    description: '微信支付交易记录解析器',
-    supportedFormats: ['.csv']
-  },
-  {
-    id: 'huobi',
-    name: '火币',
-    description: '火币交易记录解析器',
-    supportedFormats: ['.csv']
-  },
-  {
-    id: 'htsec',
-    name: '华泰证券',
-    description: '华泰证券交易记录解析器',
-    supportedFormats: ['.csv']
-  },
-  {
-    id: 'icbc',
-    name: '工商银行',
-    description: '工商银行交易记录解析器',
-    supportedFormats: ['.csv']
-  },
-  {
-    id: 'ethereum',
-    name: '以太坊(聚合链)',
-    description: '以太坊及其EVM兼容链账单解析器，支持ETH/BSC/Polygon等',
-    supportedFormats: ['API']
-  },
-  // 如有TRON解析器可加如下内容：
-  // {
-  //   id: 'tron',
-  //   name: '波场(Tron)',
-  //   description: '波场链账单解析器',
-  //   supportedFormats: ['API']
-  // },
-]);
+// 从providers.ts动态生成数据源列表
+const dataSources = computed<DataSource[]>(() => {
+  return providers.map(provider => ({
+    id: provider.type,
+    name: provider.name,
+    description: provider.description,
+    supportedFormats: provider.formats.map(format => {
+      // 将格式转换为小写并添加点号前缀
+      const lowerFormat = format.toLowerCase();
+      if (lowerFormat === 'csv') return '.csv';
+      if (lowerFormat === 'excel') return '.xlsx';
+      if (lowerFormat === 'pdf') return '.pdf';
+      if (lowerFormat === 'api') return 'API';
+      return `.${lowerFormat}`;
+    })
+  }));
+});
 
 const handleDataSourceSelected = (source: DataSource) => {
   props.onDataSourceSelected(source);
