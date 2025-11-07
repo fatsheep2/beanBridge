@@ -17,6 +17,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Checkout double-entry-generator
+        uses: actions/checkout@v4
+        with:
+          repository: deb-sig/double-entry-generator
+          path: double-entry-generator
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build WASM files
+        working-directory: double-entry-generator
+        run: |
+          mkdir -p wasm-dist
+          # 构建 WASM 文件（使用 cmd/wasm 目录）
+          GOOS=js GOARCH=wasm go build -o wasm-dist/double-entry-generator.wasm ./cmd/wasm
+          # 复制 wasm_exec.js
+          cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" wasm-dist/
+          # 验证文件
+          ls -la wasm-dist/
+          test -f wasm-dist/double-entry-generator.wasm || exit 1
+          test -f wasm-dist/wasm_exec.js || exit 1
+
+      - name: Copy WASM files to beanBridge
+        run: |
+          mkdir -p public/wasm
+          cp double-entry-generator/wasm-dist/double-entry-generator.wasm public/wasm/
+          cp double-entry-generator/wasm-dist/wasm_exec.js public/wasm/
+          # 验证文件已复制
+          ls -la public/wasm/
+          test -f public/wasm/double-entry-generator.wasm || exit 1
+          test -f public/wasm/wasm_exec.js || exit 1
+          echo "WASM files copied successfully"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

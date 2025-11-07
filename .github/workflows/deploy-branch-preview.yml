@@ -1,10 +1,19 @@
-name: Deploy to GitHub Pages
+name: Deploy Branch Preview to GitHub Pages
 
 on:
   push:
     branches:
-      - main
+      # 只监听特定分支，排除主分支
+      - wasm-support
+      - feat/**
+      - '!main'
+      - '!master'
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy (e.g., wasm-support)'
+        required: true
+        default: 'wasm-support'
 
 # 添加权限配置
 permissions:
@@ -12,19 +21,34 @@ permissions:
   pages: write
   id-token: write
 
-# 允许一个并发部署（主分支）
+# 允许一个并发部署（每个分支独立）
 concurrency:
-  group: "pages-main"
+  group: "pages-preview-${{ github.ref }}"
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      path: ${{ steps.upload-pages-artifact.outputs.path }}
+      branch-name: ${{ steps.branch-name.outputs.name }}
     steps:
+      - name: Get branch name
+        id: branch-name
+        run: |
+          if [ -n "${{ github.event.inputs.branch }}" ]; then
+            BRANCH_NAME="${{ github.event.inputs.branch }}"
+          else
+            BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          fi
+          # 清理分支名，移除特殊字符
+          BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g')
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "Branch name: $BRANCH_NAME"
+
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref_name }}
 
       - name: Checkout double-entry-generator
         uses: actions/checkout@v4
@@ -71,7 +95,11 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build
-        run: yarn run build:github
+        env:
+          BRANCH_NAME: ${{ steps.branch-name.outputs.name }}
+        run: |
+          # 使用分支名作为 base path
+          yarn run build --base /beanBridge/$BRANCH_NAME/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -83,11 +111,12 @@ jobs:
 
   deploy:
     environment:
-      name: github-pages
+      name: github-pages-preview-${{ needs.build.outputs.branch-name }}
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 
+        uses: actions/deploy-pages@v4
+
