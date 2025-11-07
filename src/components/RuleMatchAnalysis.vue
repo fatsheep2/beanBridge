@@ -13,7 +13,7 @@
     </div>
 
     <!-- 统计概览 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <!-- 总账单数 -->
       <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-5 border border-blue-200 dark:border-blue-700">
         <div class="flex items-center justify-between">
@@ -218,15 +218,20 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 
-interface BillItem {
-  type?: string;
-  peer?: string;
-  item?: string;
-  category?: string;
-  method?: string;
-  money?: string;
-  time?: string;
-  [key: string]: any;
+interface AccountLine {
+  account: string;
+  amount: string;
+  isFIXME: boolean;
+}
+
+interface Transaction {
+  date: string;
+  payee: string;
+  narration: string;
+  metadata: Record<string, string>;
+  accounts: AccountLine[];
+  matchStatus: 'unmatched' | 'partial' | 'matched'; // 未匹配、半匹配、全匹配
+  fixmeCount: number;
 }
 
 interface Props {
@@ -240,75 +245,150 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
-// 从处理结果中提取未匹配的账单信息
-// 这里需要解析 beancount 输出，查找包含 FIXME 的条目
-const unmatchedItems = computed<BillItem[]>(() => {
+// 解析所有交易
+const transactions = computed<Transaction[]>(() => {
+  console.log('[RuleMatchAnalysis] 开始解析所有交易');
+  console.log('[RuleMatchAnalysis] processedData 长度:', props.processedData?.length || 0);
+  
   if (!props.processedData) {
+    console.log('[RuleMatchAnalysis] processedData 为空');
     return [];
   }
 
-  const unmatched: BillItem[] = [];
+  const result: Transaction[] = [];
   const lines = props.processedData.split('\n');
+  console.log('[RuleMatchAnalysis] 总行数:', lines.length);
   
-  let currentItem: BillItem | null = null;
+  let currentTx: Transaction | null = null;
+  let inTransaction = false;
   
-  for (const line of lines) {
-    // 检测是否包含 FIXME（表示未匹配到规则）
-    if (line.includes('FIXME')) {
-      if (!currentItem) {
-        currentItem = {};
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // 检测交易开始（日期行）
+    if (/^\d{4}-\d{2}-\d{2}\s+\*/.test(trimmed)) {
+      // 保存上一笔交易
+      if (currentTx) {
+        result.push(currentTx);
+        console.log('[RuleMatchAnalysis] 完成一笔交易:', currentTx);
       }
       
-      // 尝试从注释中提取原始数据信息
-      const commentMatch = line.match(/;\s*(.+)/);
-      if (commentMatch) {
-        const comment = commentMatch[1];
-        
-        // 解析各种字段
-        const peerMatch = comment.match(/对方[:：]\s*([^,，]+)/);
-        if (peerMatch) currentItem.peer = peerMatch[1].trim();
-        
-        const itemMatch = comment.match(/商品[:：]\s*([^,，]+)/);
-        if (itemMatch) currentItem.item = itemMatch[1].trim();
-        
-        const categoryMatch = comment.match(/分类[:：]\s*([^,，]+)/);
-        if (categoryMatch) currentItem.category = categoryMatch[1].trim();
-        
-        const methodMatch = comment.match(/支付方式[:：]\s*([^,，]+)/);
-        if (methodMatch) currentItem.method = methodMatch[1].trim();
-        
-        const typeMatch = comment.match(/类型[:：]\s*([^,，]+)/);
-        if (typeMatch) currentItem.type = typeMatch[1].trim();
+      // 解析日期、payee、narration
+      const match = trimmed.match(/^(\d{4}-\d{2}-\d{2})\s+\*\s+"([^"]*)"\s+"([^"]*)"/);
+      if (match) {
+        currentTx = {
+          date: match[1],
+          payee: match[2],
+          narration: match[3],
+          metadata: {},
+          accounts: [],
+          matchStatus: 'matched',
+          fixmeCount: 0
+        };
+        inTransaction = true;
+        console.log(`[RuleMatchAnalysis] 开始新交易: ${currentTx.date} ${currentTx.payee}`);
       }
-      
-      // 提取金额
-      const moneyMatch = line.match(/([-+]?\d+(?:\.\d+)?)\s+CNY/);
-      if (moneyMatch && currentItem) {
-        currentItem.money = moneyMatch[1];
+    }
+    // 解析元数据
+    else if (inTransaction && currentTx && trimmed && /^\w+:/.test(trimmed)) {
+      const metaMatch = trimmed.match(/^(\w+):\s*"?([^"]*)"?$/);
+      if (metaMatch) {
+        currentTx.metadata[metaMatch[1]] = metaMatch[2];
       }
-    } else if (currentItem && line.trim().startsWith('time:')) {
-      // 提取时间
-      const timeMatch = line.match(/time:\s*"([^"]+)"/);
-      if (timeMatch) {
-        currentItem.time = timeMatch[1];
-        unmatched.push(currentItem);
-        currentItem = null;
+    }
+    // 解析账户行
+    else if (inTransaction && currentTx && trimmed && /^[A-Z]/.test(trimmed)) {
+      const accountMatch = trimmed.match(/^([A-Za-z:]+)\s+([-]?\d+(?:\.\d+)?)\s+(\w+)/);
+      if (accountMatch) {
+        const account = accountMatch[1];
+        const amount = accountMatch[2];
+        const isFIXME = account.includes('FIXME');
+        
+        currentTx.accounts.push({
+          account,
+          amount,
+          isFIXME
+        });
+        
+        if (isFIXME) {
+          currentTx.fixmeCount++;
+        }
+        
+        console.log(`[RuleMatchAnalysis] 添加账户: ${account} ${amount} (FIXME: ${isFIXME})`);
       }
+    }
+    // 空行表示交易结束
+    else if (inTransaction && !trimmed) {
+      if (currentTx && currentTx.accounts.length > 0) {
+        // 确定匹配状态
+        if (currentTx.fixmeCount === 0) {
+          currentTx.matchStatus = 'matched';
+        } else if (currentTx.fixmeCount >= currentTx.accounts.length) {
+          currentTx.matchStatus = 'unmatched';
+        } else {
+          currentTx.matchStatus = 'partial';
+        }
+        
+        result.push(currentTx);
+        console.log('[RuleMatchAnalysis] 完成一笔交易:', currentTx);
+      }
+      currentTx = null;
+      inTransaction = false;
     }
   }
   
-  return unmatched;
+  // 处理最后一笔交易
+  if (currentTx && currentTx.accounts.length > 0) {
+    if (currentTx.fixmeCount === 0) {
+      currentTx.matchStatus = 'matched';
+    } else if (currentTx.fixmeCount >= currentTx.accounts.length) {
+      currentTx.matchStatus = 'unmatched';
+    } else {
+      currentTx.matchStatus = 'partial';
+    }
+    result.push(currentTx);
+    console.log('[RuleMatchAnalysis] 完成最后一笔交易:', currentTx);
+  }
+  
+  console.log('[RuleMatchAnalysis] 解析完成，共', result.length, '笔交易');
+  console.log('[RuleMatchAnalysis] 交易列表:', result);
+  
+  return result;
+});
+
+// 按匹配状态排序：未匹配 → 半匹配 → 全匹配
+const sortedTransactions = computed(() => {
+  const sorted = [...transactions.value].sort((a, b) => {
+    const order = { unmatched: 0, partial: 1, matched: 2 };
+    return order[a.matchStatus] - order[b.matchStatus];
+  });
+  console.log('[RuleMatchAnalysis] 排序后的交易:', sorted);
+  return sorted;
 });
 
 // 统计信息
-const totalCount = computed(() => props.totalRecords || 0);
-const unmatchedCount = computed(() => unmatchedItems.value.length);
-const matchedCount = computed(() => Math.max(0, totalCount.value - unmatchedCount.value));
+const totalCount = computed(() => transactions.value.length);
+const unmatchedCount = computed(() => transactions.value.filter(t => t.matchStatus === 'unmatched').length);
+const partialCount = computed(() => transactions.value.filter(t => t.matchStatus === 'partial').length);
+const matchedCount = computed(() => transactions.value.filter(t => t.matchStatus === 'matched').length);
+
+console.log('[RuleMatchAnalysis] 统计:', {
+  total: totalCount.value,
+  unmatched: unmatchedCount.value,
+  partial: partialCount.value,
+  matched: matchedCount.value
+});
 
 // 覆盖率
 const coverageRate = computed(() => {
-  if (totalCount.value === 0) return 0;
-  return (matchedCount.value / totalCount.value) * 100;
+  if (totalCount.value === 0) {
+    console.log('[RuleMatchAnalysis] totalCount 为 0，覆盖率返回 0');
+    return 0;
+  }
+  const rate = (matchedCount.value / totalCount.value) * 100;
+  console.log('[RuleMatchAnalysis] 覆盖率:', rate.toFixed(2) + '%');
+  return rate;
 });
 
 // 覆盖率颜色
