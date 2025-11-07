@@ -210,8 +210,10 @@ export class WASMService {
 
   /**
    * 解析 YAML 配置
+   * @param yamlStr YAML 配置字符串
+   * @param provider 可选的 provider，如果提供则使用此 provider
    */
-  async parseYamlConfig(yamlStr: string): Promise<{
+  async parseYamlConfig(yamlStr: string, provider?: string): Promise<{
     success: boolean
     message?: string
     error?: string
@@ -224,7 +226,10 @@ export class WASMService {
     }
 
     try {
-      const result = await window.parseYamlConfig(yamlStr)
+      // 如果提供了 provider，作为第二个参数传递
+      const result = provider 
+        ? await window.parseYamlConfig(yamlStr, provider)
+        : await window.parseYamlConfig(yamlStr)
       return result
     } catch (error) {
       console.error('[WASM] 解析配置失败:', error)

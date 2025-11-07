@@ -60,10 +60,29 @@ export function useDegWasm() {
       await init()
     }
 
-    // 如果有配置，先解析配置
-    if (configYaml.value) {
-      await wasm.parseYamlConfig(configYaml.value)
+    // 获取当前选择的 provider（这是用户选择的，必须使用这个）
+    const selectedProvider = wasm.currentProvider.value
+    if (!selectedProvider) {
+      throw new Error('请先选择解析器')
     }
+
+    // 先设置 provider（确保 WASM 中的 provider 正确）
+    await wasm.setProvider(selectedProvider)
+    // 等待一下确保设置完成
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // 如果有配置，解析配置（传递用户选择的 provider）
+    if (configYaml.value) {
+      await wasm.parseYamlConfig(configYaml.value, selectedProvider)
+      // 解析配置后，再次确保 provider 正确（因为 parseYamlConfig 会重新创建 fileReader）
+      await wasm.setProvider(selectedProvider)
+      // 等待一下确保设置完成
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+
+    // 处理文件前，最后一次确保 provider 正确
+    await wasm.setProvider(selectedProvider)
+    await new Promise(resolve => setTimeout(resolve, 50))
 
     // 处理文件
     return await wasm.processFile(file, format)
@@ -72,17 +91,41 @@ export function useDegWasm() {
   /**
    * 更新配置
    */
-  const updateConfig = async (config: any) => {
+  const updateConfig = async (config: any, provider?: string) => {
+    // 使用传入的 provider 或当前的 provider
+    const providerToUse = provider || wasm.currentProvider.value
+    if (!providerToUse) {
+      throw new Error('请先选择解析器')
+    }
+
+    console.log(`[useDegWasm] updateConfig: 设置 provider 为 ${providerToUse}`)
+    
+    // 先设置 provider，确保全局 currentProvider 正确
+    await wasm.setProvider(providerToUse)
+    // 【关键修复】等待确保 Go 端的 currentProvider 已更新
+    await new Promise(resolve => setTimeout(resolve, 150))
+
     // 将配置对象转换为 YAML
     const yamlStr = yaml.stringify(config)
     configYaml.value = yamlStr
 
-    // 解析配置到 WASM
-    const result = await wasm.parseYamlConfig(yamlStr)
+    console.log(`[useDegWasm] updateConfig: 调用 parseYamlConfig，provider: ${providerToUse}`)
+    
+    // 解析配置到 WASM（传递 provider 确保使用正确的 provider）
+    const result = await wasm.parseYamlConfig(yamlStr, providerToUse)
     if (!result.success) {
       throw new Error(result.error || '配置更新失败')
     }
 
+    console.log(`[useDegWasm] updateConfig: parseYamlConfig 完成，再次确保 provider 正确`)
+    
+    // 解析配置后，再次确保 provider 正确（因为 parseYamlConfig 会重新创建 fileReader）
+    await wasm.setProvider(providerToUse)
+    // 等待确保设置完成
+    await new Promise(resolve => setTimeout(resolve, 150))
+
+    console.log(`[useDegWasm] updateConfig: 完成，provider = ${providerToUse}`)
+    
     return result
   }
 

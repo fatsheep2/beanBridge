@@ -37,7 +37,7 @@ declare global {
       format?: 'beancount' | 'ledger'
     ) => Promise<WASMProcessResult>
     processFileContent: (content: string) => Promise<WASMProcessResult>
-    parseYamlConfig: (yamlStr: string) => Promise<{
+    parseYamlConfig: (yamlStr: string, provider?: string) => Promise<{
       success: boolean
       message?: string
       error?: string

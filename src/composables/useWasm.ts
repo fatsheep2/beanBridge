@@ -1,17 +1,20 @@
 /**
  * WASM Composable - 提供 WASM 功能的 Vue 组合式函数
+ * 使用单例模式确保所有地方使用同一个 WASM 实例
  */
 
 import { ref, computed } from 'vue'
 import { wasmService } from '@/services/wasm-service'
 import type { WASMProcessResult, WASMConfig } from '@/types/wasm'
 
+// 单例状态 - 确保所有 useWasm() 调用共享同一个状态
+const isInitialized = ref(false)
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+const currentProvider = ref<string>('alipay')
+const supportedProviders = ref<string[]>([])
+
 export function useWasm() {
-  const isInitialized = ref(false)
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
-  const currentProvider = ref<string>('alipay')
-  const supportedProviders = ref<string[]>([])
 
   /**
    * 初始化 WASM
@@ -170,8 +173,10 @@ export function useWasm() {
 
   /**
    * 解析 YAML 配置
+   * @param yamlStr YAML 配置字符串
+   * @param provider 可选的 provider，如果提供则使用此 provider，否则使用当前的 provider
    */
-  const parseYamlConfig = async (yamlStr: string) => {
+  const parseYamlConfig = async (yamlStr: string, provider?: string) => {
     if (!isInitialized.value) {
       await init()
     }
@@ -180,7 +185,9 @@ export function useWasm() {
     error.value = null
 
     try {
-      const result = await wasmService.parseYamlConfig(yamlStr)
+      // 如果提供了 provider，使用它；否则使用当前的 provider
+      const providerToUse = provider || currentProvider.value
+      const result = await wasmService.parseYamlConfig(yamlStr, providerToUse)
       if (!result.success) {
         error.value = result.error || '解析配置失败'
       }
