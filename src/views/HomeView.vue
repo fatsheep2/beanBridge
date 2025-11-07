@@ -31,13 +31,23 @@
           <p class="mb-8 text-lg sm:text-xl max-w-3xl mx-auto opacity-95">准备好开始了吗？选择您要处理的账单类型，上传文件即可开始转换。</p>
           <div class="flex flex-col sm:flex-row gap-6 w-full justify-center">
             <router-link 
-              to="/bill-processing"
+              to="/deg-test"
               class="inline-flex items-center justify-center px-8 py-4 bg-white dark:bg-gray-900 text-blue-700 dark:text-blue-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold shadow-xl transition-all duration-300 w-full sm:w-auto transform hover:scale-105 hover:shadow-2xl border border-transparent dark:border-gray-700"
             >
               <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
               </svg>
-              立即体验
+              测试页面
+            </router-link>
+            <router-link 
+              to="/bill-processing"
+              class="inline-flex items-center justify-center px-8 py-4 border-2 border-white dark:border-gray-700 text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-900 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-blue-900 dark:hover:text-blue-200 font-semibold shadow-xl transition-all duration-300 w-full sm:w-auto transform hover:scale-105 hover:shadow-2xl"
+            >
+              <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+              </svg>
+              正式页面
             </router-link>
             <a 
               href="https://github.com/1677883418/beanBridge" 
@@ -92,10 +102,6 @@
         />
       </div>
       
-      <!-- Font Awesome 测试组件 -->
-      <div class="mt-8 sm:mt-12 w-full">
-        <IconTest />
-      </div>
     </div>
   </div>
 </template>

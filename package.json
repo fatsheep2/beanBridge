@@ -16,7 +16,9 @@
     "format": "prettier --write src/",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "copy-wasm": "mkdir -p public/wasm && cp ../double-entry-generator/wasm/double-entry-generator.wasm ../double-entry-generator/wasm/wasm_exec.js public/wasm/ || echo 'WASM files not found, please build them first'",
+    "prebuild": "npm run copy-wasm"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.10",
