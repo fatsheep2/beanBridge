@@ -173,6 +173,7 @@ import { yamlConfigService } from '@/services/yaml-config-service'
 import ProviderSelector from '@/components/ProviderSelector.vue'
 import YamlConfigEditor from '@/components/YamlConfigEditor.vue'
 import { providers } from '@/data/providers'
+import type { ProviderType } from '@/types/provider'
 
 const route = useRoute()
 const router = useRouter()
@@ -210,12 +211,10 @@ const providerHistory = computed(() => {
 })
 
 // 方法
-const setProvider = async (provider: ProviderType | string) => {
-  // 如果是 ProviderType，直接使用；如果是字符串，转换为 ProviderType
-  const providerId = typeof provider === 'string' ? provider as ProviderType : provider
-  selectedProvider.value = providerId
+const setProvider = async (provider: string) => {
+  selectedProvider.value = provider
   try {
-    await deg.setProvider(providerId)
+    await deg.setProvider(provider)
     loadConfig()
   } catch (err) {
     console.error('设置 Provider 失败:', err)
@@ -421,7 +420,7 @@ const getProviderDisplayName = (provider: string) => {
 const initFromRoute = () => {
   const providerParam = route.query.provider as string
   if (providerParam) {
-    setProvider(providerParam as ProviderType)
+    setProvider(providerParam)
   } else if (supportedProviders.value.length > 0 && !selectedProvider.value) {
     // 如果没有指定 provider，使用第一个支持的 provider
     setProvider(supportedProviders.value[0].type)

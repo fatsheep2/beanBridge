@@ -175,7 +175,7 @@ const fileProcessing = useDegFileProcessing()
 
 // 响应式数据
 const isInitializing = ref(true)
-const currentProvider = computed(() => deg.currentProvider.value)
+const currentProvider = computed<string | null>(() => deg.currentProvider.value)
 // 将 WASM 返回的 providers 转换为 ProviderSelector 期望的格式
 const providersForSelector = computed(() => {
   const wasmProviders = deg.supportedProviders.value

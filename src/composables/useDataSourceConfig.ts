@@ -161,11 +161,16 @@ export function useDataSourceConfig() {
     return selectedFile.value || processingResult.value || blockchainDataSourceConfig.value;
   });
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (file: File | null) => {
     selectedFile.value = file;
     error.value = null;
     processingResult.value = null;
     blockchainDataSourceConfig.value = null; // 清除区块链配置
+
+    if (!file) {
+      detectedProvider.value = null;
+      return;
+    }
 
     try {
       // 自动检测解析器类型

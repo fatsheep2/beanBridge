@@ -80,7 +80,7 @@ describe('区块链功能集成测试', () => {
 
             // 将Rule类型转换为ConfigRule类型
             const configRules: ConfigRule[] = ethereumConfig!.config.rules.map(rule => ({
-                pattern: rule.name,
+                pattern: rule.name || '',
                 account: rule.targetAccount || 'Assets:Crypto:ETH',
                 methodAccount: rule.methodAccount,
                 chain: rule.chain,
