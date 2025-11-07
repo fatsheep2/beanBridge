@@ -29,16 +29,31 @@
         </div>
       </div>
 
-      <!-- 已匹配 -->
+      <!-- 全匹配 -->
       <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-5 border border-green-200 dark:border-green-700">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-green-600 dark:text-green-400 mb-1">已匹配</p>
+            <p class="text-sm font-medium text-green-600 dark:text-green-400 mb-1">全匹配</p>
             <p class="text-3xl font-bold text-green-900 dark:text-green-100">{{ matchedCount }}</p>
           </div>
           <div class="bg-green-500 dark:bg-green-600 rounded-full p-3">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 半匹配 -->
+      <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-xl p-5 border border-yellow-200 dark:border-yellow-700">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-yellow-600 dark:text-yellow-400 mb-1">半匹配</p>
+            <p class="text-3xl font-bold text-yellow-900 dark:text-yellow-100">{{ partialCount }}</p>
+          </div>
+          <div class="bg-yellow-500 dark:bg-yellow-600 rounded-full p-3">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
         </div>
@@ -53,7 +68,7 @@
           </div>
           <div class="bg-red-500 dark:bg-red-600 rounded-full p-3">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
         </div>
@@ -74,110 +89,98 @@
         ></div>
       </div>
       <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-        {{ matchedCount }} 笔账单已正确匹配规则，{{ unmatchedCount }} 笔账单需要配置规则
+        {{ matchedCount }} 笔全匹配，{{ partialCount }} 笔半匹配，{{ unmatchedCount }} 笔未匹配
       </p>
     </div>
 
-    <!-- 未匹配账单列表 -->
-    <div v-if="unmatchedCount > 0" class="mb-6">
+    <!-- 交易明细列表 -->
+    <div v-if="sortedTransactions.length > 0" class="mb-6">
       <div class="flex items-center justify-between mb-4">
-        <h4 class="text-xl font-bold text-gray-900 dark:text-white">未匹配账单明细</h4>
+        <h4 class="text-xl font-bold text-gray-900 dark:text-white">交易明细</h4>
         <span class="text-sm text-gray-600 dark:text-gray-400">
-          点击可复制相关信息用于配置规则
+          点击账户可复制，FIXME 标记需要配置规则
         </span>
       </div>
 
-      <div class="space-y-3 max-h-96 overflow-y-auto">
+      <!-- 响应式网格：PC 2-3列，移动端 1列 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto">
         <div
-          v-for="(item, index) in unmatchedItems"
+          v-for="(tx, index) in sortedTransactions"
           :key="index"
-          class="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 rounded-xl p-4 hover:shadow-md transition-all duration-200"
+          class="rounded-xl p-4 hover:shadow-lg transition-all duration-200 border-2"
+          :class="getTransactionCardClass(tx.matchStatus)"
         >
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex-1">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="inline-flex items-center px-2 py-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-bold">
-                  未匹配 #{{ index + 1 }}
-                </span>
-                <span v-if="item.type" class="inline-flex items-center px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
-                  {{ item.type }}
-                </span>
-              </div>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                <div v-if="item.peer" class="flex items-center gap-2">
-                  <span class="font-medium text-gray-600 dark:text-gray-400">交易对手:</span>
-                  <button
-                    @click="copyToClipboard(item.peer)"
-                    class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    title="点击复制"
-                  >
-                    {{ item.peer }}
-                  </button>
-                </div>
-                
-                <div v-if="item.item" class="flex items-center gap-2">
-                  <span class="font-medium text-gray-600 dark:text-gray-400">商品描述:</span>
-                  <button
-                    @click="copyToClipboard(item.item)"
-                    class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    title="点击复制"
-                  >
-                    {{ item.item }}
-                  </button>
-                </div>
-                
-                <div v-if="item.category" class="flex items-center gap-2">
-                  <span class="font-medium text-gray-600 dark:text-gray-400">分类:</span>
-                  <button
-                    @click="copyToClipboard(item.category)"
-                    class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    title="点击复制"
-                  >
-                    {{ item.category }}
-                  </button>
-                </div>
-                
-                <div v-if="item.method" class="flex items-center gap-2">
-                  <span class="font-medium text-gray-600 dark:text-gray-400">支付方式:</span>
-                  <button
-                    @click="copyToClipboard(item.method)"
-                    class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    title="点击复制"
-                  >
-                    {{ item.method }}
-                  </button>
-                </div>
-                
-                <div v-if="item.money" class="flex items-center gap-2">
-                  <span class="font-medium text-gray-600 dark:text-gray-400">金额:</span>
-                  <span class="text-gray-900 dark:text-white font-mono">{{ item.money }}</span>
-                </div>
-                
-                <div v-if="item.time" class="flex items-center gap-2">
-                  <span class="font-medium text-gray-600 dark:text-gray-400">时间:</span>
-                  <span class="text-gray-900 dark:text-white">{{ item.time }}</span>
-                </div>
+          <!-- 卡片头部：状态标签 + 日期 -->
+          <div class="flex items-center justify-between mb-3">
+            <span 
+              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold"
+              :class="getStatusBadgeClass(tx.matchStatus)"
+            >
+              {{ getStatusText(tx.matchStatus) }}
+            </span>
+            <span class="text-sm text-gray-600 dark:text-gray-400 font-mono">{{ tx.date }}</span>
+          </div>
+
+          <!-- 交易基本信息 -->
+          <div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-start gap-2 mb-2">
+              <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ tx.payee }}</p>
+                <p v-if="tx.narration && tx.narration !== '/'" class="text-xs text-gray-600 dark:text-gray-400 truncate">{{ tx.narration }}</p>
               </div>
             </div>
           </div>
 
-          <!-- 建议的规则配置 -->
-          <div class="bg-white dark:bg-gray-800 rounded-lg p-3 mt-3 border border-gray-200 dark:border-gray-700">
-            <div class="flex items-center gap-2 mb-2">
-              <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">建议规则配置</span>
-            </div>
-            <pre class="text-xs font-mono text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-900/50 p-2 rounded overflow-x-auto">{{ generateSuggestedRule(item) }}</pre>
-            <button
-              @click="copyToClipboard(generateSuggestedRule(item))"
-              class="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+          <!-- 账户信息 - 高亮 FIXME -->
+          <div class="space-y-2 mb-3">
+            <div
+              v-for="(acc, accIdx) in tx.accounts"
+              :key="accIdx"
+              class="flex items-center justify-between text-sm font-mono p-2 rounded-lg"
+              :class="acc.isFIXME 
+                ? 'bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700' 
+                : 'bg-gray-50 dark:bg-gray-800/50'"
             >
-              📋 复制规则配置
-            </button>
+              <button
+                @click="copyToClipboard(acc.account)"
+                class="flex-1 text-left truncate transition-colors"
+                :class="acc.isFIXME 
+                  ? 'text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 font-bold' 
+                  : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'"
+                :title="`点击复制：${acc.account}`"
+              >
+                {{ acc.isFIXME ? '⚠️ ' : '' }}{{ acc.account }}
+              </button>
+              <span 
+                class="ml-2 flex-shrink-0 font-semibold"
+                :class="parseFloat(acc.amount) < 0 
+                  ? 'text-red-600 dark:text-red-400' 
+                  : 'text-green-600 dark:text-green-400'"
+              >
+                {{ acc.amount }}
+              </span>
+            </div>
           </div>
+
+          <!-- 元数据（折叠显示） -->
+          <details v-if="Object.keys(tx.metadata).length > 0" class="text-xs">
+            <summary class="cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 select-none">
+              查看详情 ({{ Object.keys(tx.metadata).length }} 项)
+            </summary>
+            <div class="mt-2 space-y-1 pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+              <div
+                v-for="(value, key) in tx.metadata"
+                :key="key"
+                class="flex gap-2"
+              >
+                <span class="text-gray-500 dark:text-gray-500 font-semibold min-w-[80px]">{{ key }}:</span>
+                <span class="text-gray-700 dark:text-gray-300 break-all">{{ value }}</span>
+              </div>
+            </div>
+          </details>
         </div>
       </div>
     </div>
@@ -290,16 +293,8 @@ const transactions = computed<Transaction[]>(() => {
         console.log(`[RuleMatchAnalysis] 开始新交易: ${currentTx.date} ${currentTx.payee}`);
       }
     }
-    // 解析元数据（有缩进）
-    else if (inTransaction && currentTx && line.trim() && /^\s+\w+:/.test(line)) {
-      const metaMatch = line.match(/^\s+(\w+):\s*"?([^"]*)"?$/);
-      if (metaMatch) {
-        currentTx.metadata[metaMatch[1]] = metaMatch[2];
-        console.log(`[RuleMatchAnalysis] 添加元数据: ${metaMatch[1]} = ${metaMatch[2]}`);
-      }
-    }
-    // 解析账户行（有缩进，以大写字母开头）
-    else if (inTransaction && currentTx && line.trim() && /^\s+[A-Z]/.test(line)) {
+    // 先尝试解析账户行（有缩进，包含金额和货币）
+    else if (inTransaction && currentTx && line.trim() && /^\s+[A-Za-z:]+\s+[-]?\d+(?:\.\d+)?\s+\w+/.test(line)) {
       const accountMatch = line.match(/^\s+([A-Za-z:]+)\s+([-]?\d+(?:\.\d+)?)\s+(\w+)/);
       if (accountMatch) {
         const account = accountMatch[1];
@@ -319,6 +314,14 @@ const transactions = computed<Transaction[]>(() => {
         console.log(`[RuleMatchAnalysis] 添加账户: ${account} ${amount} (FIXME: ${isFIXME})`);
       } else {
         console.log(`[RuleMatchAnalysis] 账户行匹配失败:`, line.substring(0, 80));
+      }
+    }
+    // 解析元数据（有缩进，单个键值对，冒号后不含账户分隔符）
+    else if (inTransaction && currentTx && line.trim() && /^\s+\w+:/.test(line)) {
+      const metaMatch = line.match(/^\s+(\w+):\s*"?([^"]*)"?$/);
+      if (metaMatch) {
+        currentTx.metadata[metaMatch[1]] = metaMatch[2];
+        console.log(`[RuleMatchAnalysis] 添加元数据: ${metaMatch[1]} = ${metaMatch[2]}`);
       }
     }
     // 空行表示交易结束
@@ -409,40 +412,68 @@ const coverageBarClass = computed(() => {
   return 'bg-gradient-to-r from-red-500 to-pink-500';
 });
 
+// 辅助函数：获取交易卡片样式类
+const getTransactionCardClass = (status: 'unmatched' | 'partial' | 'matched') => {
+  const classes = {
+    unmatched: 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-700',
+    partial: 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-300 dark:border-yellow-700',
+    matched: 'bg-green-50 dark:bg-green-900/10 border-green-300 dark:border-green-700'
+  };
+  return classes[status];
+};
+
+// 辅助函数：获取状态标签样式类
+const getStatusBadgeClass = (status: 'unmatched' | 'partial' | 'matched') => {
+  const classes = {
+    unmatched: 'bg-red-500 dark:bg-red-600 text-white',
+    partial: 'bg-yellow-500 dark:bg-yellow-600 text-white',
+    matched: 'bg-green-500 dark:bg-green-600 text-white'
+  };
+  return classes[status];
+};
+
+// 辅助函数：获取状态文本
+const getStatusText = (status: 'unmatched' | 'partial' | 'matched') => {
+  const texts = {
+    unmatched: '❌ 未匹配',
+    partial: '⚠️ 半匹配',
+    matched: '✅ 全匹配'
+  };
+  return texts[status];
+};
+
 // 生成优化建议
 const suggestions = computed(() => {
   const result: string[] = [];
   
-  if (unmatchedCount.value > 0) {
-    // 统计未匹配账单的共性
+  if (unmatchedCount.value > 0 || partialCount.value > 0) {
+    // 统计未匹配和半匹配交易的共性
     const peers = new Map<string, number>();
-    const categories = new Map<string, number>();
     const types = new Map<string, number>();
     
-    unmatchedItems.value.forEach(item => {
-      if (item.peer) {
-        peers.set(item.peer, (peers.get(item.peer) || 0) + 1);
-      }
-      if (item.category) {
-        categories.set(item.category, (categories.get(item.category) || 0) + 1);
-      }
-      if (item.type) {
-        types.set(item.type, (types.get(item.type) || 0) + 1);
-      }
-    });
+    transactions.value
+      .filter(tx => tx.matchStatus === 'unmatched' || tx.matchStatus === 'partial')
+      .forEach(tx => {
+        if (tx.payee && tx.payee !== '/') {
+          peers.set(tx.payee, (peers.get(tx.payee) || 0) + 1);
+        }
+        if (tx.metadata.type) {
+          types.set(tx.metadata.type, (types.get(tx.metadata.type) || 0) + 1);
+        }
+      });
     
     // 生成建议
     if (peers.size > 0) {
       const topPeer = Array.from(peers.entries()).sort((a, b) => b[1] - a[1])[0];
       if (topPeer[1] > 1) {
-        result.push(`发现 ${topPeer[1]} 笔来自"${topPeer[0]}"的交易未匹配，建议添加针对该交易对手的规则`);
+        result.push(`发现 ${topPeer[1]} 笔来自"${topPeer[0]}"的交易需要配置，建议添加针对该交易对手的规则`);
       }
     }
     
-    if (categories.size > 0) {
-      const topCategory = Array.from(categories.entries()).sort((a, b) => b[1] - a[1])[0];
-      if (topCategory[1] > 1) {
-        result.push(`发现 ${topCategory[1]} 笔"${topCategory[0]}"分类的交易未匹配，建议添加针对该分类的规则`);
+    if (types.size > 0) {
+      const topType = Array.from(types.entries()).sort((a, b) => b[1] - a[1])[0];
+      if (topType[1] > 1) {
+        result.push(`发现 ${topType[1]} 笔"${topType[0]}"类型的交易需要配置，建议添加针对该类型的规则`);
       }
     }
     
@@ -450,8 +481,12 @@ const suggestions = computed(() => {
       result.push(`当前规则覆盖率较低（${coverageRate.value.toFixed(1)}%），建议优先配置常见的交易对手和分类规则`);
     }
     
-    if (unmatchedCount.value > 5) {
+    if (unmatchedCount.value + partialCount.value > 5) {
       result.push('建议使用通配符或正则表达式匹配相似的交易，避免为每笔交易单独配置规则');
+    }
+    
+    if (partialCount.value > 0) {
+      result.push(`有 ${partialCount.value} 笔交易仅部分匹配，建议完善这些交易的规则配置`);
     }
   }
   
