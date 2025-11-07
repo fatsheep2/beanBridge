@@ -19,7 +19,9 @@ on:
 
 # 添加权限配置
 permissions:
-  contents: write  # 需要写权限以推送到 gh-pages 分支
+  contents: write         # 需要写权限以推送到 gh-pages 分支
+  pull-requests: write    # 需要写权限以在 PR 中发表评论
+  issues: write           # 需要写权限以在 Issue 中发表评论
 
 # 允许一个并发部署（每个分支独立）
 concurrency:
@@ -93,6 +95,7 @@ jobs:
       - name: Comment PR with preview link
         uses: actions/github-script@v7
         if: github.event_name == 'push'
+        continue-on-error: true  # 如果评论失败不影响部署
         with:
           script: |
             const branchName = '${{ steps.branch-name.outputs.name }}';
@@ -100,23 +103,32 @@ jobs:
             const repoOwner = context.repo.owner;
             const previewUrl = `https://${repoOwner}.github.io/${repoName}/${branchName}/`;
             
-            console.log(`Preview URL: ${previewUrl}`);
+            console.log(`✅ 预览部署成功！`);
+            console.log(`📍 预览地址: ${previewUrl}`);
+            console.log(`📝 分支: ${{ steps.branch-name.outputs.original }}`);
             
-            // 如果是 PR，添加评论
-            const prs = await github.rest.pulls.list({
-              owner: repoOwner,
-              repo: repoName,
-              state: 'open',
-              head: `${repoOwner}:${context.ref.replace('refs/heads/', '')}`
-            });
-            
-            if (prs.data.length > 0) {
-              const pr = prs.data[0];
-              await github.rest.issues.createComment({
+            try {
+              // 尝试查找相关的 PR
+              const prs = await github.rest.pulls.list({
                 owner: repoOwner,
                 repo: repoName,
-                issue_number: pr.number,
-                body: `🎉 **预览部署成功！**\n\n✨ 预览地址: ${previewUrl}\n\n📝 分支: \`${{ steps.branch-name.outputs.original }}\`\n⏰ 部署时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`
+                state: 'open',
+                head: `${repoOwner}:${context.ref.replace('refs/heads/', '')}`
               });
+              
+              if (prs.data.length > 0) {
+                const pr = prs.data[0];
+                await github.rest.issues.createComment({
+                  owner: repoOwner,
+                  repo: repoName,
+                  issue_number: pr.number,
+                  body: `🎉 **预览部署成功！**\n\n✨ 预览地址: ${previewUrl}\n\n📝 分支: \`${{ steps.branch-name.outputs.original }}\`\n⏰ 部署时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`
+                });
+                console.log(`✅ 已在 PR #${pr.number} 中添加评论`);
+              } else {
+                console.log(`ℹ️  未找到相关的 PR，跳过评论`);
+              }
+            } catch (error) {
+              console.log(`⚠️  添加评论失败（这不影响部署）: ${error.message}`);
             }
 
