@@ -97,7 +97,7 @@
         </div>
 
         <!-- 操作按钮 -->
-        <div class="flex flex-wrap justify-end gap-4">
+        <div class="flex flex-wrap justify-end gap-4 my-6">
           <button
             @click="saveConfig"
             class="inline-flex items-center px-12 py-5 text-xl font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
@@ -134,6 +134,12 @@
             处理账单
           </button>
         </div>
+
+        <!-- 规则列表可视化 -->
+        <RuleListViewer
+          :yaml-content="yamlContent"
+          :provider="selectedProvider"
+        />
       </div>
 
       <!-- 未选择Provider的提示 -->
@@ -199,6 +205,7 @@ import { useDegWasm } from '@/composables/useDegWasm'
 import { yamlConfigService } from '@/services/yaml-config-service'
 import ProviderSelector from '@/components/ProviderSelector.vue'
 import YamlConfigEditor from '@/components/YamlConfigEditor.vue'
+import RuleListViewer from '@/components/RuleListViewer.vue'
 import { providers } from '@/data/providers'
 import type { ProviderType } from '@/types/provider'
 
