@@ -17,7 +17,7 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage",
-    "copy-wasm": "mkdir -p public/wasm && cp ../double-entry-generator/wasm/double-entry-generator.wasm ../double-entry-generator/wasm/wasm_exec.js public/wasm/ || echo 'WASM files not found, please build them first'",
+    "copy-wasm": "mkdir -p public/wasm && (cp ../double-entry-generator/wasm-dist/double-entry-generator.wasm ../double-entry-generator/wasm-dist/wasm_exec.js public/wasm/ 2>/dev/null || echo 'WASM files not found in wasm-dist/, please run: cd ../double-entry-generator && make build-wasm')",
     "prebuild": "npm run copy-wasm"
   },
   "dependencies": {
