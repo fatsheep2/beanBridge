@@ -106,9 +106,9 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">开发文档</h3>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">在线文档</h3>
             <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
-              查看完整的 API 文档和使用示例，贡献代码
+              查看详细的使用说明、规则配置指南和常见问题解答
             </p>
             <div class="mt-4 flex items-center text-green-600 dark:text-green-400 font-medium">
               <span>查看文档</span>
@@ -148,9 +148,18 @@
       <div class="mb-16">
         <div class="text-center mb-12">
           <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">支持的数据源</h2>
-          <p class="text-xl text-gray-600 dark:text-gray-400">已支持 14+ 种主流支付和金融平台</p>
+          <p class="text-xl text-gray-600 dark:text-gray-400">已支持多种主流支付和金融平台</p>
         </div>
+        
+        <!-- Loading 状态 -->
+        <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
+          <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+          <p class="text-lg text-gray-600 dark:text-gray-400">加载解析器中...</p>
+        </div>
+        
+        <!-- 解析器列表 -->
         <ProviderSelector
+          v-else
           :supported-providers="supportedProviders"
           :selected-provider="selectedProvider"
           @provider-selected="setProvider"
@@ -161,15 +170,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import ProviderSelector from '../components/ProviderSelector.vue';
 import { providers } from '../data/providers';
 import { ProviderType } from '../types/provider';
+import { useDegWasm } from '@/composables/useDegWasm';
 
-const supportedProviders = ref(providers);
+const deg = useDegWasm();
 const selectedProvider = ref<ProviderType | null>(null);
+const isLoading = ref(true);
+
+// 从 WASM 获取支持的 providers（无备用逻辑）
+const supportedProviders = computed(() => {
+  const wasmProviders = deg.supportedProviders.value;
+  // 将 WASM provider ID 映射到 ProviderInfo
+  return wasmProviders
+    .map(providerId => {
+      const provider = providers.find(p => p.type === providerId);
+      return provider;
+    })
+    .filter((p): p is NonNullable<typeof p> => p !== undefined);
+});
 
 const setProvider = (providerType: ProviderType) => {
   selectedProvider.value = providerType;
 };
+
+onMounted(async () => {
+  // 确保 WASM 初始化
+  if (!deg.isInitialized.value) {
+    await deg.init();
+  }
+  isLoading.value = false;
+});
 </script>
