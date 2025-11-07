@@ -1,156 +1,432 @@
 @import './base.css';
 
-/* 只保留结构和自定义动画/滚动条等，所有颜色、圆角、阴影、间距等全部用 class 控制 */
+/* ========================================
+   🎴 卡片组件
+   ======================================== */
 
-.card, .bg-white.rounded-lg.shadow, .bg-white.rounded-2xl.shadow-2xl, .bg-white.rounded-2xl.shadow-lg {
-  transition: box-shadow 0.2s, border-color 0.2s;
-  border-radius: 1.25rem;
-  box-shadow: 0 4px 24px 0 rgba(60, 72, 88, 0.10), 0 1.5px 4px 0 rgba(60, 72, 88, 0.08);
-  border: 1px solid #e5e7eb;
-}
-.card:hover, .bg-white.rounded-lg.shadow:hover, .bg-white.rounded-2xl.shadow-2xl:hover, .bg-white.rounded-2xl.shadow-lg:hover {
-  box-shadow: 0 8px 32px 0 rgba(60, 72, 88, 0.16), 0 3px 8px 0 rgba(60, 72, 88, 0.10);
-  border-color: #a5b4fc;
-}
-.dark .card, .dark .bg-white.rounded-lg.shadow, .dark .bg-white.rounded-2xl.shadow-2xl, .dark .bg-white.rounded-2xl.shadow-lg {
-  background: #23272f !important;
-  border-color: #374151;
-  box-shadow: 0 4px 24px 0 rgba(30, 41, 59, 0.18), 0 1.5px 4px 0 rgba(30, 41, 59, 0.10);
-}
-.dark .card:hover, .dark .bg-white.rounded-lg.shadow:hover, .dark .bg-white.rounded-2xl.shadow-2xl:hover, .dark .bg-white.rounded-2xl.shadow-lg:hover {
-  border-color: #6366f1;
+.card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  transition: var(--transition-base);
 }
 
-input, select, textarea {
-  border-radius: 0.75rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  background: #f9fafb;
-  border: 1.5px solid #e5e7eb;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-}
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #6366f180;
-  background: #fff;
-  border-color: #6366f1;
-}
-.dark input, .dark select, .dark textarea {
-  background: #23272f;
-  color: #e5e7eb;
-  border-color: #374151;
-}
-.dark input:focus, .dark select:focus, .dark textarea:focus {
-  background: #181a20;
-  border-color: #6366f1;
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--accent-primary);
 }
 
-button {
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
-  border: none;
-  border-radius: 0.75rem;
-  cursor: pointer;
+.card-flat {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  transition: var(--transition-base);
+}
+
+.card-elevated {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+}
+
+/* ========================================
+   🔘 按钮组件
+   ======================================== */
+
+button, .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  box-shadow: 0 1.5px 4px 0 rgba(60, 72, 88, 0.08);
+  line-height: 1.5;
+  border-radius: var(--radius-lg);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
 }
-button:active {
+
+button:active:not(:disabled), .btn:active:not(:disabled) {
   transform: scale(0.98);
 }
-button:disabled, .disabled {
+
+button:disabled, .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  background: #f1f5f9;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+.btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
 }
 
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s cubic-bezier(.4,0,.2,1);
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+  transform: translateY(-1px);
 }
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-elevated);
+  border-color: var(--border-secondary);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.btn-icon {
+  padding: 0.5rem;
+  aspect-ratio: 1;
+}
+
+/* ========================================
+   📝 表单组件
+   ======================================== */
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: var(--transition-fast);
+  outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+input[type="checkbox"], input[type="radio"] {
+  width: auto;
+  cursor: pointer;
+}
+
+/* ========================================
+   🏷️ 徽章和标签
+   ======================================== */
+
+.badge, .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.badge-primary {
+  background: var(--accent-light);
+  color: var(--accent-primary);
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+html.dark .badge-success {
+  background: #14532d;
+  color: #86efac;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+html.dark .badge-warning {
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.badge-error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+html.dark .badge-error {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+/* ========================================
+   🎭 过渡动画
+   ======================================== */
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
 
+.slide-up-enter-active {
+  animation: slideUp 0.3s ease-out;
+}
+
+.slide-up-leave-active {
+  animation: slideUp 0.3s ease-out reverse;
+}
+
+.scale-in-enter-active {
+  animation: scaleIn 0.2s ease-out;
+}
+
+.scale-in-leave-active {
+  animation: scaleIn 0.2s ease-out reverse;
+}
+
+/* ========================================
+   📱 响应式工具类
+   ======================================== */
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  .card {
+    padding: 1rem;
+  }
+  
+  button, .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .show-mobile {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   🎨 自定义组件样式
+   ======================================== */
+
 .sidebar-item {
-  transition: background 0.2s, color 0.2s;
-  border-radius: 0.75rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   font-weight: 600;
-  padding: 0.5rem 1rem;
+  color: var(--text-secondary);
+  border-radius: var(--radius-lg);
+  transition: var(--transition-fast);
 }
-.sidebar-item.bg-indigo-50, .sidebar-item.active {
-  font-weight: bold;
-  border-left: 4px solid #6366f1;
-  background: #eef2ff;
-  color: #3730a3;
+
+.sidebar-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
-.dark .sidebar-item.bg-indigo-50, .dark .sidebar-item.active {
-  background: #312e81;
-  color: #a5b4fc;
+
+.sidebar-item.active {
+  background: var(--accent-light);
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  background: var(--accent-primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .transaction-item {
-  transition: box-shadow 0.2s, transform 0.2s;
-  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  background: var(--bg-primary);
+  transition: var(--transition-base);
 }
+
 .transaction-item:hover {
-  box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.10);
-  transform: translateY(-2px) scale(1.01);
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
-footer a {
-  color: #6366f1;
-  transition: color 0.2s;
-}
-footer a:hover {
-  color: #fff;
-  text-decoration: underline;
-}
-
-.tag, .badge {
+/* 加载状态 */
+.loading-spinner {
   display: inline-block;
-  background: #f1f5f9;
-  color: #6366f1;
-  border-radius: 9999px;
-  padding: 0.25em 0.75em;
-  font-size: 0.95em;
-  font-weight: 600;
-  margin-right: 0.5em;
-  margin-bottom: 0.25em;
-}
-.dark .tag, .dark .badge {
-  background: #312e81;
-  color: #a5b4fc;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-@media (max-width: 640px) {
-  html, body {
-    font-size: 15px;
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 0%,
+    var(--bg-primary) 50%,
+    var(--bg-tertiary) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton {
+  0% {
+    background-position: 200% 0;
   }
-  .card, .bg-white.rounded-lg.shadow, .bg-white.rounded-2xl.shadow-2xl, .bg-white.rounded-2xl.shadow-lg {
-    padding: 1rem !important;
+  100% {
+    background-position: -200% 0;
   }
-  button, input, select, textarea {
-    font-size: 0.98rem;
-    padding: 0.5rem 0.75rem;
-  }
+}
+
+/* 工具提示 */
+.tooltip {
+  position: absolute;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* 代码块美化 */
+pre, code {
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+}
+
+pre {
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+code {
+  padding: 0.125rem 0.375rem;
+  background: var(--bg-tertiary);
+  color: var(--accent-primary);
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+/* 通知/提示框 */
+.alert {
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid;
+  display: flex;
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.alert-info {
+  background: var(--accent-light);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.alert-success {
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #15803d;
+}
+
+html.dark .alert-success {
+  background: #14532d;
+  border-color: #16a34a;
+  color: #86efac;
+}
+
+.alert-warning {
+  background: #fef3c7;
+  border-color: #d97706;
+  color: #b45309;
+}
+
+html.dark .alert-warning {
+  background: #78350f;
+  border-color: #d97706;
+  color: #fcd34d;
+}
+
+.alert-error {
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
+html.dark .alert-error {
+  background: #7f1d1d;
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+/* ========================================
+   🎯 优化焦点样式（无障碍）
+   ======================================== */
+
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible, .btn:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
