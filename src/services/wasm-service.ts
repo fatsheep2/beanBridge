@@ -36,26 +36,32 @@ export class WASMService {
 
   private async _doInit(): Promise<void> {
     try {
+      // 获取正确的基础路径（支持子目录部署）
+      const basePath = import.meta.env.BASE_URL || '/'
+      const wasmPath = `${basePath}wasm/`
+      
+      console.log('[WASM] 使用路径:', wasmPath)
+      
       // 检查 WASM 文件是否存在
-      const wasmExecCheck = await fetch('/wasm/wasm_exec.js', { method: 'HEAD' }).catch(() => null)
+      const wasmExecCheck = await fetch(`${wasmPath}wasm_exec.js`, { method: 'HEAD' }).catch(() => null)
       if (!wasmExecCheck || !wasmExecCheck.ok) {
         throw new Error('WASM 文件未找到。请确保已运行 `npm run copy-wasm` 或 `pnpm run copy-wasm` 复制 WASM 文件到 public/wasm/ 目录')
       }
 
       // 加载 wasm_exec.js
       if (!window.Go) {
-        await this.loadScript('/wasm/wasm_exec.js')
+        await this.loadScript(`${wasmPath}wasm_exec.js`)
       }
 
       // 检查 WASM 二进制文件
-      const wasmCheck = await fetch('/wasm/double-entry-generator.wasm', { method: 'HEAD' }).catch(() => null)
+      const wasmCheck = await fetch(`${wasmPath}double-entry-generator.wasm`, { method: 'HEAD' }).catch(() => null)
       if (!wasmCheck || !wasmCheck.ok) {
         throw new Error('WASM 二进制文件未找到。请确保已构建 double-entry-generator 的 WASM 版本')
       }
 
       // 加载 WASM 模块
       const go = new window.Go()
-      const wasmResponse = await fetch('/wasm/double-entry-generator.wasm')
+      const wasmResponse = await fetch(`${wasmPath}double-entry-generator.wasm`)
       if (!wasmResponse.ok) {
         throw new Error(`无法加载 WASM 文件: ${wasmResponse.statusText}`)
       }
