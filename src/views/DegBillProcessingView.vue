@@ -29,7 +29,7 @@
         <ProviderSelector
           v-if="providersForSelector.length > 0"
           :supported-providers="providersForSelector"
-          :selected-provider="currentProvider"
+          :selected-provider="currentProvider as any"
           @provider-selected="handleProviderSelected"
         />
         <div v-else class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">

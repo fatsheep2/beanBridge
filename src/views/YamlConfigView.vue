@@ -18,7 +18,7 @@
         <ProviderSelector
           v-if="supportedProviders.length > 0"
           :supported-providers="supportedProviders"
-          :selected-provider="selectedProvider"
+          :selected-provider="selectedProvider as any"
           @provider-selected="setProvider"
         />
         <div v-else class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
