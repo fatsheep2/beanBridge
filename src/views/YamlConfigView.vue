@@ -1,27 +1,30 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="bg-white shadow-2xl rounded-2xl border border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 p-10">
+  <div class="w-full min-h-screen bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 py-8">
+      
+      <!-- 页面标题 -->
       <div class="flex items-center justify-between mb-8">
-        <h1 class="text-3xl font-extrabold">YAML 规则配置</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">YAML 规则配置</h1>
         <router-link 
           to="/"
-          class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold shadow-md"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
-          <span class="material-icons mr-3">arrow_back</span>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
           返回首页
         </router-link>
       </div>
 
       <!-- Provider选择 -->
-      <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">选择解析器</h2>
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">选择解析器</h2>
         <ProviderSelector
           v-if="supportedProviders.length > 0"
           :supported-providers="supportedProviders"
           :selected-provider="selectedProvider as any"
           @provider-selected="setProvider"
         />
-        <div v-else class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div v-else class="p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-700">
           <p class="text-gray-600 dark:text-gray-400 text-sm">正在加载解析器列表...</p>
         </div>
       </div>
@@ -29,47 +32,62 @@
       <!-- 配置内容 -->
       <div v-if="selectedProvider" class="space-y-6">
         <!-- 配置头部 -->
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-xl font-semibold">{{ getProviderDisplayName(selectedProvider) }}</h3>
-            <p class="text-gray-600 dark:text-gray-300">使用 double-entry-generator 的 YAML 配置格式</p>
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ getProviderDisplayName(selectedProvider) }}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">使用 double-entry-generator 的 YAML 配置格式</p>
+            </div>
+            <div class="flex gap-2">
+              <button
+                @click="loadFromExample"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="isLoadingExample"
+              >
+                <svg v-if="!isLoadingExample" class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <svg v-else class="w-4 h-4 mr-1.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ isLoadingExample ? '加载中...' : '加载示例' }}
+              </button>
+              <button
+                @click="showHistoryModal = true"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                历史
+              </button>
+            </div>
           </div>
-          <div class="flex space-x-2">
-            <button
-              @click="loadFromExample"
-              class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              :disabled="isLoadingExample"
-            >
-              <span class="material-icons mr-2" v-if="!isLoadingExample">file_download</span>
-              <span class="material-icons mr-2 animate-spin" v-else>refresh</span>
-              {{ isLoadingExample ? '加载中...' : '加载示例配置' }}
-            </button>
-            <button
-              @click="showHistoryModal = true"
-              class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium shadow-md transition-all"
-            >
-              <span class="material-icons mr-2">history</span>
-              历史记录
-            </button>
+          <div class="flex gap-2 mt-4">
             <button
               @click="exportConfig"
-              class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-md transition-all"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
             >
-              <span class="material-icons mr-2">download</span>
-              导出配置
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              导出
             </button>
             <button
               @click="importConfig"
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-all"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
             >
-              <span class="material-icons mr-2">upload</span>
-              导入配置
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              导入
             </button>
           </div>
         </div>
 
         <!-- YAML 编辑器 -->
-        <div class="bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-8">
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
           <YamlConfigEditor
             v-model="yamlContent"
             :provider="selectedProvider"
@@ -79,30 +97,40 @@
         </div>
 
         <!-- 操作按钮 -->
-        <div class="flex flex-wrap justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex flex-wrap justify-end gap-3">
           <button
             @click="saveConfig"
-            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            class="inline-flex items-center px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             :disabled="!isValid"
           >
-            <span class="material-icons mr-2">save</span>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
             保存配置
           </button>
           <button
             @click="testConfig"
-            class="inline-flex items-center px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            class="inline-flex items-center px-6 py-2.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             :disabled="!isValid || isTesting"
           >
-            <span class="material-icons mr-2" v-if="!isTesting">bug_report</span>
-            <span class="material-icons mr-2 animate-spin" v-else>refresh</span>
+            <svg v-if="!isTesting" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <svg v-else class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
             {{ isTesting ? '测试中...' : '测试配置' }}
           </button>
           <button
             @click="goToBillProcessing"
-            class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            class="inline-flex items-center px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             :disabled="!isValid"
           >
-            <span class="material-icons mr-2">play_arrow</span>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             处理账单
           </button>
         </div>
@@ -113,7 +141,6 @@
         <span class="material-icons text-4xl text-gray-400 dark:text-gray-500 mb-4">storage</span>
         <p class="text-gray-600 dark:text-gray-300">请先选择一个解析器来配置规则</p>
       </div>
-    </div>
 
     <!-- 历史记录模态框 -->
     <div v-if="showHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

@@ -26,11 +26,6 @@ const routes = [
     name: 'rule-config-old',
     component: () => import('../views/RuleConfigView.vue'),
   },
-  {
-    path: '/deg-test',
-    name: 'deg-test',
-    component: () => import('../views/DegTestView.vue'),
-  },
   // {
   //   path: '/blockchain-demo',
   //   name: 'blockchain-demo',

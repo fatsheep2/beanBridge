@@ -1,32 +1,7 @@
 <template>
-  <div id="app" class="min-h-screen flex flex-col bg-gray-50 dark:bg-dark-50 transition-colors duration-300">
+  <div id="app" class="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
     <!-- Header -->
     <AppHeader />
-    
-    <!-- 主题切换按钮 - 现代化设计 -->
-    <Transition name="fade">
-      <button 
-        @click="toggleDark" 
-        class="fixed bottom-6 right-6 z-50 p-3.5 rounded-full bg-white dark:bg-dark-100 shadow-lg hover:shadow-xl dark:shadow-dark-100/50 border border-gray-200 dark:border-dark-200 transition-all duration-300 hover:scale-110 active:scale-95 group"
-        :class="{ 'animate-pulse-slow': isTogglingTheme }"
-        :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
-      >
-        <Transition name="scale-in" mode="out-in">
-          <span v-if="isDark" key="dark" class="block text-2xl">
-            🌙
-          </span>
-          <span v-else key="light" class="block text-2xl">
-            ☀️
-          </span>
-        </Transition>
-        
-        <!-- 涟漪效果 -->
-        <span 
-          v-if="isTogglingTheme"
-          class="absolute inset-0 rounded-full bg-primary-400/20 dark:bg-primary-500/20 animate-ping"
-        ></span>
-      </button>
-    </Transition>
     
     <!-- 主内容区域 -->
     <main class="flex-1">
@@ -35,17 +10,38 @@
       </Transition>
     </main>
     
-    <!-- 返回顶部按钮 -->
-    <Transition name="slide-up">
-      <button
-        v-show="showBackToTop"
-        @click="scrollToTop"
-        class="fixed bottom-6 left-6 z-50 p-3 rounded-full bg-white/90 dark:bg-dark-100/90 backdrop-blur-sm shadow-md hover:shadow-lg border border-gray-200 dark:border-dark-200 transition-all duration-300 hover:scale-110 active:scale-95"
-        title="返回顶部"
+    <!-- 浮动按钮组 -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+      <!-- 主题切换按钮 -->
+      <button 
+        @click="toggleDark" 
+        class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300 hover:scale-110 active:scale-95 flex items-center justify-center"
+        :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
       >
-        <span class="material-icons text-primary-600 dark:text-primary-400">arrow_upward</span>
+        <Transition name="scale-in" mode="out-in">
+          <svg v-if="isDark" key="dark" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+          <svg v-else key="light" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </Transition>
       </button>
-    </Transition>
+      
+      <!-- 返回顶部按钮 -->
+      <Transition name="slide-up">
+        <button
+          v-show="showBackToTop"
+          @click="scrollToTop"
+          class="w-14 h-14 rounded-2xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 flex items-center justify-center"
+          title="返回顶部"
+        >
+          <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </button>
+      </Transition>
+    </div>
   </div>
 </template>
 
@@ -54,7 +50,6 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import AppHeader from './components/AppHeader.vue';
 
 const isDark = ref(false);
-const isTogglingTheme = ref(false);
 const showBackToTop = ref(false);
 
 function setHtmlDarkClass(val: boolean) {
@@ -67,15 +62,9 @@ function setHtmlDarkClass(val: boolean) {
 }
 
 function toggleDark() {
-  isTogglingTheme.value = true;
   isDark.value = !isDark.value;
   setHtmlDarkClass(isDark.value);
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light');
-  
-  // 重置动画状态
-  setTimeout(() => {
-    isTogglingTheme.value = false;
-  }, 600);
 }
 
 function scrollToTop() {
@@ -86,7 +75,6 @@ function scrollToTop() {
 }
 
 function handleScroll() {
-  // 滚动超过 300px 时显示返回顶部按钮
   showBackToTop.value = window.scrollY > 300;
 }
 
@@ -121,7 +109,7 @@ onMounted(() => {
   
   // 清理函数
   onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll);
     mediaQuery.removeEventListener('change', handleSystemThemeChange);
   });
 });
@@ -131,7 +119,7 @@ onMounted(() => {
 /* 路由切换动画 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .fade-enter-from,

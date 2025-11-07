@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-10">
+  <div class="w-full px-4 sm:px-8 lg:px-12 py-10">
     <div class="bg-white shadow-2xl rounded-2xl border border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 p-10">
       <h1 class="text-3xl font-extrabold mb-8">账单处理</h1>
       
