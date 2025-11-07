@@ -501,30 +501,5 @@ const copyToClipboard = (text: string) => {
   });
 };
 
-// 生成建议的规则配置
-const generateSuggestedRule = (item: BillItem): string => {
-  const rules: string[] = [];
-  
-  if (item.type) {
-    rules.push(`  - type: ${item.type}`);
-  }
-  if (item.peer) {
-    rules.push(`    peer: ${item.peer}`);
-  }
-  if (item.item) {
-    rules.push(`    item: ${item.item}`);
-  }
-  if (item.category) {
-    rules.push(`    category: ${item.category}`);
-  }
-  if (item.method) {
-    rules.push(`    method: ${item.method}`);
-  }
-  
-  rules.push(`    targetAccount: Expenses:FIXME  # 请修改为合适的账户`);
-  rules.push(`    methodAccount: Assets:FIXME    # 请修改为合适的账户`);
-  
-  return rules.join('\n');
-};
 </script>
 
