@@ -9,12 +9,27 @@ const routes = [
   {
     path: '/bill-processing',
     name: 'bill-processing',
+    component: () => import('../views/DegBillProcessingView.vue'),
+  },
+  {
+    path: '/bill-processing-old',
+    name: 'bill-processing-old',
     component: () => import('../views/BillProcessingView.vue'),
   },
   {
     path: '/rule-config',
     name: 'rule-config',
+    component: () => import('../views/YamlConfigView.vue'),
+  },
+  {
+    path: '/rule-config-old',
+    name: 'rule-config-old',
     component: () => import('../views/RuleConfigView.vue'),
+  },
+  {
+    path: '/deg-test',
+    name: 'deg-test',
+    component: () => import('../views/DegTestView.vue'),
   },
   // {
   //   path: '/blockchain-demo',
