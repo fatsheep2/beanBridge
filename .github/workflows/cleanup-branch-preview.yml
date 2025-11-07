@@ -1,0 +1,51 @@
+name: Cleanup Branch Preview
+
+on:
+  delete:  # 分支被删除时触发
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch name to cleanup (e.g., feat/old-feature)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get branch name
+        id: branch-name
+        run: |
+          if [ -n "${{ github.event.inputs.branch }}" ]; then
+            BRANCH_NAME="${{ github.event.inputs.branch }}"
+          else
+            BRANCH_NAME="${{ github.event.ref }}"
+          fi
+          # 清理分支名
+          CLEAN_BRANCH=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9\/-]/-/g')
+          echo "name=$CLEAN_BRANCH" >> $GITHUB_OUTPUT
+          echo "Cleaning up: $BRANCH_NAME -> $CLEAN_BRANCH"
+
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          
+      - name: Remove branch directory
+        run: |
+          BRANCH_DIR="${{ steps.branch-name.outputs.name }}"
+          if [ -d "$BRANCH_DIR" ]; then
+            echo "Removing directory: $BRANCH_DIR"
+            rm -rf "$BRANCH_DIR"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "Clean up preview for deleted branch: $BRANCH_DIR"
+            git push
+            echo "✓ Successfully removed $BRANCH_DIR"
+          else
+            echo "Directory $BRANCH_DIR does not exist, nothing to clean up"
+          fi
+

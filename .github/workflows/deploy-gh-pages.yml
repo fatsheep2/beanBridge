@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages (Main)
 
 on:
   push:
@@ -8,20 +8,16 @@ on:
 
 # 添加权限配置
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write  # 需要写权限以推送到 gh-pages 分支
 
-# 允许一个并发部署（主分支）
+# 允许一个并发部署
 concurrency:
-  group: "pages-main"
+  group: "pages-deploy"
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    outputs:
-      path: ${{ steps.upload-pages-artifact.outputs.path }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -53,21 +49,12 @@ jobs:
       - name: Build
         run: yarn run build:github
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to GitHub Pages (Root)
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: ./dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4 
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          destination_dir: .  # 部署到根目录
+          keep_files: true  # 保留其他分支的文件
+          commit_message: "Deploy main branch to GitHub Pages" 
