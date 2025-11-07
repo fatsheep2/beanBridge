@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>BeanBridge - 加载中...</title>
+  <script>
+    // GitHub Pages SPA 路由修复
+    // 将路径信息存储到 sessionStorage，然后重定向到根路径
+    (function() {
+      var pathSegmentsToKeep = 1; // 保留 /beanBridge/ 部分
+      
+      var l = window.location;
+      var path = l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/';
+      
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + path + 
+        '?/' + l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    })();
+  </script>
+</head>
+<body>
+  <div style="text-align: center; padding: 50px; font-family: sans-serif;">
+    <h2>页面加载中...</h2>
+    <p>正在跳转，请稍候...</p>
+  </div>
+</body>
+</html>
+

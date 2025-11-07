@@ -1,0 +1,39 @@
+/* Font Awesome 本地备用文件 */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
+
+/* 如果CDN加载失败，使用Unicode字符作为备用 */
+/* 确保备用图标只在Font Awesome未加载时显示 */
+@supports not (font-family: "Font Awesome 6 Free") {
+  .fas.fa-arrow-left::before { content: "←"; font-family: inherit; }
+  .fas.fa-arrow-right::before { content: "→"; font-family: inherit; }
+  .fas.fa-file-upload::before { content: "📤"; font-family: inherit; }
+  .fas.fa-cog::before { content: "⚙️"; font-family: inherit; }
+  .fas.fa-flask::before { content: "🧪"; font-family: inherit; }
+  .fas.fa-rocket::before { content: "🚀"; font-family: inherit; }
+  .fas.fa-check-circle::before { content: "✅"; font-family: inherit; }
+  .fas.fa-copy::before { content: "📋"; font-family: inherit; }
+  .fas.fa-download::before { content: "⬇️"; font-family: inherit; }
+  .fas.fa-database::before { content: "🗄️"; font-family: inherit; }
+  .fas.fa-exclamation-triangle::before { content: "⚠️"; font-family: inherit; }
+  .fas.fa-info-circle::before { content: "ℹ️"; font-family: inherit; }
+  .fas.fa-save::before { content: "💾"; font-family: inherit; }
+  .fas.fa-bars::before { content: "☰"; font-family: inherit; }
+  .fab.fa-github::before { content: "🐙"; font-family: inherit; }
+}
+
+/* 备用方案：使用CSS检测Font Awesome是否加载 */
+.fas.fa-arrow-left:not([style*="font-family"])::before { content: "←"; }
+.fas.fa-arrow-right:not([style*="font-family"])::before { content: "→"; }
+.fas.fa-file-upload:not([style*="font-family"])::before { content: "📤"; }
+.fas.fa-cog:not([style*="font-family"])::before { content: "⚙️"; }
+.fas.fa-flask:not([style*="font-family"])::before { content: "🧪"; }
+.fas.fa-rocket:not([style*="font-family"])::before { content: "🚀"; }
+.fas.fa-check-circle:not([style*="font-family"])::before { content: "✅"; }
+.fas.fa-copy:not([style*="font-family"])::before { content: "📋"; }
+.fas.fa-download:not([style*="font-family"])::before { content: "⬇️"; }
+.fas.fa-database:not([style*="font-family"])::before { content: "🗄️"; }
+.fas.fa-exclamation-triangle:not([style*="font-family"])::before { content: "⚠️"; }
+.fas.fa-info-circle:not([style*="font-family"])::before { content: "ℹ️"; }
+.fas.fa-save:not([style*="font-family"])::before { content: "💾"; }
+.fas.fa-bars:not([style*="font-family"])::before { content: "☰"; }
+.fab.fa-github:not([style*="font-family"])::before { content: "🐙"; } 
