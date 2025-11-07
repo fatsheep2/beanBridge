@@ -18,16 +18,16 @@
         ></textarea>
       </div>
       
-      <div class="flex space-x-2">
+      <div class="flex gap-4">
         <button 
           @click="saveConfig"
-          class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          class="inline-flex items-center px-10 py-4 text-lg font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-lg transition-all duration-200"
         >
           保存配置
         </button>
         <button 
           @click="resetConfig"
-          class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          class="inline-flex items-center px-10 py-4 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-2xl shadow-lg transition-all duration-200"
         >
           重置
         </button>

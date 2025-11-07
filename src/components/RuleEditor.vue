@@ -247,17 +247,17 @@
       </div>
 
       <!-- 操作按钮 -->
-      <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           @click="$emit('close')"
-          class="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
+          class="inline-flex items-center px-10 py-4 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-2xl shadow-lg transition-all duration-200"
         >
           取消
         </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          class="inline-flex items-center px-10 py-4 text-lg font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-lg transition-all duration-200"
         >
           {{ isEditing ? '更新' : '创建' }}
         </button>

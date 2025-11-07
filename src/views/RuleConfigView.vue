@@ -30,24 +30,24 @@
             <h3 class="text-xl font-semibold">{{ currentConfig.name }}</h3>
             <p class="text-gray-600 dark:text-gray-300">{{ currentConfig.description }}</p>
           </div>
-          <div class="flex space-x-2">
+          <div class="flex gap-4">
             <button
               @click="showHistoryModal = true"
-              class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              class="inline-flex items-center px-8 py-4 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-2xl shadow-lg transition-all duration-200"
             >
               <span class="material-icons mr-2">history</span>
               历史记录
             </button>
             <button
               @click="exportConfig"
-              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              class="inline-flex items-center px-8 py-4 text-lg font-bold text-white bg-green-600 hover:bg-green-700 rounded-2xl shadow-lg transition-all duration-200"
             >
               <span class="material-icons mr-2">download</span>
               导出配置
             </button>
             <button
               @click="importConfig"
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              class="inline-flex items-center px-8 py-4 text-lg font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-2xl shadow-lg transition-all duration-200"
             >
               <span class="material-icons mr-2">upload</span>
               导入配置
