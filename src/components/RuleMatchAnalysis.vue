@@ -290,16 +290,17 @@ const transactions = computed<Transaction[]>(() => {
         console.log(`[RuleMatchAnalysis] 开始新交易: ${currentTx.date} ${currentTx.payee}`);
       }
     }
-    // 解析元数据
-    else if (inTransaction && currentTx && trimmed && /^\w+:/.test(trimmed)) {
-      const metaMatch = trimmed.match(/^(\w+):\s*"?([^"]*)"?$/);
+    // 解析元数据（有缩进）
+    else if (inTransaction && currentTx && line.trim() && /^\s+\w+:/.test(line)) {
+      const metaMatch = line.match(/^\s+(\w+):\s*"?([^"]*)"?$/);
       if (metaMatch) {
         currentTx.metadata[metaMatch[1]] = metaMatch[2];
+        console.log(`[RuleMatchAnalysis] 添加元数据: ${metaMatch[1]} = ${metaMatch[2]}`);
       }
     }
-    // 解析账户行
-    else if (inTransaction && currentTx && trimmed && /^[A-Z]/.test(trimmed)) {
-      const accountMatch = trimmed.match(/^([A-Za-z:]+)\s+([-]?\d+(?:\.\d+)?)\s+(\w+)/);
+    // 解析账户行（有缩进，以大写字母开头）
+    else if (inTransaction && currentTx && line.trim() && /^\s+[A-Z]/.test(line)) {
+      const accountMatch = line.match(/^\s+([A-Za-z:]+)\s+([-]?\d+(?:\.\d+)?)\s+(\w+)/);
       if (accountMatch) {
         const account = accountMatch[1];
         const amount = accountMatch[2];
@@ -316,6 +317,8 @@ const transactions = computed<Transaction[]>(() => {
         }
         
         console.log(`[RuleMatchAnalysis] 添加账户: ${account} ${amount} (FIXME: ${isFIXME})`);
+      } else {
+        console.log(`[RuleMatchAnalysis] 账户行匹配失败:`, line.substring(0, 80));
       }
     }
     // 空行表示交易结束
