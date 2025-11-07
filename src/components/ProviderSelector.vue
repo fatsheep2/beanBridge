@@ -1,122 +1,150 @@
 <template>
-  <div class="mb-6" v-if="supportedProviders.length > 0">
-    <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100"></h2>
+  <div v-if="supportedProviders.length > 0">
     
     <!-- 分类选择 -->
-    <div class="mb-4">
-      <div class="flex items-center justify-between mb-4">
-        <!-- <h3 class="text-md font-medium text-gray-800">解析器分类</h3> -->
-        <div class="flex space-x-2">
-          <button 
-            v-for="category in categories" 
-            :key="category.value"
-            @click="selectedCategory = category.value"
-            :class="[
-              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
-              selectedCategory === category.value 
-                ? 'bg-indigo-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
-            ]"
-          >
-            {{ category.label }}
-          </button>
-        </div>
+    <div class="mb-8">
+      <div class="flex flex-wrap gap-3 justify-center">
+        <button 
+          v-for="category in categories" 
+          :key="category.value"
+          @click="selectedCategory = category.value"
+          :class="[
+            'px-6 py-3 rounded-xl text-base font-semibold transition-all duration-300',
+            selectedCategory === category.value 
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 scale-105' 
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 hover:scale-105'
+          ]"
+        >
+          {{ category.label }}
+        </button>
       </div>
     </div>
     
-    <!-- 解析器卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <div 
+    <!-- 解析器卡片网格 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+      <button 
         v-for="provider in paginatedProviders" 
         :key="provider.type"
-        class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-start hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 cursor-pointer group"
         @click="selectProvider(provider.type)"
+        :class="[
+          'group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 transform hover:scale-105',
+          props.selectedProvider === provider.type
+            ? 'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-500 shadow-xl shadow-blue-500/20'
+            : 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 shadow-lg hover:shadow-xl'
+        ]"
       >
-        <div class="flex items-center mb-3 w-full">
-          <div class="w-12 h-12 mr-3 flex items-center justify-center rounded-xl overflow-hidden shadow-md group-hover:shadow-lg transition-shadow duration-300"
-               :style="{ backgroundColor: provider.color + '20' }">
-            <img 
-              :src="provider.icon" 
-              class="w-8 h-8 object-contain transition-transform duration-300 group-hover:scale-110" 
-              :alt="provider.name + ' logo'" 
-              @error="handleImageError" 
-            />
+        <!-- 背景装饰 -->
+        <div 
+          v-if="props.selectedProvider === provider.type"
+          class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full -mr-12 -mt-12"
+        ></div>
+        
+        <div class="relative">
+          <!-- Logo -->
+          <div class="flex items-center gap-4 mb-4">
+            <div :class="[
+              'w-16 h-16 flex-shrink-0 flex items-center justify-center rounded-2xl transition-all duration-300',
+              props.selectedProvider === provider.type
+                ? 'bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/50'
+                : 'bg-gray-50 dark:bg-gray-700/50 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30'
+            ]">
+              <img 
+                :src="provider.icon" 
+                :class="[
+                  'object-contain transition-all duration-300',
+                  props.selectedProvider === provider.type ? 'w-10 h-10' : 'w-9 h-9 group-hover:w-10 group-hover:h-10'
+                ]"
+                :alt="provider.name" 
+                @error="handleImageError" 
+              />
+            </div>
+            
+            <!-- 选中标记 -->
+            <div 
+              v-if="props.selectedProvider === provider.type"
+              class="ml-auto"
+            >
+              <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div class="flex-1">
-            <h4 class="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ provider.name }}</h4>
-            <p class="text-sm text-gray-500 dark:text-gray-300">{{ provider.description }}</p>
+          
+          <!-- 信息 -->
+          <div>
+            <h4 :class="[
+              'text-lg font-bold mb-2 transition-colors',
+              props.selectedProvider === provider.type
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'
+            ]">
+              {{ provider.name }}
+            </h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              {{ provider.description }}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span 
+                v-for="format in provider.formats" 
+                :key="format"
+                :class="[
+                  'px-2 py-1 rounded-lg text-xs font-medium',
+                  props.selectedProvider === provider.type
+                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                ]"
+              >
+                {{ format }}
+              </span>
+            </div>
           </div>
         </div>
-        <div class="flex items-center justify-between w-full mt-2">
-          <div class="text-xs text-gray-500 dark:text-gray-300">
-            格式: {{ provider.formats.join(', ') }}
-          </div>
-          <div class="w-2 h-2 rounded-full transition-all duration-300"
-               :style="{ backgroundColor: provider.color }"></div>
-        </div>
-      </div>
+      </button>
     </div>
 
     <!-- 分页控件 -->
-    <div v-if="totalPages > 1" class="mt-8 flex items-center justify-center">
-      <div class="flex items-center space-x-2">
-        <!-- 上一页 -->
+    <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
         <button
           @click="currentPage = Math.max(1, currentPage - 1)"
           :disabled="currentPage === 1"
-          class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 dark:disabled:hover:border-gray-700 transition-all"
         >
           上一页
         </button>
 
-        <!-- 页码 -->
-        <div class="flex items-center space-x-1">
+        <div class="flex items-center gap-1">
           <button
             v-for="page in visiblePages"
             :key="page"
             @click="currentPage = page"
             :class="[
-              'px-3 py-2 text-sm font-medium rounded-md',
+              'px-4 py-2 text-sm font-medium rounded-xl transition-all',
               page === currentPage
-                ? 'bg-indigo-600 text-white'
-                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600'
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500'
             ]"
           >
             {{ page }}
           </button>
         </div>
 
-        <!-- 下一页 -->
         <button
           @click="currentPage = Math.min(totalPages, currentPage + 1)"
           :disabled="currentPage === totalPages"
-          class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 dark:disabled:hover:border-gray-700 transition-all"
         >
           下一页
         </button>
       </div>
 
-      <!-- 页面信息 -->
-      <div class="ml-4 text-sm text-gray-500 dark:text-gray-400">
-        第 {{ currentPage }} 页，共 {{ totalPages }} 页
-        <span class="mx-2">|</span>
-        共 {{ filteredProviders.length }} 个解析器
-      </div>
-    </div>
-    
-    <!-- 已选择的解析器信息 -->
-    <div v-if="selectedProvider" class="mt-4 p-4 bg-indigo-50 rounded-lg dark:bg-gray-800">
-      <div class="flex items-center justify-between">
-        <div>
-          <h4 class="font-medium text-gray-800 dark:text-gray-100">已选择: {{ getSelectedProviderName() }}</h4>
-          <p class="text-sm text-gray-600 dark:text-gray-300 ">{{ getSelectedProviderDesc() }}</p>
-        </div>
-        <div class="text-sm text-indigo-600">
-          <svg class="w-5 h-5 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-          </svg>
-          解析器已就绪
-        </div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">
+        第 <span class="font-semibold text-gray-900 dark:text-white">{{ currentPage }}</span> 页，
+        共 <span class="font-semibold text-gray-900 dark:text-white">{{ totalPages }}</span> 页 
+        <span class="mx-2">|</span> 
+        共 <span class="font-semibold text-gray-900 dark:text-white">{{ filteredProviders.length }}</span> 个解析器
       </div>
     </div>
   </div>
@@ -151,9 +179,8 @@ const emit = defineEmits<Emits>();
 
 const selectedCategory = ref<string>('all');
 const currentPage = ref(1);
-const itemsPerPage = ref(6); // 每页显示6个解析器
+const itemsPerPage = ref(8); // 增加到每页8个
 
-// 过滤后的提供者
 const filteredProviders = computed(() => {
   if (selectedCategory.value === 'all') {
     return props.supportedProviders;
@@ -161,7 +188,6 @@ const filteredProviders = computed(() => {
   return props.supportedProviders.filter(provider => provider.category === selectedCategory.value);
 });
 
-// 分页计算
 const totalPages = computed(() => {
   return Math.ceil(filteredProviders.value.length / itemsPerPage.value);
 });
@@ -172,22 +198,18 @@ const paginatedProviders = computed(() => {
   return filteredProviders.value.slice(startIndex, endIndex);
 });
 
-// 可见页码（最多显示5个页码）
 const visiblePages = computed(() => {
   const pages: number[] = [];
   const maxVisible = 5;
   
   if (totalPages.value <= maxVisible) {
-    // 如果总页数少于等于5，显示所有页码
     for (let i = 1; i <= totalPages.value; i++) {
       pages.push(i);
     }
   } else {
-    // 如果总页数大于5，显示当前页附近的页码
     let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2));
     let end = Math.min(totalPages.value, start + maxVisible - 1);
     
-    // 调整起始位置，确保显示maxVisible个页码
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
     }
@@ -200,7 +222,6 @@ const visiblePages = computed(() => {
   return pages;
 });
 
-// 监听分类变化，重置页码
 watch(selectedCategory, () => {
   currentPage.value = 1;
 });
@@ -209,18 +230,8 @@ const selectProvider = (providerType: ProviderType) => {
   emit('provider-selected', providerType);
 };
 
-const getSelectedProviderName = (): string => {
-  const provider = props.supportedProviders.find(p => p.type === props.selectedProvider);
-  return provider?.name || '未知解析器';
-};
-
-const getSelectedProviderDesc = (): string => {
-  const provider = props.supportedProviders.find(p => p.type === props.selectedProvider);
-  return provider?.description || '通用交易记录解析器';
-};
-
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
   img.style.display = 'none';
 };
-</script> 
+</script>

@@ -13,9 +13,9 @@
         <span class="material-icons text-4xl text-gray-400 dark:text-gray-500 mb-4">cloud_upload</span>
         <button
           @click="() => fileInput?.click()"
-          class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow-md transition-all mb-3"
+          class="inline-flex items-center px-12 py-5 text-xl font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl transition-all duration-200 mb-4"
         >
-          <span class="material-icons mr-2">folder_open</span>
+          <span class="material-icons mr-3 text-3xl">folder_open</span>
           选择文件
         </button>
         <p class="text-sm text-gray-600 dark:text-gray-400">

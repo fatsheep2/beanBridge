@@ -2,19 +2,19 @@
   <div class="yaml-config-editor">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold">YAML 配置编辑器</h3>
-      <div class="flex space-x-2">
+      <div class="flex gap-3">
         <button
           @click="formatYaml"
-          class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium shadow-md transition-all text-sm"
+          class="inline-flex items-center px-7 py-3.5 text-base font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-xl shadow-lg transition-all duration-200"
         >
-          <span class="material-icons text-sm mr-2">format_align_left</span>
+          <span class="material-icons text-lg mr-2">format_align_left</span>
           格式化
         </button>
         <button
           @click="validateYaml"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-all text-sm"
+          class="inline-flex items-center px-7 py-3.5 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg transition-all duration-200"
         >
-          <span class="material-icons text-sm mr-2">check_circle</span>
+          <span class="material-icons text-lg mr-2">check_circle</span>
           验证
         </button>
       </div>

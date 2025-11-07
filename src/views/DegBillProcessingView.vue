@@ -1,28 +1,34 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="bg-white shadow-2xl rounded-2xl border border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 p-10">
+  <div class="w-full min-h-screen bg-gray-50 dark:bg-gray-900 px-6 sm:px-12 lg:px-24 py-8">
+      
+      <!-- 页面标题 -->
       <div class="flex items-center justify-between mb-8">
-        <h1 class="text-3xl font-extrabold">账单处理</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">账单处理</h1>
         <router-link 
           to="/"
-          class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold shadow-md"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
-          <span class="material-icons mr-3">arrow_back</span>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
           返回首页
         </router-link>
       </div>
       
-      <!-- 解析器选择组件 -->
-      <div class="mb-8">
+      <!-- 解析器选择 -->
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold">选择解析器</h2>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">选择解析器</h2>
           <button
             v-if="currentProvider"
             @click="goToRuleConfig"
-            class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium shadow-md transition-all text-sm"
+            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-md transition-colors"
             title="跳转到规则配置页面"
           >
-            <span class="material-icons mr-2 text-sm">settings</span>
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
             配置规则
           </button>
         </div>
@@ -32,14 +38,14 @@
           :selected-provider="currentProvider as any"
           @provider-selected="handleProviderSelected"
         />
-        <div v-else class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div v-else class="p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-700">
           <p class="text-gray-600 dark:text-gray-400 text-sm">正在加载解析器列表...</p>
         </div>
       </div>
 
-      <!-- 文件上传组件 -->
-      <div v-if="currentProvider" class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">上传账单文件</h2>
+      <!-- 文件上传 -->
+      <div v-if="currentProvider" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">上传账单文件</h2>
         <FileUploadSection
           :selected-file="selectedFile"
           :detected-provider="null"
@@ -48,111 +54,126 @@
       </div>
 
       <!-- 输出格式选择 -->
-      <div v-if="currentProvider" class="mb-8 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-        <h2 class="text-lg font-semibold mb-4">输出格式</h2>
-        <div class="flex space-x-6">
-          <label class="flex items-center space-x-2 cursor-pointer">
+      <div v-if="currentProvider" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">输出格式</h2>
+        <div class="flex gap-6">
+          <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
               v-model="outputFormat"
               value="beancount"
               class="w-4 h-4 text-blue-600 focus:ring-blue-500"
             />
-            <span class="text-gray-700 dark:text-gray-300 font-medium">Beancount</span>
+            <span class="text-gray-700 dark:text-gray-300">Beancount</span>
           </label>
-          <label class="flex items-center space-x-2 cursor-pointer">
+          <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
               v-model="outputFormat"
               value="ledger"
               class="w-4 h-4 text-blue-600 focus:ring-blue-500"
             />
-            <span class="text-gray-700 dark:text-gray-300 font-medium">Ledger</span>
+            <span class="text-gray-700 dark:text-gray-300">Ledger</span>
           </label>
         </div>
       </div>
 
       <!-- 操作按钮 -->
-      <div class="mb-8" v-if="selectedFile && currentProvider">
+      <div class="mb-6" v-if="selectedFile && currentProvider">
         <div class="flex flex-wrap gap-4">
           <button
             @click="handleProcessFile"
             :disabled="isProcessing || !selectedFile"
-            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            class="inline-flex items-center px-12 py-5 text-xl font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
           >
-            <span class="material-icons mr-2" v-if="!isProcessing">play_arrow</span>
-            <span class="material-icons mr-2 animate-spin" v-else>refresh</span>
+            <svg v-if="!isProcessing" class="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <svg v-else class="w-7 h-7 mr-3 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
             {{ isProcessing ? '处理中...' : `生成 ${outputFormat === 'beancount' ? 'Beancount' : 'Ledger'}` }}
           </button>
           <button
             @click="goToRuleConfig"
-            class="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold shadow-md transition-all"
+            class="inline-flex items-center px-12 py-5 text-xl font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-2xl shadow-xl transition-all duration-200"
           >
-            <span class="material-icons mr-2">settings</span>
+            <svg class="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
             规则配置
           </button>
         </div>
       </div>
 
       <!-- 错误信息 -->
-      <div v-if="error" class="mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+      <div v-if="error" class="mb-6 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
         <div class="flex items-center">
-          <span class="material-icons text-red-600 dark:text-red-400 mr-2">error</span>
+          <svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           <span class="text-red-800 dark:text-red-200 font-medium">{{ error }}</span>
         </div>
       </div>
 
       <!-- 结果展示 -->
-      <div v-if="processingResult && processingResult.success" class="mb-8">
-        <div class="bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">处理结果</h2>
-            <div class="flex gap-2">
-              <button
-                @click="copyResult"
-                class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-all"
-              >
-                <span class="material-icons mr-2 text-sm">content_copy</span>
-                复制
-              </button>
-              <button
-                @click="downloadResult"
-                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-all"
-              >
-                <span class="material-icons mr-2 text-sm">download</span>
-                下载
-              </button>
-            </div>
+      <div v-if="processingResult && processingResult.success" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">处理结果</h2>
+          <div class="flex gap-2">
+            <button
+              @click="copyResult"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              复制
+            </button>
+            <button
+              @click="downloadResult"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+            >
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              下载
+            </button>
           </div>
-
-          <div class="mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <span class="text-gray-600 dark:text-gray-400">格式:</span>
-                <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ processingResult.format || outputFormat }}</span>
-              </div>
-              <div>
-                <span class="text-gray-600 dark:text-gray-400">交易数:</span>
-                <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ processingResult.transactions || 0 }}</span>
-              </div>
-              <div>
-                <span class="text-gray-600 dark:text-gray-400">Provider:</span>
-                <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ processingResult.provider }}</span>
-              </div>
-            </div>
-          </div>
-          <pre class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 text-sm overflow-x-auto max-h-96 overflow-y-auto font-mono text-gray-900 dark:text-gray-100">{{ processingResult.output }}</pre>
         </div>
+
+        <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span class="text-gray-600 dark:text-gray-400">格式:</span>
+              <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ processingResult.format || outputFormat }}</span>
+            </div>
+            <div>
+              <span class="text-gray-600 dark:text-gray-400">交易数:</span>
+              <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ processingResult.transactions || 0 }}</span>
+            </div>
+            <div>
+              <span class="text-gray-600 dark:text-gray-400">Provider:</span>
+              <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ processingResult.provider }}</span>
+            </div>
+          </div>
+        </div>
+        <pre class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-sm overflow-x-auto max-h-96 overflow-y-auto font-mono text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">{{ processingResult.output }}</pre>
       </div>
 
       <!-- 加载提示 -->
-      <div v-if="isInitializing" class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+      <div v-if="isInitializing" class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
         <div class="flex items-center">
-          <span class="material-icons text-blue-600 dark:text-blue-400 mr-2 animate-spin">refresh</span>
+          <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
           <span class="text-blue-800 dark:text-blue-200 font-medium">正在初始化 WASM 模块...</span>
         </div>
       </div>
-    </div>
   </div>
 </template>
 
