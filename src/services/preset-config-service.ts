@@ -7,7 +7,9 @@ import type { PresetConfig } from '../types/rule-config';
  * 负责从文件系统加载和管理预设配置
  */
 export class PresetConfigService {
-    private static readonly EXAMPLE_BASE_PATH = '/example';
+    private static getBasePath(): string {
+        return `${import.meta.env.BASE_URL || '/'}example`;
+    }
     private static configCache: Map<string, PresetConfig> = new Map();
 
     /**
@@ -62,7 +64,7 @@ export class PresetConfigService {
      * @returns 预设配置
      */
     private static async loadConfigFromFile(provider: ProviderType): Promise<PresetConfig | null> {
-        const configPath = `${this.EXAMPLE_BASE_PATH}/${provider}/config.json`;
+        const configPath = `${this.getBasePath()}/${provider}/config.json`;
 
         try {
             // 检查是否在测试环境中

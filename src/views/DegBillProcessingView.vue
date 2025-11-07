@@ -29,7 +29,7 @@
         <ProviderSelector
           v-if="providersForSelector.length > 0"
           :supported-providers="providersForSelector"
-          :selected-provider="currentProvider"
+          :selected-provider="currentProvider as any"
           @provider-selected="handleProviderSelected"
         />
         <div v-else class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -42,7 +42,7 @@
         <h2 class="text-lg font-semibold mb-4">上传账单文件</h2>
         <FileUploadSection
           :selected-file="selectedFile"
-          :detected-provider="currentProvider"
+          :detected-provider="null"
           @file-selected="handleFileSelect"
         />
       </div>
@@ -175,7 +175,7 @@ const fileProcessing = useDegFileProcessing()
 
 // 响应式数据
 const isInitializing = ref(true)
-const currentProvider = computed(() => deg.currentProvider.value)
+const currentProvider = computed<string | null>(() => deg.currentProvider.value)
 // 将 WASM 返回的 providers 转换为 ProviderSelector 期望的格式
 const providersForSelector = computed(() => {
   const wasmProviders = deg.supportedProviders.value
@@ -205,7 +205,14 @@ const outputFormat = computed({
 // 方法
 const handleProviderSelected = async (provider: string) => {
   try {
-    await deg.setProvider(provider)
+    console.log(`[BillProcessing] 开始切换 provider 到: ${provider}`)
+    
+    // 先设置 provider，确保全局 currentProvider 正确
+    console.log(`[BillProcessing] 第一次调用 setProvider: ${provider}`)
+    const setResult1 = await deg.setProvider(provider)
+    console.log(`[BillProcessing] setProvider 结果:`, setResult1)
+    await new Promise(resolve => setTimeout(resolve, 100)) // 等待确保设置完成
+    
     // 加载已保存的配置
     let savedConfig = yamlConfigService.getConfig(provider)
     if (!savedConfig) {
@@ -215,14 +222,29 @@ const handleProviderSelected = async (provider: string) => {
     
     if (savedConfig) {
       try {
-        await deg.updateConfig(yaml.parse(savedConfig))
+        // 再次设置 provider，确保在更新配置前 provider 是正确的
+        console.log(`[BillProcessing] 第二次调用 setProvider: ${provider}`)
+        const setResult2 = await deg.setProvider(provider)
+        console.log(`[BillProcessing] setProvider 结果:`, setResult2)
+        await new Promise(resolve => setTimeout(resolve, 100)) // 增加等待时间
+        
+        // 更新配置时传递 provider 确保正确
+        console.log(`[BillProcessing] 调用 updateConfig，provider: ${provider}`)
+        await deg.updateConfig(yaml.parse(savedConfig), provider)
+        console.log(`[BillProcessing] updateConfig 完成`)
       } catch (err) {
         console.warn('加载配置失败，将使用默认配置:', err)
         // 如果加载失败，使用默认配置
+        await deg.setProvider(provider)
+        await new Promise(resolve => setTimeout(resolve, 100))
         const defaultConfig = yamlConfigService.getDefaultConfig(provider)
-        await deg.updateConfig(yaml.parse(defaultConfig))
+        await deg.updateConfig(yaml.parse(defaultConfig), provider)
       }
+    } else {
+      console.log(`[BillProcessing] 没有配置文件，只设置 provider`)
     }
+    
+    console.log(`[BillProcessing] provider 切换完成: ${provider}`)
   } catch (err) {
     console.error('设置 Provider 失败:', err)
     fileProcessing.error.value = `设置 Provider 失败: ${err instanceof Error ? err.message : String(err)}`
@@ -243,26 +265,9 @@ const handleProcessFile = async () => {
     return
   }
 
-  // 确保已加载配置
-  if (currentProvider.value) {
-    let savedConfig = yamlConfigService.getConfig(currentProvider.value)
-    if (!savedConfig) {
-      // 如果没有保存的配置，使用默认配置
-      savedConfig = yamlConfigService.getDefaultConfig(currentProvider.value)
-    }
-    
-    if (savedConfig) {
-      try {
-        await deg.updateConfig(yaml.parse(savedConfig))
-      } catch (err) {
-        console.warn('加载配置失败，将使用默认配置:', err)
-        // 如果加载失败，使用默认配置
-        const defaultConfig = yamlConfigService.getDefaultConfig(currentProvider.value)
-        await deg.updateConfig(yaml.parse(defaultConfig))
-      }
-    }
-  }
-
+  console.log(`[BillProcessing] 开始处理文件，当前 provider: ${currentProvider.value}`)
+  
+  // 直接处理文件，配置已经在选择 provider 时加载了
   await fileProcessing.processFile(selectedFile.value, outputFormat.value)
 }
 
@@ -316,6 +321,10 @@ onMounted(async () => {
 
     // 加载已保存的配置
     if (currentProvider.value) {
+      // 先确保 provider 正确
+      await deg.setProvider(currentProvider.value)
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
       let savedConfig = yamlConfigService.getConfig(currentProvider.value)
       if (!savedConfig) {
         // 如果没有保存的配置，使用默认配置
@@ -324,12 +333,24 @@ onMounted(async () => {
       
       if (savedConfig) {
         try {
-          await deg.updateConfig(yaml.parse(savedConfig))
+          // updateConfig 时传递 provider 确保正确
+          await deg.updateConfig(yaml.parse(savedConfig), currentProvider.value)
+          
+          // 配置更新后，再次确保 provider 正确
+          await deg.setProvider(currentProvider.value)
+          await new Promise(resolve => setTimeout(resolve, 50))
         } catch (err) {
           console.warn('加载配置失败，将使用默认配置:', err)
           // 如果加载失败，使用默认配置
+          await deg.setProvider(currentProvider.value)
+          await new Promise(resolve => setTimeout(resolve, 50))
+          
           const defaultConfig = yamlConfigService.getDefaultConfig(currentProvider.value)
-          await deg.updateConfig(yaml.parse(defaultConfig))
+          await deg.updateConfig(yaml.parse(defaultConfig), currentProvider.value)
+          
+          // 配置更新后，再次确保 provider 正确
+          await deg.setProvider(currentProvider.value)
+          await new Promise(resolve => setTimeout(resolve, 50))
         }
       }
     }

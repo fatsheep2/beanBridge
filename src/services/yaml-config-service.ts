@@ -83,8 +83,11 @@ class YamlConfigService {
    */
   async loadFromExample(provider: string): Promise<string | null> {
     try {
+      // 获取正确的基础路径（支持子目录部署）
+      const basePath = import.meta.env.BASE_URL || '/'
+      
       // 尝试从本地 example 目录加载
-      const response = await fetch(`/example/${provider}/config.yaml`)
+      const response = await fetch(`${basePath}example/${provider}/config.yaml`)
       if (response.ok) {
         return await response.text()
       }

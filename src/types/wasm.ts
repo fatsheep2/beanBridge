@@ -36,26 +36,26 @@ declare global {
       fileInputId?: string,
       format?: 'beancount' | 'ledger'
     ) => Promise<WASMProcessResult>
-    processFileContent: (content: string) => WASMProcessResult
-    parseYamlConfig: (yamlStr: string) => {
+    processFileContent: (content: string) => Promise<WASMProcessResult>
+    parseYamlConfig: (yamlStr: string, provider?: string) => Promise<{
       success: boolean
       message?: string
       error?: string
       config?: WASMConfig
-    }
-    setProvider: (provider: string) => {
+    }>
+    setProvider: (provider: string) => Promise<{
       success: boolean
       provider?: string
       error?: string
-    }
-    getSupportedProviders: () => {
+    }>
+    getSupportedProviders: () => Promise<{
       success: boolean
       providers?: string[]
-    }
-    getCurrentProvider: () => {
+    }>
+    getCurrentProvider: () => Promise<{
       success: boolean
       provider?: string
-    }
+    }>
     testFunction: (a?: number, b?: number) => {
       success: boolean
       args?: number

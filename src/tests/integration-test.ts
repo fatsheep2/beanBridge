@@ -78,19 +78,9 @@ describe('区块链功能集成测试', () => {
             const ethereumConfig = cryptoPresetConfigs.find(config => config.provider === ProviderType.Ethereum);
             expect(ethereumConfig).toBeDefined();
 
-            // 将Rule类型转换为ConfigRule类型
-            const configRules: ConfigRule[] = ethereumConfig!.config.rules.map(rule => ({
-                pattern: rule.name,
-                account: rule.targetAccount || 'Assets:Crypto:ETH',
-                methodAccount: rule.methodAccount,
-                chain: rule.chain,
-                token: rule.token,
-                transactionType: rule.transactionType,
-                priority: rule.priority
-            }));
-
+            // 直接使用配置中的规则，无需转换
             const ruleEngine = new RuleEngine(
-                configRules,
+                ethereumConfig!.config.rules,
                 ethereumConfig!.config.defaultMinusAccount,
                 ethereumConfig!.config.defaultPlusAccount
             );
@@ -147,8 +137,8 @@ describe('区块链功能集成测试', () => {
         it('应该验证预设配置的规则格式', () => {
             cryptoPresetConfigs.forEach(config => {
                 config.config.rules.forEach(rule => {
-                    expect(rule.name).toBeDefined();
-                    expect(rule.targetAccount).toBeDefined();
+                    expect(rule.pattern).toBeDefined();
+                    expect(rule.account).toBeDefined();
                     expect(rule.chain).toBeDefined();
                     expect(rule.token).toBeDefined();
                     expect(rule.transactionType).toBeDefined();

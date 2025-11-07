@@ -161,24 +161,20 @@ export function useDataSourceConfig() {
     return selectedFile.value || processingResult.value || blockchainDataSourceConfig.value;
   });
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (file: File | null) => {
     selectedFile.value = file;
     error.value = null;
     processingResult.value = null;
     blockchainDataSourceConfig.value = null; // 清除区块链配置
 
-    try {
-      // 自动检测解析器类型
-      const detected = await fileProcessor.detectProvider(file);
-      detectedProvider.value = detected;
-
-      if (detected) {
-        loadConfig(detected);
-      }
-    } catch (err) {
-      console.error('文件检测失败:', err);
-      error.value = '文件检测失败';
+    if (!file) {
+      detectedProvider.value = null;
+      return;
     }
+
+    // 不再自动检测解析器，用户需要手动选择
+    // 清除之前的检测结果
+    detectedProvider.value = null;
   };
 
   // 新增：处理区块链数据源配置

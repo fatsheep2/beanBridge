@@ -17,6 +17,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Verify WASM files
+        run: |
+          # 检查 WASM 文件是否已存在于仓库中
+          if [ -f "public/wasm/double-entry-generator.wasm" ] && [ -f "public/wasm/wasm_exec.js" ]; then
+            echo "✓ WASM 文件已存在于仓库中，跳过构建步骤"
+            ls -lh public/wasm/
+          else
+            echo "✗ WASM 文件不存在，请确保已提交 WASM 文件到仓库"
+            echo "运行以下命令构建并提交 WASM 文件："
+            echo "  cd double-entry-generator && make build-wasm"
+            echo "  cp double-entry-generator/wasm-dist/* public/wasm/"
+            echo "  git add public/wasm/ && git commit -m 'Add WASM files'"
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

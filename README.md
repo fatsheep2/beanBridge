@@ -220,9 +220,9 @@ src/
 
 ## 📞 联系我们
 
-- 项目主页：[GitHub](https://github.com/your-username/BeanBridge)
-- 问题反馈：[Issues](https://github.com/your-username/BeanBridge/issues)
-- 功能建议：[Discussions](https://github.com/your-username/BeanBridge/discussions)
+- 项目主页：[GitHub](https://github.com/fatsheep2/BeanBridge)
+- 问题反馈：[Issues](https://github.com/fatsheep2/BeanBridge/issues)
+- 功能建议：[Discussions](https://github.com/fatsheep2/BeanBridge/discussions)
 
 ---
 

@@ -182,11 +182,12 @@ export class ManualTester {
             try {
                 CryptoProviderFactory.create(ProviderType.BinanceSmartChain);
             } catch (error) {
-                console.log('✅ 错误处理正常:', error.message);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                console.log('✅ 错误处理正常:', errorMessage);
             }
 
             return CryptoProviderFactory;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('❌ 测试失败:', error);
             throw error;
         }

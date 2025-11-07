@@ -38,28 +38,14 @@ export function useDegFileProcessing() {
         await deg.init()
       }
 
-      // 设置 Provider
-      await deg.setProvider(deg.currentProvider.value)
-
-      // 加载配置
-      let yamlConfig = yamlConfigService.getConfig(deg.currentProvider.value)
-      if (!yamlConfig) {
-        // 如果没有保存的配置，使用默认配置
-        yamlConfig = yamlConfigService.getDefaultConfig(deg.currentProvider.value)
-      }
+      console.log(`[useDegFileProcessing] 处理文件，当前 provider: ${deg.currentProvider.value}`)
       
-      if (yamlConfig) {
-        try {
-          await deg.updateConfig(yaml.parse(yamlConfig))
-        } catch (err) {
-          console.warn('加载配置失败，将使用默认配置:', err)
-          // 如果加载失败，使用默认配置
-          const defaultConfig = yamlConfigService.getDefaultConfig(deg.currentProvider.value)
-          await deg.updateConfig(yaml.parse(defaultConfig))
-        }
-      }
+      // 只设置 Provider，配置已经在选择 provider 时加载了
+      await deg.setProvider(deg.currentProvider.value)
+      // 等待确保设置完成
+      await new Promise(resolve => setTimeout(resolve, 150))
 
-      // 处理文件
+      // 直接处理文件
       const result = await deg.processFile(file, format)
 
       if (result.success) {

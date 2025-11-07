@@ -34,9 +34,6 @@
           <p class="text-xs text-gray-600 dark:text-gray-400">
             大小: {{ formatFileSize(selectedFile.size) }}
           </p>
-          <p v-if="detectedProvider" class="text-xs text-blue-600 dark:text-blue-400 mt-1">
-            检测到的解析器: {{ detectedProvider }}
-          </p>
         </div>
         <button
           @click="clearFile"

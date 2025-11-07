@@ -1,0 +1,134 @@
+name: Deploy Branch Preview to GitHub Pages
+
+on:
+  push:
+    branches:
+      # 监听所有功能分支，排除主分支
+      - feat/**
+      - fix/**
+      - dev/**
+      - wasm-support  # 临时支持旧分支名
+      - '!main'
+      - '!master'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy (e.g., feat/wasm-support)'
+        required: true
+        default: 'feat/wasm-support'
+
+# 添加权限配置
+permissions:
+  contents: write         # 需要写权限以推送到 gh-pages 分支
+  pull-requests: write    # 需要写权限以在 PR 中发表评论
+  issues: write           # 需要写权限以在 Issue 中发表评论
+
+# 允许一个并发部署（每个分支独立）
+concurrency:
+  group: "pages-preview-${{ github.ref }}"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get branch name
+        id: branch-name
+        run: |
+          if [ -n "${{ github.event.inputs.branch }}" ]; then
+            BRANCH_NAME="${{ github.event.inputs.branch }}"
+          else
+            BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          fi
+          # 清理分支名，移除特殊字符，保留斜杠用于层级
+          CLEAN_BRANCH=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9\/-]/-/g')
+          echo "name=$CLEAN_BRANCH" >> $GITHUB_OUTPUT
+          echo "original=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "Branch name: $BRANCH_NAME -> $CLEAN_BRANCH"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref_name }}
+
+      - name: Verify WASM files
+        run: |
+          # 检查 WASM 文件是否已存在于仓库中
+          if [ -f "public/wasm/double-entry-generator.wasm" ] && [ -f "public/wasm/wasm_exec.js" ]; then
+            echo "✓ WASM 文件已存在于仓库中，跳过构建步骤"
+            ls -lh public/wasm/
+          else
+            echo "✗ WASM 文件不存在，请确保已提交 WASM 文件到仓库"
+            echo "运行以下命令构建并提交 WASM 文件："
+            echo "  cd double-entry-generator && make build-wasm"
+            echo "  cp double-entry-generator/wasm-dist/* public/wasm/"
+            echo "  git add public/wasm/ && git commit -m 'Add WASM files'"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        env:
+          BRANCH_NAME: ${{ steps.branch-name.outputs.name }}
+        run: |
+          # 使用分支名作为 base path
+          yarn run build --base /beanBridge/$BRANCH_NAME/
+
+      - name: Deploy to GitHub Pages (Branch Subdirectory)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          destination_dir: ${{ steps.branch-name.outputs.name }}  # 部署到分支名子目录
+          keep_files: true  # 保留其他部署的文件
+          commit_message: "Deploy ${{ steps.branch-name.outputs.original }} branch preview"
+      
+      - name: Comment PR with preview link
+        uses: actions/github-script@v7
+        if: github.event_name == 'push'
+        continue-on-error: true  # 如果评论失败不影响部署
+        with:
+          script: |
+            const branchName = '${{ steps.branch-name.outputs.name }}';
+            const repoName = context.repo.repo;
+            const repoOwner = context.repo.owner;
+            const previewUrl = `https://${repoOwner}.github.io/${repoName}/${branchName}/`;
+            
+            console.log(`✅ 预览部署成功！`);
+            console.log(`📍 预览地址: ${previewUrl}`);
+            console.log(`📝 分支: ${{ steps.branch-name.outputs.original }}`);
+            
+            try {
+              // 尝试查找相关的 PR
+              const prs = await github.rest.pulls.list({
+                owner: repoOwner,
+                repo: repoName,
+                state: 'open',
+                head: `${repoOwner}:${context.ref.replace('refs/heads/', '')}`
+              });
+              
+              if (prs.data.length > 0) {
+                const pr = prs.data[0];
+                await github.rest.issues.createComment({
+                  owner: repoOwner,
+                  repo: repoName,
+                  issue_number: pr.number,
+                  body: `🎉 **预览部署成功！**\n\n✨ 预览地址: ${previewUrl}\n\n📝 分支: \`${{ steps.branch-name.outputs.original }}\`\n⏰ 部署时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`
+                });
+                console.log(`✅ 已在 PR #${pr.number} 中添加评论`);
+              } else {
+                console.log(`ℹ️  未找到相关的 PR，跳过评论`);
+              }
+            } catch (error) {
+              console.log(`⚠️  添加评论失败（这不影响部署）: ${error.message}`);
+            }
+

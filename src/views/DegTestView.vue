@@ -595,17 +595,7 @@ const downloadResult = () => {
   URL.revokeObjectURL(url)
 }
 
-// 声明全局类型
-declare global {
-  interface Window {
-    Go: any
-    processFileFromInputWithFormat?: (fileInputId: string, format: 'beancount' | 'ledger') => Promise<any>
-    parseYamlConfig?: (yamlStr: string) => Promise<any>
-    setProvider?: (provider: string) => Promise<any>
-    getSupportedProviders?: () => Promise<any>
-    getCurrentProvider?: () => Promise<any>
-  }
-}
+// 全局类型已在 src/types/wasm.ts 中声明，这里不需要重复声明
 
 // 组件挂载时自动初始化
 onMounted(() => {

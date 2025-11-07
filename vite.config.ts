@@ -34,10 +34,12 @@ export default defineConfig(async () => {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: false,
+      chunkSizeWarningLimit: 1000, // 增加 chunk 大小警告限制到 1MB
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['vue', 'vue-router']
+            vendor: ['vue', 'vue-router'],
+            wasm: ['yaml'] // 将 yaml 库单独打包
           }
         }
       }
