@@ -164,6 +164,13 @@
         <pre class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-sm overflow-x-auto max-h-96 overflow-y-auto font-mono text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">{{ processingResult.output }}</pre>
       </div>
 
+      <!-- 规则匹配分析 -->
+      <RuleMatchAnalysis
+        v-if="processingResult && processingResult.success && processingResult.output"
+        :processed-data="processingResult.output"
+        :total-records="processingResult.transactions || 0"
+      />
+
       <!-- 加载提示 -->
       <div v-if="isInitializing" class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
         <div class="flex items-center">
@@ -187,6 +194,7 @@ import { yaml } from '@/utils/yaml'
 import { providers } from '@/data/providers'
 import FileUploadSection from '@/components/FileUploadSection.vue'
 import ProviderSelector from '@/components/ProviderSelector.vue'
+import RuleMatchAnalysis from '@/components/RuleMatchAnalysis.vue'
 
 const router = useRouter()
 const route = useRoute()

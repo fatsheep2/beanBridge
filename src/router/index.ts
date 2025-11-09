@@ -39,11 +39,34 @@ const routes = [
   //   // which is lazy-loaded when the route is visited.
   //   component: () => import('../views/AboutView.vue'),
   // },
+  // 404 路由 - 必须放在最后
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('../views/HomeView.vue'), // 暂时重定向到首页
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
+
+// 添加路由调试信息（仅在开发环境）
+if (import.meta.env.DEV) {
+  router.beforeEach((to, from, next) => {
+    console.log('[Router] Navigating:', {
+      from: from.fullPath,
+      to: to.fullPath,
+      base: import.meta.env.BASE_URL,
+      matched: to.matched.length > 0
+    })
+    next()
+  })
+  
+  router.onError((error) => {
+    console.error('[Router] Error:', error)
+  })
+}
 
 export default router

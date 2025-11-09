@@ -35,22 +35,13 @@ export function useWasm() {
       const providersResult = await wasmService.getSupportedProviders()
       if (providersResult.success && providersResult.providers) {
         supportedProviders.value = providersResult.providers
-        // 如果没有 providers，使用默认列表
-        if (supportedProviders.value.length === 0) {
-          supportedProviders.value = ['alipay', 'wechat', 'icbc', 'ccb', 'citic', 'cmb', 'huobi', 'htsec', 'hxsec', 'mt', 'jd', 'bmo', 'td', 'hsbchk']
-        }
         // 设置默认 provider
         if (supportedProviders.value.length > 0 && !currentProvider.value) {
           currentProvider.value = supportedProviders.value[0]
           await wasmService.setProvider(supportedProviders.value[0])
         }
       } else {
-        // 如果获取失败，使用默认列表
-        supportedProviders.value = ['alipay', 'wechat', 'icbc', 'ccb', 'citic', 'cmb', 'huobi', 'htsec', 'hxsec', 'mt', 'jd', 'bmo', 'td', 'hsbchk']
-        if (!currentProvider.value) {
-          currentProvider.value = 'alipay'
-          await wasmService.setProvider('alipay')
-        }
+        throw new Error('无法获取支持的 providers')
       }
 
       // 获取当前 provider
@@ -61,11 +52,7 @@ export function useWasm() {
     } catch (err) {
       error.value = err instanceof Error ? err.message : String(err)
       console.error('[useWasm] 初始化失败:', err)
-      // 即使初始化失败，也设置默认 providers
-      if (supportedProviders.value.length === 0) {
-        supportedProviders.value = ['alipay', 'wechat', 'icbc', 'ccb', 'citic', 'cmb', 'huobi', 'htsec', 'hxsec', 'mt', 'jd', 'bmo', 'td', 'hsbchk']
-        currentProvider.value = 'alipay'
-      }
+      throw err
     } finally {
       isLoading.value = false
     }

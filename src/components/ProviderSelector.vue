@@ -140,11 +140,11 @@
         </button>
       </div>
 
-      <div class="text-sm text-gray-600 dark:text-gray-400">
-        第 <span class="font-semibold text-gray-900 dark:text-white">{{ currentPage }}</span> 页，
-        共 <span class="font-semibold text-gray-900 dark:text-white">{{ totalPages }}</span> 页 
+      <div class="text-base text-gray-600 dark:text-gray-400 font-medium">
+        第 <span class="font-bold text-gray-900 dark:text-white">{{ currentPage }}</span> 页，
+        共 <span class="font-bold text-gray-900 dark:text-white">{{ totalPages }}</span> 页 
         <span class="mx-2">|</span> 
-        共 <span class="font-semibold text-gray-900 dark:text-white">{{ filteredProviders.length }}</span> 个解析器
+        共 <span class="font-bold text-gray-900 dark:text-white">{{ filteredProviders.length }}</span> 个解析器
       </div>
     </div>
   </div>
