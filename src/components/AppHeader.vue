@@ -55,7 +55,7 @@ import { computed } from 'vue';
 
 const logoPath = computed(() => {
   const base = import.meta.env.BASE_URL || '/';
-  return `${base}assets/icons/beancount.png`;
+  return `${base}logo.png`;
 });
 
 const handleImageError = (event: Event) => {
