@@ -56,6 +56,7 @@ export enum OrderType {
   ChinaSecuritiesInterestCapitalization = "ChinaSecuritiesInterestCapitalization",
   ChinaSecuritiesEtfMerge = "ChinaSecuritiesEtfMerge",
   ChinaSecuritiesDividend = "ChinaSecuritiesDividend",
+  Crypto = "Crypto", // 加密货币交易（需要高精度）
   // 新增区块链交易类型
   CryptoTransfer = "CryptoTransfer",
   CryptoSwap = "CryptoSwap",
@@ -198,6 +199,7 @@ export enum ProviderType {
   MT = "mt",
   Hxsec = "hxsec",
   CCB = "ccb",
+  OKLink = "oklink",
   // 新增区块链类型
   Ethereum = "ethereum",
   BinanceSmartChain = "bsc",

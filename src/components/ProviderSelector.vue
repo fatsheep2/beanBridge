@@ -43,20 +43,30 @@
           <!-- Logo -->
           <div class="flex items-center gap-4 mb-4">
             <div :class="[
-              'w-16 h-16 flex-shrink-0 flex items-center justify-center rounded-2xl transition-all duration-300',
+              'w-16 h-16 flex-shrink-0 flex items-center justify-center rounded-2xl transition-all duration-300 relative overflow-hidden',
               props.selectedProvider === provider.type
                 ? 'bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/50'
                 : 'bg-gray-50 dark:bg-gray-700/50 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30'
             ]">
               <img 
+                v-if="!imageErrors[provider.type]"
                 :src="provider.icon" 
                 :class="[
                   'object-contain transition-all duration-300',
                   props.selectedProvider === provider.type ? 'w-10 h-10' : 'w-9 h-9 group-hover:w-10 group-hover:h-10'
                 ]"
                 :alt="provider.name" 
-                @error="handleImageError" 
+                @error="() => handleImageError(provider.type, provider.name)" 
               />
+              <div 
+                v-else
+                :class="[
+                  'flex items-center justify-center text-4xl transition-all duration-300',
+                  props.selectedProvider === provider.type ? 'w-10 h-10' : 'w-9 h-9'
+                ]"
+              >
+                {{ getPlaceholderEmoji(provider.name) }}
+              </div>
             </div>
             
             <!-- 选中标记 -->
@@ -180,6 +190,7 @@ const emit = defineEmits<Emits>();
 const selectedCategory = ref<string>('all');
 const currentPage = ref(1);
 const itemsPerPage = ref(8); // 增加到每页8个
+const imageErrors = ref<Record<string, boolean>>({});
 
 const filteredProviders = computed(() => {
   if (selectedCategory.value === 'all') {
@@ -230,8 +241,38 @@ const selectProvider = (providerType: ProviderType) => {
   emit('provider-selected', providerType);
 };
 
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.style.display = 'none';
+// 生成占位符 emoji
+const getPlaceholderEmoji = (providerName: string): string => {
+  // 根据 provider 名称生成对应的 emoji
+  const emojiMap: Record<string, string> = {
+    'oklink': '🔗',
+    'ethereum': '⛓️',
+    'bsc': '🟡',
+    'polygon': '🟣',
+    'arbitrum': '🔵',
+    'optimism': '🔴',
+    'avalanche': '❄️',
+    'solana': '🟢',
+    'bitcoin': '₿',
+  };
+  
+  // 如果找到对应的 emoji，使用它
+  const emoji = emojiMap[providerName.toLowerCase()];
+  if (emoji) {
+    return emoji;
+  }
+  
+  // 否则根据名称生成随机 emoji（确保同一名称总是返回相同的 emoji）
+  const emojis = ['💎', '🌟', '⚡', '🔥', '🚀', '💫', '✨', '🎯', '🎨', '🎭'];
+  let hash = 0;
+  for (let i = 0; i < providerName.length; i++) {
+    hash = providerName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return emojis[Math.abs(hash) % emojis.length];
+};
+
+const handleImageError = (providerType: ProviderType, providerName: string) => {
+  imageErrors.value[providerType] = true;
+  console.log(`[ProviderSelector] 图片加载失败，使用占位符: ${providerName} -> ${getPlaceholderEmoji(providerName)}`);
 };
 </script>
