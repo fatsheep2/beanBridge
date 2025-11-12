@@ -289,6 +289,27 @@ export const providers: ProviderInfo[] = [
     ]
   },
   {
+    type: ProviderType.OKLink,
+    name: 'OKLink',
+    formats: ['CSV'],
+    description: '多链代币转账记录解析器，支持ERC20、TRC20等',
+    category: 'crypto',
+    color: '#1E88E5',
+    icon: getIconPath('oklink.png'),
+    fieldMappings: [
+      { originalField: '交易哈希', mappedField: 'transactionHash', description: '交易哈希' },
+      { originalField: '区块号', mappedField: 'blockNumber', description: '区块号' },
+      { originalField: '时间戳', mappedField: 'payTime', description: '交易时间' },
+      { originalField: '发送地址', mappedField: 'fromAddress', description: '发送方地址' },
+      { originalField: '接收地址', mappedField: 'toAddress', description: '接收方地址' },
+      { originalField: '代币数量', mappedField: 'amount', description: '代币数量' },
+      { originalField: '合约地址', mappedField: 'tokenAddress', description: '代币合约地址' },
+      { originalField: '代币名称', mappedField: 'token', description: '代币名称' },
+      { originalField: '代币符号', mappedField: 'tokenSymbol', description: '代币符号' },
+      { originalField: '方向', mappedField: 'direction', description: '交易方向(recv/send)' }
+    ]
+  },
+  {
     type: ProviderType.Ethereum,
     name: '以太坊(聚合链)',
     formats: ['API'],

@@ -291,6 +291,24 @@ export class WASMService {
 
     try {
       const result = await window.getSupportedProviders()
+      console.log('[WASM] getSupportedProviders 原始结果:', result)
+      
+      // 确保 providers 是数组格式
+      if (result && result.success) {
+        const providers = result.providers
+        // 如果是 JS Array 对象，转换为普通数组
+        const providersArray = Array.isArray(providers) 
+          ? providers 
+          : Array.from(providers || [])
+        
+        console.log('[WASM] 转换后的 providers:', providersArray)
+        
+        return {
+          success: true,
+          providers: providersArray
+        }
+      }
+      
       return result
     } catch (error) {
       console.error('[WASM] 获取 Providers 失败:', error)
