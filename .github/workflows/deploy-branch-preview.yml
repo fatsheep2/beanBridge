@@ -7,7 +7,6 @@ on:
       - feat/**
       - fix/**
       - dev/**
-      - auto-sync-deg-*  # 自动同步 DEG 的分支
       - wasm-support  # 临时支持旧分支名
       - '!main'
       - '!master'
