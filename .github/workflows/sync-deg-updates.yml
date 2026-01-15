@@ -275,11 +275,30 @@ jobs:
             
             # 如果已审批但不可合并，可能是检查未通过，尝试设置 auto-merge
             if [ "$APPROVED_COUNT" -gt 0 ]; then
-              echo "PR has approvals but not mergeable, enabling auto-merge..."
-              gh pr merge "$PR_NUMBER" --auto --squash 2>&1 || {
-                echo "Auto-merge not available or failed"
-                echo "PR will be merged automatically when all checks pass"
-              }
+              echo "PR has approvals but merge state is BLOCKED"
+              
+              # 检查检查状态
+              FAILED_CHECKS=$(gh pr view "$PR_NUMBER" --json statusCheckRollup --jq '[.statusCheckRollup[] | select(.conclusion == "FAILURE" or .conclusion == "ACTION_REQUIRED")] | length' 2>/dev/null || echo "0")
+              PENDING_CHECKS=$(gh pr view "$PR_NUMBER" --json statusCheckRollup --jq '[.statusCheckRollup[] | select(.status == "PENDING" or .status == "IN_PROGRESS")] | length' 2>/dev/null || echo "0")
+              
+              echo "Failed checks: $FAILED_CHECKS"
+              echo "Pending checks: $PENDING_CHECKS"
+              
+              if [ "$FAILED_CHECKS" -eq 0 ] && [ "$PENDING_CHECKS" -eq 0 ] && [ "$MERGE_STATE" = "BLOCKED" ]; then
+                echo "No failed or pending checks but still BLOCKED, may be branch protection rule"
+                echo "Attempting to enable auto-merge..."
+                gh pr merge "$PR_NUMBER" --auto --squash 2>&1 || {
+                  echo "Auto-merge not available"
+                  echo "Note: PR may require bypassing branch protection rules manually"
+                  echo "Or adjust branch protection rules to allow auto-merge for approved PRs"
+                }
+              else
+                echo "Enabling auto-merge (will merge when checks pass)..."
+                gh pr merge "$PR_NUMBER" --auto --squash 2>&1 || {
+                  echo "Auto-merge not available or failed"
+                  echo "PR will be merged automatically when all checks pass"
+                }
+              fi
             else
               echo "PR needs approval before it can be merged"
             fi
