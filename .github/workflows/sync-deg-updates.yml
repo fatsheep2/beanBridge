@@ -193,6 +193,18 @@ jobs:
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
             # 尝试添加标签（如果存在），失败也不影响
             gh pr edit "$PR_NUMBER" --add-label "auto-merge" 2>/dev/null || echo "Label 'auto-merge' not found, skipping label addition"
+            
+            # 等待一下让 PR 完全创建
+            sleep 2
+            
+            # 触发部署预览（通过 workflow_dispatch）
+            echo "Triggering preview deployment for branch: $BRANCH_NAME"
+            gh workflow run "Deploy Branch Preview to GitHub Pages" \
+              --ref "$BRANCH_NAME" \
+              --field branch="$BRANCH_NAME" 2>/dev/null || {
+              echo "Failed to trigger deployment workflow (may need to wait for PR to be fully created)"
+              echo "Deployment will be triggered automatically when PR is opened"
+            }
           fi
 
       - name: Auto-merge Pull Request
