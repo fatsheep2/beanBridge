@@ -41,6 +41,33 @@ jobs:
           make build-wasm
           ls -lh wasm-dist/
 
+      - name: Copy wasm_exec.js if missing
+        working-directory: double-entry-generator
+        run: |
+          # 如果 wasm_exec.js 不在 wasm-dist 目录中，从 GOROOT 复制
+          if [ ! -f "wasm-dist/wasm_exec.js" ]; then
+            echo "wasm_exec.js not found in wasm-dist, copying from GOROOT..."
+            GOROOT=$(go env GOROOT)
+            # 尝试新路径 (Go 1.24+)
+            if [ -f "$GOROOT/lib/wasm/wasm_exec.js" ]; then
+              cp "$GOROOT/lib/wasm/wasm_exec.js" wasm-dist/
+              echo "Copied from $GOROOT/lib/wasm/wasm_exec.js"
+            # 尝试旧路径 (Go < 1.24)
+            elif [ -f "$GOROOT/misc/wasm/wasm_exec.js" ]; then
+              cp "$GOROOT/misc/wasm/wasm_exec.js" wasm-dist/
+              echo "Copied from $GOROOT/misc/wasm/wasm_exec.js"
+            else
+              echo "Error: wasm_exec.js not found in GOROOT"
+              echo "GOROOT: $GOROOT"
+              ls -la "$GOROOT/lib/wasm/" 2>/dev/null || echo "lib/wasm not found"
+              ls -la "$GOROOT/misc/wasm/" 2>/dev/null || echo "misc/wasm not found"
+              exit 1
+            fi
+          else
+            echo "wasm_exec.js already exists in wasm-dist"
+          fi
+          ls -lh wasm-dist/
+
       - name: Copy WASM files
         run: |
           mkdir -p beanBridge/public/wasm
@@ -52,16 +79,24 @@ jobs:
         run: |
           # 同步所有 provider 的示例配置文件
           cd double-entry-generator
+          if [ ! -d "example" ]; then
+            echo "Warning: example directory not found"
+            exit 0
+          fi
           for provider_dir in example/*/; do
+            # 检查目录是否存在（避免 glob 失败的情况）
+            [ -d "$provider_dir" ] || continue
             provider=$(basename "$provider_dir")
             if [ -f "$provider_dir/config.yaml" ]; then
               echo "Syncing config for $provider..."
               mkdir -p "../beanBridge/public/example/$provider"
-              cp "$provider_dir/config.yaml" "../beanBridge/public/example/$provider/" || true
+              cp "$provider_dir/config.yaml" "../beanBridge/public/example/$provider/" || {
+                echo "Warning: Failed to copy config for $provider"
+              }
             fi
           done
           echo "Synced example configs:"
-          ls -la ../beanBridge/public/example/
+          ls -la ../beanBridge/public/example/ || echo "No example configs synced"
 
       - name: Check for changes
         id: changes
