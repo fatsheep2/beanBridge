@@ -33,7 +33,7 @@ permissions:
 # 使用分支名作为 group，确保同一分支/PR 只有一个预览环境
 concurrency:
   group: "pages-preview-${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}"
-  cancel-in-progress: true  # 取消正在进行的部署，只保留最新的
+  cancel-in-progress: false  # 不取消正在进行的部署，等待完成（避免频繁取消）
 
 jobs:
   build-and-deploy:

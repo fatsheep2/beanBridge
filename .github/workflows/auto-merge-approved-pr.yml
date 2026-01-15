@@ -10,6 +10,12 @@ permissions:
   contents: write
   pull-requests: write
 
+# 并发控制：同一 PR 的自动合并只运行一个
+# 避免多个审批同时触发多个合并尝试
+concurrency:
+  group: auto-merge-pr-${{ github.event.pull_request.number || github.event.review.pull_request.number || 'unknown' }}
+  cancel-in-progress: false  # 不取消，等待完成（避免重复合并尝试）
+
 jobs:
   auto-merge:
     if: github.event.review.state == 'approved' || github.event.pull_request.title == 'Auto-sync DEG updates'
