@@ -38,33 +38,59 @@ jobs:
       - name: Build WASM
         working-directory: double-entry-generator
         run: |
-          make build-wasm
+          # 构建 WASM，即使 Makefile 最后复制 wasm_exec.js 失败也继续
+          # 因为我们的下一步会处理 wasm_exec.js 的复制
+          make build-wasm || {
+            echo "Makefile build-wasm failed (likely wasm_exec.js copy issue), checking if WASM file was generated..."
+            if [ -f "wasm-dist/double-entry-generator.wasm" ]; then
+              echo "✓ WASM file was generated successfully, continuing..."
+            else
+              echo "✗ WASM file was not generated, build failed"
+              exit 1
+            fi
+          }
           ls -lh wasm-dist/
 
       - name: Copy wasm_exec.js if missing
         working-directory: double-entry-generator
         run: |
-          # 如果 wasm_exec.js 不在 wasm-dist 目录中，从 GOROOT 复制
+          # 如果 wasm_exec.js 不在 wasm-dist 目录中，从 GOROOT 或 toolchain 复制
           if [ ! -f "wasm-dist/wasm_exec.js" ]; then
-            echo "wasm_exec.js not found in wasm-dist, copying from GOROOT..."
+            echo "wasm_exec.js not found in wasm-dist, searching for it..."
             GOROOT=$(go env GOROOT)
-            # 尝试新路径 (Go 1.24+)
+            echo "GOROOT: $GOROOT"
+            
+            # 首先尝试标准 GOROOT 路径
             if [ -f "$GOROOT/lib/wasm/wasm_exec.js" ]; then
               cp "$GOROOT/lib/wasm/wasm_exec.js" wasm-dist/
-              echo "Copied from $GOROOT/lib/wasm/wasm_exec.js"
-            # 尝试旧路径 (Go < 1.24)
+              echo "✓ Copied from $GOROOT/lib/wasm/wasm_exec.js"
             elif [ -f "$GOROOT/misc/wasm/wasm_exec.js" ]; then
               cp "$GOROOT/misc/wasm/wasm_exec.js" wasm-dist/
-              echo "Copied from $GOROOT/misc/wasm/wasm_exec.js"
+              echo "✓ Copied from $GOROOT/misc/wasm/wasm_exec.js"
             else
-              echo "Error: wasm_exec.js not found in GOROOT"
-              echo "GOROOT: $GOROOT"
-              ls -la "$GOROOT/lib/wasm/" 2>/dev/null || echo "lib/wasm not found"
-              ls -la "$GOROOT/misc/wasm/" 2>/dev/null || echo "misc/wasm not found"
-              exit 1
+              echo "Not found in GOROOT, searching in toolchain paths..."
+              
+              # 使用 find 命令在常见位置查找 wasm_exec.js
+              # 尝试 lib/wasm (Go 1.24+) 和 misc/wasm (旧版本)
+              WASM_EXEC_PATH=$(find "$HOME/go/pkg/mod" -name "wasm_exec.js" \( -path "*/toolchain@*/lib/wasm/wasm_exec.js" -o -path "*/toolchain@*/misc/wasm/wasm_exec.js" \) 2>/dev/null | head -1)
+              
+              if [ -n "$WASM_EXEC_PATH" ] && [ -f "$WASM_EXEC_PATH" ]; then
+                cp "$WASM_EXEC_PATH" wasm-dist/wasm_exec.js
+                echo "✓ Copied from toolchain: $WASM_EXEC_PATH"
+              else
+                echo "Error: wasm_exec.js not found"
+                echo "GOROOT: $GOROOT"
+                echo "Searching in $GOROOT/lib/wasm:"
+                ls -la "$GOROOT/lib/wasm/" 2>/dev/null || echo "lib/wasm not found"
+                echo "Searching in $GOROOT/misc/wasm:"
+                ls -la "$GOROOT/misc/wasm/" 2>/dev/null || echo "misc/wasm not found"
+                echo "Searching in toolchain:"
+                find "$HOME/go/pkg/mod" -name "wasm_exec.js" 2>/dev/null | head -5 || echo "No wasm_exec.js found in toolchain"
+                exit 1
+              fi
             fi
           else
-            echo "wasm_exec.js already exists in wasm-dist"
+            echo "✓ wasm_exec.js already exists in wasm-dist"
           fi
           ls -lh wasm-dist/
 
