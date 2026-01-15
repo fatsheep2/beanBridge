@@ -121,7 +121,6 @@ jobs:
       
       - name: Comment PR with preview link
         uses: actions/github-script@v7
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
         continue-on-error: true  # 如果评论失败不影响部署
         with:
           script: |
@@ -129,10 +128,11 @@ jobs:
             const repoName = context.repo.repo;
             const repoOwner = context.repo.owner;
             const previewUrl = `https://${repoOwner}.github.io/${repoName}/${branchName}/`;
+            const originalBranch = '${{ steps.branch-name.outputs.original }}';
             
             console.log(`✅ 预览部署成功！`);
             console.log(`📍 预览地址: ${previewUrl}`);
-            console.log(`📝 分支: ${{ steps.branch-name.outputs.original }}`);
+            console.log(`📝 分支: ${originalBranch}`);
             
             try {
               let prNumber;
@@ -140,15 +140,23 @@ jobs:
                 // PR 事件直接使用 PR number
                 prNumber = context.payload.pull_request.number;
               } else {
-                // Push 事件需要查找相关的 PR
+                // Push 或 workflow_dispatch 事件需要查找相关的 PR
+                const branchRef = context.eventName === 'workflow_dispatch' 
+                  ? originalBranch 
+                  : context.ref.replace('refs/heads/', '');
+                
+                console.log(`查找分支 ${branchRef} 相关的 PR...`);
                 const prs = await github.rest.pulls.list({
                   owner: repoOwner,
                   repo: repoName,
                   state: 'open',
-                  head: `${repoOwner}:${context.ref.replace('refs/heads/', '')}`
+                  head: `${repoOwner}:${branchRef}`
                 });
                 if (prs.data.length > 0) {
                   prNumber = prs.data[0].number;
+                  console.log(`找到 PR #${prNumber}`);
+                } else {
+                  console.log(`未找到分支 ${branchRef} 的开放 PR`);
                 }
               }
               
@@ -157,7 +165,7 @@ jobs:
                   owner: repoOwner,
                   repo: repoName,
                   issue_number: prNumber,
-                  body: `🎉 **预览部署成功！**\n\n✨ 预览地址: ${previewUrl}\n\n📝 分支: \`${{ steps.branch-name.outputs.original }}\`\n⏰ 部署时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`
+                  body: `🎉 **预览部署成功！**\n\n✨ 预览地址: ${previewUrl}\n\n📝 分支: \`${originalBranch}\`\n⏰ 部署时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`
                 });
                 console.log(`✅ 已在 PR #${prNumber} 中添加评论`);
               } else {
