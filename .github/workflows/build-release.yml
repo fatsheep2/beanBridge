@@ -1,0 +1,102 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify WASM files
+        run: |
+          # 检查 WASM 文件是否已存在于仓库中
+          if [ -f "public/wasm/double-entry-generator.wasm" ] && [ -f "public/wasm/wasm_exec.js" ]; then
+            echo "✓ WASM 文件已存在于仓库中，跳过构建步骤"
+            ls -lh public/wasm/
+          else
+            echo "✗ WASM 文件不存在，请确保已提交 WASM 文件到仓库"
+            echo "运行以下命令构建并提交 WASM 文件："
+            echo "  cd double-entry-generator && make build-wasm"
+            echo "  cp double-entry-generator/wasm-dist/* public/wasm/"
+            echo "  git add public/wasm/ && git commit -m 'Add WASM files'"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn run build
+
+      - name: Create dist.zip
+        run: |
+          cd dist
+          zip -r ../dist.zip .
+          cd ..
+          ls -la dist.zip
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="v$(date +'%Y%m%d-%H%M%S')"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist.zip
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: BeanBridge ${{ steps.get_version.outputs.version }}
+          body: |
+            ## BeanBridge ${{ steps.get_version.outputs.version }}
+            
+            ### 📦 离线版本
+            这是一个完整的离线版本，包含所有必要的文件。
+            
+            ### 🔒 隐私安全
+            建议下载离线版本使用，保护您的财务隐私。
+            
+            ### 📋 使用说明
+            1. 下载 `dist.zip` 文件
+            2. 解压到本地目录
+            3. **请在 dist 目录下用本地静态服务器访问，不要直接双击打开！**
+               - 操作步骤：
+                 - 进入解压后的 dist 目录：`cd dist`
+                 - 启动本地服务器：`npx serve`（推荐，需安装 Node.js）
+                 - 或：`python -m http.server 8080`（需安装 Python）
+               - 然后在浏览器访问 `http://localhost:3000`（或 8080）
+               - `yarn preview` 仅适用于开发者在完整项目根目录下预览
+            
+            ### 🚀 功能特性
+            - 支持多种支付平台（支付宝、微信等）
+            - 智能规则匹配
+            - 本地处理，保护隐私
+            - 响应式设计
+            
+            ### 🔗 相关链接
+            - [在线版本](https://1677883418.github.io/beanBridge/)
+            - [项目源码](https://github.com/1677883418/beanBridge)
+            - [double-entry-generator](https://github.com/deb-sig/double-entry-generator)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
