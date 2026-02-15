@@ -1,0 +1,67 @@
+{
+  "provider": "huobi",
+  "name": "火币交易所基础配置",
+  "description": "火币交易所交易记录的基础配置模板",
+  "config": {
+    "defaultCashAccount": "Assets:Huobi:Cash",
+    "defaultPositionAccount": "Assets:Huobi:Positions",
+    "defaultCommissionAccount": "Expenses:Huobi:Commission",
+    "defaultPnlAccount": "Income:Huobi:PnL",
+    "defaultCurrency": "CNY",
+    "rules": [
+      {
+        "name": "BTC/USDT交易",
+        "description": "BTC/USDT和BTC1S/USDT的买入交易",
+        "item": "BTC/USDT,BTC1S/USDT",
+        "type": "买入",
+        "txType": "币币交易",
+        "fullMatch": true,
+        "sep": ",",
+        "cashAccount": "Assets:Rule1:Cash",
+        "positionAccount": "Assets:Rule1:Positions",
+        "commissionAccount": "Expenses:Rule1:Commission",
+        "pnlAccount": "Income:Rule1:PnL",
+        "priority": 1
+      },
+      {
+        "name": "ETH/USDT交易",
+        "description": "ETH/USDT的买入交易",
+        "item": "ETH/USDT",
+        "type": "买入",
+        "txType": "币币交易",
+        "fullMatch": true,
+        "cashAccount": "Assets:Huobi:Cash",
+        "positionAccount": "Assets:Huobi:Positions:ETH",
+        "commissionAccount": "Expenses:Huobi:Commission",
+        "pnlAccount": "Income:Huobi:PnL",
+        "priority": 2
+      },
+      {
+        "name": "卖出交易",
+        "description": "所有卖出交易",
+        "type": "卖出",
+        "txType": "币币交易",
+        "cashAccount": "Assets:Huobi:Cash",
+        "positionAccount": "Assets:Huobi:Positions",
+        "commissionAccount": "Expenses:Huobi:Commission",
+        "pnlAccount": "Income:Huobi:PnL",
+        "priority": 3
+      },
+      {
+        "name": "充值",
+        "description": "充值操作",
+        "txType": "充值",
+        "cashAccount": "Assets:Huobi:Cash",
+        "priority": 4
+      },
+      {
+        "name": "提现",
+        "description": "提现操作",
+        "txType": "提现",
+        "cashAccount": "Assets:Huobi:Cash",
+        "commissionAccount": "Expenses:Huobi:Commission",
+        "priority": 5
+      }
+    ]
+  }
+} 
