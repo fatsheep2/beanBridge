@@ -3,10 +3,11 @@ name: Deploy Branch Preview to GitHub Pages
 on:
   push:
     branches:
-      # 监听所有功能分支，排除主分支
+      # 监听所有功能分支及 chore 同步分支，排除主分支
       - feat/**
       - fix/**
       - dev/**
+      - chore/**
       - wasm-support  # 临时支持旧分支名
       - '!main'
       - '!master'
