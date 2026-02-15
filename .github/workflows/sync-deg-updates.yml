@@ -52,6 +52,9 @@ jobs:
 
       - name: Build WASM
         working-directory: double-entry-generator
+        env:
+          # 强制使用当前安装的 Go，不随 DEG 的 go.mod 升级到 1.24，避免 wasm_exec.js 路径错误
+          GOTOOLCHAIN: local
         run: |
           make build-wasm
           ls -lh wasm-dist/
