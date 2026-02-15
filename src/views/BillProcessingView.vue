@@ -1,6 +1,6 @@
 <template>
   <div class="w-full px-4 sm:px-8 lg:px-12 py-10">
-    <div class="bg-white shadow-2xl rounded-2xl border border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 p-10">
+    <div class="card-wrap">
       <h1 class="text-3xl font-extrabold mb-8">账单处理</h1>
       
       <!-- 解析器选择组件 -->
@@ -31,88 +31,67 @@
 
       <!-- 元数据选项 -->
       <div class="mb-8" v-if="hasDataSource || selectedProvider">
-        <h2 class="text-xl font-bold mb-2">元数据选项</h2>
-        <div class="flex flex-wrap gap-4">
-          <label v-for="opt in metadataOptions" :key="opt.key" class="flex items-center space-x-2">
-            <input type="checkbox" v-model="selectedMetadata" :value="opt.key" />
-            <span>{{ opt.label }}</span>
-          </label>
-        </div>
+        <h2 class="text-xl font-bold mb-4">元数据选项</h2>
+        <van-checkbox-group v-model="selectedMetadata" direction="horizontal">
+            <van-checkbox
+              v-for="opt in metadataOptions"
+              :key="opt.key"
+              :name="opt.key"
+            >
+              {{ opt.label }}
+            </van-checkbox>
+          </van-checkbox-group>
       </div>
 
       <!-- 操作按钮 -->
       <div class="mb-8" v-if="hasDataSource || selectedProvider">
         <h2 class="text-xl font-bold mb-6">操作</h2>
-        <div class="flex justify-between items-center gap-6">
-          <div class="flex gap-6">
-            <button
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="flex flex-wrap gap-3">
+            <van-button
+              type="success"
+              size="large"
               @click="previewFile(selectedMetadata)"
-              :disabled="isProcessing || !canProcess"
-              class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold shadow-md disabled:opacity-50 text-lg"
+              :loading="isProcessing"
+              :disabled="!canProcess"
             >
               {{ isProcessing ? '处理中...' : '预览' }}
-            </button>
-            <button
+            </van-button>
+            <van-button
+              type="primary"
+              size="large"
               @click="processFile(selectedMetadata)"
-              :disabled="isProcessing || !canProcess"
-              class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-semibold shadow-md disabled:opacity-50 text-lg"
+              :loading="isProcessing"
+              :disabled="!canProcess"
             >
               {{ isProcessing ? '处理中...' : '生成 Beancount' }}
-            </button>
+            </van-button>
           </div>
-          <div class="flex gap-6">
-            <button
-              @click="goToRuleConfig"
-              class="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 font-semibold shadow-md text-lg"
-            >
-              <span class="material-icons mr-3">settings</span>
-              规则配置
-            </button>
-            <button
-              @click="testRules"
-              :disabled="isProcessing || !canProcess"
-              class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md disabled:opacity-50 text-lg"
-            >
-              <span class="material-icons mr-3">bug_report</span>
-              测试规则
-            </button>
+          <div class="flex flex-wrap gap-3">
+            <van-button size="large" @click="goToRuleConfig">规则配置</van-button>
+            <van-button type="warning" size="large" @click="testRules" :disabled="!canProcess">测试规则</van-button>
           </div>
         </div>
       </div>
 
       <!-- 错误信息 -->
-      <div v-if="error" class="mb-8 p-6 bg-red-50 border-2 border-red-300 text-red-800 rounded-lg font-semibold text-lg">
+      <van-notice-bar v-if="error" type="danger" left-icon="warning-o" class="mb-8">
         {{ error }}
-      </div>
+      </van-notice-bar>
 
       <!-- 结果展示组件 - 只在没有测试规则结果时显示 -->
       <ResultDisplay v-if="!ruleTestResult" :processing-result="processingResult" />
 
       <!-- 测试规则结果 - 只在有测试规则结果时显示 -->
-      <div v-if="ruleTestResult" class="mb-6">
-        <h2 class="text-lg font-semibold mb-4 dark:bg-gray-800">测试规则结果</h2>
-        <div class="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-600 rounded-lg p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-medium text-yellow-800 dark:text-yellow-200">规则测试报告</h3>
-            <button
-              @click="clearRuleTestResult"
-              class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200"
-            >
-              <span class="material-icons">close</span>
-            </button>
-          </div>
-          <div class="relative">
-            <pre class="bg-white dark:bg-gray-900 p-4 rounded text-sm overflow-x-auto max-h-96 overflow-y-auto text-yellow-800 dark:text-yellow-200">{{ ruleTestResult.data }}</pre>
-            <div class="absolute top-2 right-2 flex gap-2">
-              <button
-                @click="copyToClipboard(ruleTestResult.data)"
-                class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
-              >
-                <i class="fas fa-copy mr-1"></i>复制
-              </button>
-            </div>
+      <div v-if="ruleTestResult" class="card-wrap mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">测试规则结果</h3>
+          <div class="flex gap-2">
+            <van-button size="small" plain @click="clearRuleTestResult">关闭</van-button>
+            <van-button size="small" @click="copyToClipboard(ruleTestResult.data)">复制</van-button>
           </div>
         </div>
+        <pre class="p-4 bg-gray-1 rounded text-sm overflow-auto">{{ ruleTestResult.data }}</pre>
       </div>
     </div>
   </div>
@@ -195,6 +174,13 @@ const clearRuleTestResult = () => {
   ruleTestResult.value = null;
 };
 
+// 清除错误
+const clearError = () => {
+  if (error && typeof error === 'object' && 'value' in error) {
+    (error as { value: string }).value = '';
+  }
+};
+
 // 复制到剪贴板
 const copyToClipboard = async (text: string) => {
   try {
@@ -223,4 +209,13 @@ onMounted(() => {
     router.replace({ path: '/bill-processing', query: {} });
   }
 });
-</script> 
+</script>
+
+<style scoped>
+.card-wrap {
+  background: var(--van-cell-group-background, #fff);
+  border-radius: var(--van-radius-lg, 12px);
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+</style> 

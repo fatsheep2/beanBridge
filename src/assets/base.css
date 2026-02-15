@@ -62,14 +62,14 @@ html.dark * {
   scrollbar-color: #52525b transparent;
 }
 
-/* 选中文本样式 */
+/* 选中文本样式 - 绿色系 */
 ::selection {
-  background-color: #3b82f6;
+  background-color: #10b981; /* emerald-500 */
   color: #ffffff;
 }
 
 html.dark ::selection {
-  background-color: #60a5fa;
+  background-color: #34d399; /* emerald-400 */
   color: #ffffff;
 }
 

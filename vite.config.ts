@@ -3,12 +3,17 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
+import Components from 'unplugin-vue-components/vite'
+import { VantResolver } from '@vant/auto-import-resolver'
 
 // https://vite.dev/config/
 export default defineConfig(async () => {
   const plugins: any[] = [
     vue(),
     tailwindcss(),
+    Components({
+      resolvers: [VantResolver()],
+    }),
   ]
 
   // 只在开发环境时动态导入 Vue DevTools，避免在 Node.js 环境中访问 localStorage

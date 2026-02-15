@@ -54,21 +54,11 @@
 
     <!-- 生成的 Beancount 数据 -->
     <div v-if="processingResult.data && typeof processingResult.data === 'string'" class="mb-4">
-      <div class="flex justify-between items-center mb-2">
+      <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
         <h3 class="font-medium">生成的 Beancount 数据</h3>
-        <div class="flex gap-3">
-          <button
-            @click="copyToClipboard(processingResult.data)"
-            class="inline-flex items-center px-8 py-3.5 text-base font-bold text-white bg-green-600 hover:bg-green-700 rounded-xl shadow-lg transition-all duration-200"
-          >
-            <i class="fas fa-copy mr-2"></i>复制
-          </button>
-          <button
-            @click="downloadResult"
-            class="inline-flex items-center px-8 py-3.5 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg transition-all duration-200"
-          >
-            <i class="fas fa-download mr-2"></i>下载
-          </button>
+        <div class="flex gap-2">
+          <van-button size="small" type="primary" @click="copyToClipboard(processingResult.data)">复制</van-button>
+          <van-button size="small" @click="downloadResult">下载</van-button>
         </div>
       </div>
       <div class="relative">
@@ -98,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from 'vue'
 
 interface ProcessingResult {
   success: boolean;

@@ -2,12 +2,7 @@
   <div class="bg-white dark:bg-gray-800 border rounded-lg p-6 text-gray-900 dark:text-gray-100">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold">{{ isEditing ? '编辑规则' : '新增规则' }}</h3>
-      <button
-        @click="$emit('close')"
-        class="text-gray-400 hover:text-gray-600"
-      >
-        <span class="material-icons">close</span>
-      </button>
+      <van-button size="small" plain @click="$emit('close')">关闭</van-button>
     </div>
 
     <form @submit.prevent="saveRule" class="space-y-4">
@@ -247,27 +242,16 @@
       </div>
 
       <!-- 操作按钮 -->
-      <div class="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <button
-          type="button"
-          @click="$emit('close')"
-          class="inline-flex items-center px-10 py-4 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-2xl shadow-lg transition-all duration-200"
-        >
-          取消
-        </button>
-        <button
-          type="submit"
-          class="inline-flex items-center px-10 py-4 text-lg font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-lg transition-all duration-200"
-        >
-          {{ isEditing ? '更新' : '创建' }}
-        </button>
+      <div class="pt-4 border-t border-gray-200 flex justify-end gap-2 flex-wrap">
+        <van-button @click="$emit('close')">取消</van-button>
+        <van-button type="primary" native-type="submit">{{ isEditing ? '更新' : '创建' }}</van-button>
       </div>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue'
 import type { Rule } from '../types/rule-config';
 
 interface Props {

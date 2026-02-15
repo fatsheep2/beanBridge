@@ -6,9 +6,9 @@
     <div class="bg-gray-50 p-4 rounded-lg mb-6">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-medium text-gray-800">示例数据预览</h3>
-        <button @click="showSampleData = !showSampleData" class="text-indigo-600 text-sm">
+        <van-button size="small" plain @click="showSampleData = !showSampleData">
           {{ showSampleData ? '隐藏' : '显示' }}示例
-        </button>
+        </van-button>
       </div>
       
       <transition name="fade">
@@ -46,26 +46,20 @@
           </select>
         </div>
         <div class="flex items-center">
-          <button @click="testFieldMapping(field)" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200">
-            测试
-          </button>
+          <van-button size="small" @click="testFieldMapping(field)">测试</van-button>
         </div>
       </div>
     </div>
     
-    <div class="mt-6 flex justify-between">
-      <button @click="$emit('prev-step')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-        上一步
-      </button>
-      <button @click="$emit('next-step')" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-        下一步
-      </button>
+    <div class="mt-6 flex justify-between flex-wrap gap-2">
+      <van-button @click="$emit('prev-step')">上一步</van-button>
+      <van-button type="primary" @click="$emit('next-step')">下一步</van-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from 'vue'
 
 interface MappingField {
   label: string;

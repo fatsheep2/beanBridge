@@ -38,6 +38,21 @@ class YamlConfigService {
   }
 
   /**
+   * 移除指定 Provider 的已保存配置（用于解析失败时清除无效数据）
+   */
+  removeConfig(provider: string): void {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY)
+      if (!stored) return
+      const configs = JSON.parse(stored)
+      delete configs[provider]
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(configs))
+    } catch (error) {
+      console.error('Failed to remove config:', error)
+    }
+  }
+
+  /**
    * 保存 YAML 配置
    */
   saveConfig(provider: string, yamlContent: string): void {
@@ -57,6 +72,7 @@ class YamlConfigService {
 
   /**
    * 获取默认配置模板
+   * OKLink 等需要「地址 -> 配置」的 map 结构，不能是 { rules: [] }
    */
   getDefaultConfig(provider: string): string {
     const defaultConfig: DegConfig = {
@@ -67,8 +83,23 @@ class YamlConfigService {
       title: 'BeanBridge 财务记录'
     }
 
-    defaultConfig[provider] = {
-      rules: []
+    if (provider === 'oklink') {
+      defaultConfig.oklink = {
+        '0x你的地址': {
+          defaultCashAccount: 'Assets:Crypto:Ethereum',
+          rules: [
+            {
+              tokenSymbol: 'USDT',
+              methodAccount: 'Assets:Crypto:Ethereum:USDT',
+              targetAccount: 'Income:Crypto:Transfer'
+            }
+          ]
+        }
+      }
+    } else {
+      defaultConfig[provider] = {
+        rules: []
+      }
     }
 
     return yaml.stringify(defaultConfig, {
