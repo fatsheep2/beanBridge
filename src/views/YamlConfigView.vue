@@ -1,93 +1,41 @@
 <template>
-  <div class="w-full min-h-screen bg-gray-50 dark:bg-gray-900 px-6 sm:px-12 lg:px-24 py-8">
-      
-      <!-- 页面标题 -->
-      <div class="flex items-center justify-between mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">YAML 规则配置</h1>
-        <router-link 
-          to="/"
-          class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors"
-        >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          返回首页
-        </router-link>
-      </div>
-
+  <div class="page-rule">
       <!-- Provider选择 -->
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">选择解析器</h2>
+      <div class="card mb-6">
+        <h2 class="card-title mb-4">选择解析器</h2>
         <ProviderSelector
           v-if="supportedProviders.length > 0"
           :supported-providers="supportedProviders"
           :selected-provider="selectedProvider as any"
           @provider-selected="setProvider"
         />
-        <div v-else class="p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-700">
-          <p class="text-gray-600 dark:text-gray-400 text-sm">正在加载解析器列表...</p>
-        </div>
+        <div v-else class="p-4 rounded-md text-secondary text-sm">正在加载解析器列表...</div>
       </div>
 
       <!-- 配置内容 -->
       <div v-if="selectedProvider" class="space-y-6">
         <!-- 配置头部 -->
-        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div class="card">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ getProviderDisplayName(selectedProvider) }}</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">使用 double-entry-generator 的 YAML 配置格式</p>
+              <h3 class="text-xl font-semibold text-gray-900">{{ getProviderDisplayName(selectedProvider) }}</h3>
+              <p class="text-sm text-secondary mt-1">使用 double-entry-generator 的 YAML 配置格式</p>
             </div>
-            <div class="flex gap-4">
-              <button
-                @click="loadFromExample"
-                class="inline-flex items-center px-8 py-4 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-2xl shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-800"
-                :disabled="isLoadingExample"
-              >
-                <svg v-if="!isLoadingExample" class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <svg v-else class="w-6 h-6 mr-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+            <div class="flex flex-wrap gap-2">
+              <van-button :loading="isLoadingExample" :disabled="isLoadingExample" @click="loadFromExample">
                 {{ isLoadingExample ? '加载中...' : '加载示例' }}
-              </button>
-              <button
-                @click="showHistoryModal = true"
-                class="inline-flex items-center px-8 py-4 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-2xl shadow-xl transition-all duration-200"
-              >
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                历史
-              </button>
+              </van-button>
+              <van-button @click="showHistoryModal = true">历史</van-button>
             </div>
           </div>
-          <div class="flex gap-4 mt-4">
-            <button
-              @click="exportConfig"
-              class="inline-flex items-center px-8 py-4 text-lg font-bold text-white bg-green-600 hover:bg-green-700 rounded-2xl shadow-xl transition-all duration-200"
-            >
-              <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              导出
-            </button>
-            <button
-              @click="importConfig"
-              class="inline-flex items-center px-8 py-4 text-lg font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-2xl shadow-xl transition-all duration-200"
-            >
-              <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              导入
-            </button>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <van-button type="primary" @click="exportConfig">导出</van-button>
+            <van-button plain type="primary" @click="importConfig">导入</van-button>
           </div>
         </div>
 
         <!-- YAML 编辑器 -->
-        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div class="card">
           <YamlConfigEditor
             v-model="yamlContent"
             :provider="selectedProvider"
@@ -97,26 +45,9 @@
         </div>
 
         <!-- 操作按钮 -->
-        <div class="flex flex-wrap justify-end gap-4 my-6">
-          <button
-            @click="saveConfig"
-            class="inline-flex items-center px-12 py-5 text-xl font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-xl transition-all duration-200"
-          >
-            <svg class="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-            </svg>
-            保存配置
-          </button>
-          <button
-            @click="goToBillProcessing"
-            class="inline-flex items-center px-12 py-5 text-xl font-bold text-white bg-green-600 hover:bg-green-700 rounded-2xl shadow-xl transition-all duration-200"
-          >
-            <svg class="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            处理账单
-          </button>
+        <div class="my-6 flex flex-wrap gap-2 justify-end">
+          <van-button type="primary" @click="saveConfig">保存配置</van-button>
+          <van-button plain type="primary" @click="goToBillProcessing">处理账单</van-button>
         </div>
 
         <!-- 规则列表可视化 -->
@@ -128,57 +59,29 @@
 
       <!-- 未选择Provider的提示 -->
       <div v-else class="text-center py-12">
-        <span class="material-icons text-4xl text-gray-400 dark:text-gray-500 mb-4">storage</span>
-        <p class="text-gray-600 dark:text-gray-300">请先选择一个解析器来配置规则</p>
+        <van-empty description="请先选择一个解析器来配置规则" />
       </div>
 
-    <!-- 历史记录模态框 -->
-    <div v-if="showHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-2xl font-bold">历史记录</h3>
-          <button
-            @click="showHistoryModal = false"
-            class="text-gray-400 hover:text-gray-600 dark:text-gray-500 text-2xl"
-          >
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-
-        <div class="space-y-2">
-          <div
-            v-for="history in providerHistory"
-            :key="history.id"
-            class="border-2 border-gray-100 dark:border-gray-800 rounded-xl p-4 hover:bg-gray-100 dark:hover:bg-gray-900 cursor-pointer"
-            @click="applyHistory(history.id)"
-          >
-            <div class="flex items-center justify-between">
-              <div>
-                <h4 class="font-medium">{{ history.provider }}</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-300">{{ formatDate(history.createdAt) }}</p>
-              </div>
-              <div class="flex space-x-2">
-                <button
-                  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  应用
-                </button>
-                <button
-                  @click.stop="deleteHistory(history.id)"
-                  class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  <span class="material-icons text-sm">delete</span>
-                </button>
-              </div>
-            </div>
+    <!-- 历史记录弹层 -->
+    <van-popup v-model:show="showHistoryModal" round position="bottom" :style="{ maxHeight: '70%' }">
+      <div class="popup-header">
+        <h3 class="popup-title">历史记录</h3>
+        <van-button size="small" plain @click="showHistoryModal = false">关闭</van-button>
+      </div>
+      <div class="popup-body">
+        <div v-for="history in providerHistory" :key="history.id" class="history-item" @click="applyHistory(history.id)">
+          <div class="history-info">
+            <h4 class="font-medium">{{ history.provider }}</h4>
+            <p class="text-sm text-secondary">{{ formatDate(history.createdAt) }}</p>
+          </div>
+          <div class="flex gap-2">
+            <van-button size="small" type="primary" @click.stop="applyHistory(history.id)">应用</van-button>
+            <van-button size="small" type="danger" plain @click.stop="deleteHistory(history.id)">删除</van-button>
           </div>
         </div>
-
-        <div v-if="providerHistory.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-          暂无历史记录
-        </div>
+        <van-empty v-if="providerHistory.length === 0" description="暂无历史记录" />
       </div>
-    </div>
+    </van-popup>
   </div>
 </template>
 
@@ -186,6 +89,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDegWasm } from '@/composables/useDegWasm'
+import { useSharedProvider } from '@/composables/useSharedProvider'
 import { yamlConfigService } from '@/services/yaml-config-service'
 import ProviderSelector from '@/components/ProviderSelector.vue'
 import YamlConfigEditor from '@/components/YamlConfigEditor.vue'
@@ -196,6 +100,7 @@ import type { ProviderType } from '@/types/provider'
 const route = useRoute()
 const router = useRouter()
 const deg = useDegWasm()
+const { sharedProvider, setSharedProvider } = useSharedProvider()
 
 // 响应式数据
 const selectedProvider = ref<string | null>(null)
@@ -231,6 +136,7 @@ const providerHistory = computed(() => {
 // 方法
 const setProvider = async (provider: string) => {
   selectedProvider.value = provider
+  setSharedProvider(provider)
   try {
     await deg.setProvider(provider)
     loadConfig()
@@ -291,7 +197,7 @@ const saveConfig = async () => {
     yamlConfigService.saveConfig(selectedProvider.value, yamlContent.value)
 
     // 更新到 WASM
-    await deg.updateConfig(validation.config!)
+    await deg.updateConfig(validation.config!, selectedProvider.value)
 
     alert('配置保存成功！')
   } catch (error) {
@@ -434,14 +340,16 @@ const getProviderDisplayName = (provider: string) => {
   return deg.getProviderDisplayName(provider)
 }
 
-// 从URL参数初始化Provider
+// 从 URL 或跨页共享状态初始化 Provider
 const initFromRoute = () => {
   const providerParam = route.query.provider as string
-  if (providerParam) {
+  const list = supportedProviders.value
+  if (providerParam && list.some(p => p.type === providerParam)) {
     setProvider(providerParam)
-  } else if (supportedProviders.value.length > 0 && !selectedProvider.value) {
-    // 如果没有指定 provider，使用第一个支持的 provider
-    setProvider(supportedProviders.value[0].type)
+  } else if (sharedProvider.value && list.some(p => p.type === sharedProvider.value)) {
+    setProvider(sharedProvider.value!)
+  } else if (list.length > 0 && !selectedProvider.value) {
+    setProvider(list[0].type)
   }
 }
 
@@ -475,3 +383,55 @@ onMounted(async () => {
 })
 </script>
 
+<style scoped>
+.page-rule {
+  width: 100%;
+  min-height: 100%;
+}
+.card {
+  background: var(--van-cell-group-background, #fff);
+  border-radius: var(--van-radius-lg, 12px);
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.text-secondary {
+  color: #6b7280;
+}
+.text-gray-900 {
+  color: #1f2937;
+}
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--van-gray-2, #ebedf0);
+}
+.popup-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.popup-body {
+  padding: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: var(--van-gray-1, #f7f8fa);
+}
+.history-info {
+  flex: 1;
+}
+</style>

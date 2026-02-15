@@ -1,0 +1,380 @@
+/* Vant 4 全局主题：美观大气 */
+:root {
+  /* 主色：沉稳蓝绿，兼顾专业与舒适 */
+  --van-primary-color: #0d9488;
+  --van-success-color: #059669;
+  --van-warning-color: #d97706;
+  --van-danger-color: #dc2626;
+  /* 圆角统一略大，更现代 */
+  --van-radius-lg: 12px;
+  --van-radius-md: 10px;
+  --van-radius-sm: 8px;
+  /* 导航栏 */
+  --van-nav-bar-height: 48px;
+  --van-nav-bar-title-font-size: 17px;
+  --van-nav-bar-title-text-color: #1f2937;
+  --van-nav-bar-background: #fff;
+  /* 底部导航 */
+  --van-tabbar-height: 56px;
+  --van-tabbar-item-active-color: #0d9488;
+  /* 按钮 */
+  --van-button-primary-background: #0d9488;
+  --van-button-primary-border-color: #0d9488;
+  --van-button-default-height: 44px;
+  --van-button-large-height: 48px;
+  /* 单元格/卡片 */
+  --van-cell-group-background: #fff;
+  --van-cell-font-size: 15px;
+  /* 通用间距 */
+  --van-padding-md: 14px;
+  --van-padding-lg: 16px;
+}
+
+/* YAML 编辑器：浅色模式白底黑字（随 data-theme 切换） */
+.yaml-textarea {
+  background: #fff !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1d5db !important;
+}
+.yaml-textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.35);
+}
+.yaml-textarea::placeholder {
+  color: #9ca3af;
+}
+.yaml-config-editor h3 {
+  color: #1f2937;
+}
+.yaml-footer {
+  color: #6b7280;
+}
+[data-theme="dark"] .yaml-textarea {
+  background: #1f2937 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+[data-theme="dark"] .yaml-textarea:focus {
+  box-shadow: 0 0 0 2px rgba(107, 144, 128, 0.4);
+}
+[data-theme="dark"] .yaml-textarea::placeholder {
+  color: #9ca3af;
+}
+[data-theme="dark"] .yaml-config-editor h3 {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .yaml-footer {
+  color: #9ca3af !important;
+}
+
+/* 夜间模式：黑底白字，选中态用柔和灰绿不刺眼 */
+[data-theme="dark"] {
+  --van-primary-color: #6b9080;
+  --van-nav-bar-title-text-color: #f3f4f6;
+  --van-nav-bar-background: #1f2937;
+  --van-tabbar-item-active-color: #94a3b8;
+  --van-tabbar-background: #1f2937;
+  --van-cell-group-background: #111827;
+  --van-gray-1: #1f2937;
+  --van-gray-2: #374151;
+  --van-gray-3: #4b5563;
+  --van-gray-4: #6b7280;
+  --van-gray-5: #9ca3af;
+  --van-gray-6: #d1d5db;
+  --van-gray-7: #e5e7eb;
+  --van-background: #111827;
+  --van-background-2: #1f2937;
+  --van-text-color: #f3f4f6;
+  --van-button-default-color: #f3f4f6;
+  --van-button-default-background: #1f2937;
+  --van-button-default-border-color: #4b5563;
+  --van-button-plain-background: transparent;
+  --van-tag-default-color: #9ca3af;
+  --van-tag-plain-background: #1f2937;
+  /* 底部 Tab：黑底，未选中白字，选中蓝色 */
+  --van-tabbar-item-active-background: #1f2937;
+  --van-tabbar-item-active-color: #60a5fa;
+  --van-tabbar-item-text-color: #f3f4f6;
+}
+
+[data-theme="dark"] html,
+[data-theme="dark"] body,
+[data-theme="dark"] .app-layout,
+[data-theme="dark"] .layout-main,
+[data-theme="dark"] #app {
+  background: #111827 !important;
+}
+
+/* 顶部导航栏：深色下必须深底 */
+[data-theme="dark"] .van-nav-bar {
+  background: #1f2937 !important;
+}
+[data-theme="dark"] .van-nav-bar__content {
+  background: #1f2937 !important;
+}
+[data-theme="dark"] .van-nav-bar__title {
+  color: #f3f4f6 !important;
+}
+
+/* 底部导航栏：黑底白字，选中项蓝色 */
+[data-theme="dark"] .van-tabbar,
+[data-theme="dark"] .van-tabbar--fixed,
+[data-theme="dark"] .van-tabbar__placeholder {
+  background: #1f2937 !important;
+}
+[data-theme="dark"] .van-tabbar-item {
+  background: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .van-tabbar-item--active {
+  background: #1f2937 !important;
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .van-tabbar-item__text {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .van-tabbar-item--active .van-tabbar-item__text {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .van-tabbar-item__icon .van-icon {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .van-tabbar-item--active .van-tabbar-item__icon .van-icon {
+  color: #60a5fa !important;
+}
+
+/* 解析器：分类按钮（全部、支付平台、银行、加密货币）深色 */
+[data-theme="dark"] .van-button--default {
+  background: #1f2937 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+
+/* 规则配置页：处理账单、保存等 plain 主按钮深色下不白底 */
+[data-theme="dark"] .van-button--plain.van-button--primary {
+  background: #1f2937 !important;
+  color: #94a3b8 !important;
+  border-color: #4b5563 !important;
+}
+
+/* 规则列表区域深色：整块、列表头、分组头、规则卡片内 cell 均随主题切换 */
+[data-theme="dark"] .rule-list-viewer {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+[data-theme="dark"] .rule-list-viewer .van-cell-group {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+[data-theme="dark"] .rule-list-viewer .van-cell,
+[data-theme="dark"] .rule-list-viewer .list-header,
+[data-theme="dark"] .rule-list-viewer .group-header .van-cell,
+[data-theme="dark"] .rule-list-viewer .rule-card .van-cell {
+  background: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .rule-list-viewer .van-cell__title,
+[data-theme="dark"] .rule-list-viewer .van-cell__value {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .rule-list-viewer .van-cell__label {
+  color: #9ca3af !important;
+}
+[data-theme="dark"] .rule-list-viewer .van-cell::after {
+  border-color: #374151 !important;
+}
+[data-theme="dark"] .rule-list-viewer .rule-card {
+  border-color: #374151 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+[data-theme="dark"] .rule-list-viewer h3,
+[data-theme="dark"] .rule-list-viewer h4 {
+  color: #f3f4f6 !important;
+}
+
+/* 解析器：CSV/Excel 等标签深色 */
+[data-theme="dark"] .van-tag--plain {
+  background: #1f2937 !important;
+  color: #d1d5db !important;
+  border-color: #4b5563 !important;
+}
+
+/* 解析器选择器：深色下整块和卡片都深底，覆盖组件 scoped 样式 */
+[data-theme="dark"] .provider-card {
+  background: #1f2937 !important;
+}
+
+[data-theme="dark"] .provider-card .icon-box {
+  background: #374151 !important;
+}
+
+[data-theme="dark"] .provider-card .icon-box-selected {
+  background: rgba(13, 148, 136, 0.25) !important;
+  border-color: var(--van-primary-color) !important;
+}
+
+[data-theme="dark"] .provider-card h4 {
+  color: #f3f4f6 !important;
+}
+
+[data-theme="dark"] .provider-card p {
+  color: #9ca3af !important;
+}
+
+[data-theme="dark"] .provider-card .text-gray-600 {
+  color: #9ca3af !important;
+}
+
+[data-theme="dark"] .provider-card-selected {
+  border-color: var(--van-primary-color) !important;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-wrap {
+  background: #1f2937;
+}
+/* 规则/配置页、账单页内 .card 被 scoped 样式覆盖，用更高优先级强制深色（含「选择解析器」整块） */
+[data-theme="dark"] .page-rule .card,
+[data-theme="dark"] .page-rule .card-wrap,
+[data-theme="dark"] .page-bill .card,
+[data-theme="dark"] .page-bill .card-wrap {
+  background: #1f2937 !important;
+}
+
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .page-bill .card-title,
+[data-theme="dark"] .page-rule .card-title {
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .text-secondary,
+[data-theme="dark"] .text-gray-600,
+[data-theme="dark"] .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+[data-theme="dark"] .result-pre,
+[data-theme="dark"] .van-field__control {
+  background: #374151 !important;
+  color: #e5e7eb !important;
+  border-color: #4b5563;
+}
+
+/* YAML 深色已在上面 .yaml-textarea / .yaml-footer 中与浅色一起定义 */
+[data-theme="dark"] .yaml-config-editor .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+/* 上传账单区域：深色背景 */
+[data-theme="dark"] .upload-area {
+  background: #1f2937 !important;
+  border-color: #4b5563 !important;
+}
+[data-theme="dark"] .upload-text {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .upload-hint {
+  color: #9ca3af !important;
+}
+[data-theme="dark"] .file-card {
+  background: #1f2937 !important;
+}
+[data-theme="dark"] .file-name {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .file-size {
+  color: #9ca3af !important;
+}
+
+/* 分页等其它默认按钮与文字 */
+[data-theme="dark"] .van-uploader__upload {
+  background: #1f2937 !important;
+}
+[data-theme="dark"] .history-item,
+[data-theme="dark"] .history-info h4 {
+  color: #f3f4f6;
+}
+[data-theme="dark"] .popup-title {
+  color: #f3f4f6;
+}
+[data-theme="dark"] .popup-header {
+  border-color: #374151;
+}
+[data-theme="dark"] .van-popup {
+  background: #1f2937 !important;
+}
+
+/* 首页：深色下标题与描述白字 */
+[data-theme="dark"] .hero-title,
+[data-theme="dark"] .section-title {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .hero-desc {
+  color: #9ca3af !important;
+}
+
+/* 账单页：输出格式单选项、处理结果统计行、规则匹配分析整块 深色 */
+[data-theme="dark"] .page-bill .van-radio__label {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .page-bill .van-radio__icon--checked .van-icon {
+  color: var(--van-primary-color);
+}
+[data-theme="dark"] .page-bill .card .rounded-lg.bg-gray-1 {
+  background: #374151 !important;
+  color: #e5e7eb !important;
+}
+[data-theme="dark"] .page-bill .card .rounded-lg.bg-gray-1 .font-medium,
+[data-theme="dark"] .page-bill .card .rounded-lg.bg-gray-1 span {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .page-bill .card .rounded-lg.bg-gray-1 .text-secondary {
+  color: #9ca3af !important;
+}
+
+/* 规则匹配分析：整块、标题、统计、进度、交易明细 深色 */
+[data-theme="dark"] .rule-match-analysis {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+[data-theme="dark"] .rule-match-analysis .van-cell-group {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+[data-theme="dark"] .rule-match-analysis .van-cell,
+[data-theme="dark"] .rule-match-analysis .flex.items-center.justify-between {
+  background: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .rule-match-analysis .van-cell__title,
+[data-theme="dark"] .rule-match-analysis .van-cell__value {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .rule-match-analysis .van-cell__label {
+  color: #9ca3af !important;
+}
+[data-theme="dark"] .rule-match-analysis .van-cell::after {
+  border-color: #374151 !important;
+}
+[data-theme="dark"] .rule-match-analysis .pa-4,
+[data-theme="dark"] .rule-match-analysis .section-title {
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .rule-match-analysis .text-secondary {
+  color: #9ca3af !important;
+}
+[data-theme="dark"] .rule-match-analysis .tx-card {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+[data-theme="dark"] .rule-match-analysis .transaction-list {
+  color: #e5e7eb;
+}
+[data-theme="dark"] .rule-match-analysis .suggestion-card {
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+}
+[data-theme="dark"] .rule-match-analysis .suggestion-text {
+  color: #e5e7eb !important;
+}

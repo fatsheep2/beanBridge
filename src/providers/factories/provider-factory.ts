@@ -3,6 +3,7 @@ import { ProviderType } from '../../types/provider';
 import { AlipayProvider } from '../payment/alipay-provider';
 import { WechatProvider } from '../payment/wechat-provider';
 import { HuobiProvider } from '../crypto/huobi-provider';
+import { OKLinkProvider } from '../crypto/oklink-provider';
 import { HtsecProvider } from '../securities/htsec-provider';
 import { IcbcProvider } from '../bank/icbc-provider';
 import { TdProvider } from '../bank/td-provider';
@@ -19,6 +20,7 @@ export class ProviderFactory {
     [ProviderType.Alipay, AlipayProvider],
     [ProviderType.Wechat, WechatProvider],
     [ProviderType.Huobi, HuobiProvider],
+    [ProviderType.OKLink, OKLinkProvider],
     [ProviderType.Htsec, HtsecProvider],
     [ProviderType.Icbc, IcbcProvider],
     [ProviderType.Td, TdProvider],
@@ -72,6 +74,10 @@ export class ProviderFactory {
       return ProviderType.Huobi;
     }
 
+    if (lowerFilename.includes('oklink') || lowerFilename.includes('ok_link')) {
+      return ProviderType.OKLink;
+    }
+
     if (lowerFilename.includes('htsec') || lowerFilename.includes('华泰') || lowerFilename.includes('ht')) {
       return ProviderType.Htsec;
     }
@@ -99,6 +105,9 @@ export class ProviderFactory {
       }
       if (headerText.includes('火币') || headerText.includes('huobi')) {
         return ProviderType.Huobi;
+      }
+      if (headerText.includes('交易哈希') && (headerText.includes('代币') || headerText.includes('token'))) {
+        return ProviderType.OKLink;
       }
       if (headerText.includes('华泰') || headerText.includes('htsec')) {
         return ProviderType.Htsec;

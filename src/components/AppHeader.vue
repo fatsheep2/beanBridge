@@ -4,11 +4,11 @@
       <div class="flex justify-between items-center h-16">
         <!-- Logo -->
         <router-link to="/" class="flex items-center gap-3 group">
-          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-shadow">
+          <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
             <img :src="logoPath" class="w-6 h-6" alt="Logo" @error="handleImageError" />
           </div>
           <div class="flex flex-col">
-            <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+            <span class="text-xl font-bold text-emerald-600 dark:text-emerald-400">
               BeanBridge
             </span>
             <span class="text-xs text-gray-500 dark:text-gray-400 -mt-1">账单转换工具</span>
@@ -19,20 +19,33 @@
         <nav class="hidden md:flex items-center gap-1">
           <router-link 
             to="/bill-processing"
-            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
           >
             账单处理
           </router-link>
           <router-link 
             to="/rule-config"
-            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
           >
             规则配置
           </router-link>
         </nav>
         
         <!-- Actions -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <!-- 主题切换按钮 -->
+          <van-button
+            plain
+            round
+            @click="toggleTheme"
+            :title="themeMode === 'light' ? '浅色模式' : themeMode === 'dark' ? '深色模式' : '跟随系统'"
+            class="hidden sm:flex"
+          >
+            <span v-if="themeMode === 'light'">☀️</span>
+            <span v-else-if="themeMode === 'dark'">🌙</span>
+            <span v-else>💻</span>
+          </van-button>
+          
           <a 
             href="https://github.com/fatsheep2/beanBridge" 
             target="_blank"
@@ -52,6 +65,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useTheme } from '../composables/useTheme';
+
+const { themeMode, toggleTheme } = useTheme();
 
 const logoPath = computed(() => {
   const base = import.meta.env.BASE_URL || '/';

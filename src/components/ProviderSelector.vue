@@ -2,159 +2,89 @@
   <div v-if="supportedProviders.length > 0">
     
     <!-- 分类选择 -->
-    <div class="mb-8">
-      <div class="flex flex-wrap gap-3 justify-center">
-        <button 
+    <div class="mb-6">
+      <div class="flex flex-wrap gap-2 justify-center">
+        <van-button
           v-for="category in categories" 
           :key="category.value"
           @click="selectedCategory = category.value"
-          :class="[
-            'px-6 py-3 rounded-xl text-base font-semibold transition-all duration-300',
-            selectedCategory === category.value 
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 scale-105' 
-              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 hover:scale-105'
-          ]"
+          :type="selectedCategory === category.value ? 'primary' : 'default'"
+          size="small"
+          round
         >
           {{ category.label }}
-        </button>
+        </van-button>
       </div>
     </div>
     
     <!-- 解析器卡片网格 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-      <button 
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+      <div
         v-for="provider in paginatedProviders" 
         :key="provider.type"
+        :class="['provider-card cursor-pointer', props.selectedProvider === provider.type ? 'provider-card-selected' : '']"
         @click="selectProvider(provider.type)"
-        :class="[
-          'group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 transform hover:scale-105',
-          props.selectedProvider === provider.type
-            ? 'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-500 shadow-xl shadow-blue-500/20'
-            : 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 shadow-lg hover:shadow-xl'
-        ]"
       >
-        <!-- 背景装饰 -->
-        <div 
-          v-if="props.selectedProvider === provider.type"
-          class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full -mr-12 -mt-12"
-        ></div>
-        
-        <div class="relative">
+        <div class="flex flex-col">
           <!-- Logo -->
           <div class="flex items-center gap-4 mb-4">
             <div :class="[
-              'w-16 h-16 flex-shrink-0 flex items-center justify-center rounded-2xl transition-all duration-300 relative overflow-hidden',
-              props.selectedProvider === provider.type
-                ? 'bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/50'
-                : 'bg-gray-50 dark:bg-gray-700/50 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30'
+              'w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-xl icon-box-transition',
+              props.selectedProvider === provider.type ? 'icon-box-selected' : 'icon-box'
             ]">
               <img 
                 v-if="!imageErrors[provider.type]"
                 :src="provider.icon" 
-                :class="[
-                  'object-contain transition-all duration-300',
-                  props.selectedProvider === provider.type ? 'w-10 h-10' : 'w-9 h-9 group-hover:w-10 group-hover:h-10'
-                ]"
+                class="w-9 h-9 object-contain"
                 :alt="provider.name" 
                 @error="() => handleImageError(provider.type, provider.name)" 
               />
-              <div 
-                v-else
-                :class="[
-                  'flex items-center justify-center text-4xl transition-all duration-300',
-                  props.selectedProvider === provider.type ? 'w-10 h-10' : 'w-9 h-9'
-                ]"
-              >
-                {{ getPlaceholderEmoji(provider.name) }}
-              </div>
+              <span v-else class="text-2xl">{{ getPlaceholderEmoji(provider.name) }}</span>
             </div>
-            
-            <!-- 选中标记 -->
-            <div 
-              v-if="props.selectedProvider === provider.type"
-              class="ml-auto"
-            >
-              <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-              </div>
+            <div v-if="props.selectedProvider === provider.type" class="ml-auto text-primary">
+              <van-icon name="success" size="20" />
             </div>
           </div>
-          
-          <!-- 信息 -->
           <div>
-            <h4 :class="[
-              'text-lg font-bold mb-2 transition-colors',
-              props.selectedProvider === provider.type
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'
-            ]">
-              {{ provider.name }}
-            </h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              {{ provider.description }}
-            </p>
-            <div class="flex flex-wrap gap-2">
-              <span 
+            <h4 class="text-base font-bold mb-2 text-gray-900">{{ provider.name }}</h4>
+            <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ provider.description }}</p>
+            <div class="flex flex-wrap gap-1">
+              <van-tag
                 v-for="format in provider.formats" 
                 :key="format"
-                :class="[
-                  'px-2 py-1 rounded-lg text-xs font-medium',
-                  props.selectedProvider === provider.type
-                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                ]"
+                :type="props.selectedProvider === provider.type ? 'primary' : 'default'"
+                size="medium"
+                plain
               >
                 {{ format }}
-              </span>
+              </van-tag>
             </div>
           </div>
         </div>
-      </button>
+      </div>
     </div>
 
     <!-- 分页控件 -->
     <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <button
-          @click="currentPage = Math.max(1, currentPage - 1)"
-          :disabled="currentPage === 1"
-          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 dark:disabled:hover:border-gray-700 transition-all"
-        >
+      <div class="flex items-center gap-2 flex-wrap">
+        <van-button size="small" :disabled="currentPage === 1" @click="currentPage = Math.max(1, currentPage - 1)">
           上一页
-        </button>
-
-        <div class="flex items-center gap-1">
-          <button
-            v-for="page in visiblePages"
-            :key="page"
-            @click="currentPage = page"
-            :class="[
-              'px-4 py-2 text-sm font-medium rounded-xl transition-all',
-              page === currentPage
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500'
-            ]"
-          >
-            {{ page }}
-          </button>
-        </div>
-
-        <button
-          @click="currentPage = Math.min(totalPages, currentPage + 1)"
-          :disabled="currentPage === totalPages"
-          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 dark:disabled:hover:border-gray-700 transition-all"
+        </van-button>
+        <van-button
+          v-for="page in visiblePages"
+          :key="page"
+          size="small"
+          :type="page === currentPage ? 'primary' : 'default'"
+          @click="currentPage = page"
         >
+          {{ page }}
+        </van-button>
+        <van-button size="small" :disabled="currentPage === totalPages" @click="currentPage = Math.min(totalPages, currentPage + 1)">
           下一页
-        </button>
+        </van-button>
       </div>
-
-      <div class="text-base text-gray-600 dark:text-gray-400 font-medium">
-        第 <span class="font-bold text-gray-900 dark:text-white">{{ currentPage }}</span> 页，
-        共 <span class="font-bold text-gray-900 dark:text-white">{{ totalPages }}</span> 页 
-        <span class="mx-2">|</span> 
-        共 <span class="font-bold text-gray-900 dark:text-white">{{ filteredProviders.length }}</span> 个解析器
+      <div class="text-sm text-gray-600 font-medium">
+        第 {{ currentPage }} 页 / 共 {{ totalPages }} 页，{{ filteredProviders.length }} 个解析器
       </div>
     </div>
   </div>
@@ -237,6 +167,20 @@ watch(selectedCategory, () => {
   currentPage.value = 1;
 });
 
+// 从配置规则/账单处理页进入时，根据当前解析器选中对应类别（如「加密货币」）
+watch(
+  () => props.selectedProvider,
+  (val) => {
+    if (val) {
+      const p = props.supportedProviders.find((x) => x.type === val);
+      if (p && categories.some((c) => c.value === p.category)) {
+        selectedCategory.value = p.category;
+      }
+    }
+  },
+  { immediate: true }
+);
+
 const selectProvider = (providerType: ProviderType) => {
   emit('provider-selected', providerType);
 };
@@ -276,3 +220,36 @@ const handleImageError = (providerType: ProviderType, providerName: string) => {
   console.log(`[ProviderSelector] 图片加载失败，使用占位符: ${providerName} -> ${getPlaceholderEmoji(providerName)}`);
 };
 </script>
+
+<style scoped>
+.provider-card {
+  background: var(--van-cell-group-background, #fff);
+  border-radius: var(--van-radius-lg, 12px);
+  padding: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  border: 2px solid transparent;
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+.provider-card-selected {
+  border-color: var(--van-primary-color, #0d9488);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, .2);
+}
+.icon-box {
+  background: var(--van-gray-1, #f7f8fa);
+  border: 2px solid transparent;
+}
+.icon-box-transition {
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
+}
+.icon-box-selected {
+  background: rgba(13, 148, 136, 0.12);
+  border-color: var(--van-primary-color, #0d9488);
+}
+/* 选中时保留图标原色，不再做 invert，避免白图标消失 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>
