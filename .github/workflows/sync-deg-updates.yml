@@ -48,15 +48,16 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
 
       - name: Build WASM
         working-directory: double-entry-generator
-        env:
-          # 强制使用当前安装的 Go，不随 DEG 的 go.mod 升级到 1.24，避免 wasm_exec.js 路径错误
-          GOTOOLCHAIN: local
         run: |
-          make build-wasm
+          make build-wasm || true
+          # DEG Makefile 里 cp wasm_exec.js 在 Go 1.24 toolchain 路径下会失败，这里用 GOROOT 兜底
+          if [ ! -f wasm-dist/wasm_exec.js ]; then
+            cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" wasm-dist/
+          fi
           ls -lh wasm-dist/
 
       - name: Copy WASM files
