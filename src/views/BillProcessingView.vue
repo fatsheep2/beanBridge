@@ -1,6 +1,6 @@
 <template>
   <div class="w-full px-4 sm:px-8 lg:px-12 py-10">
-    <n-card>
+    <div class="card-wrap">
       <h1 class="text-3xl font-extrabold mb-8">账单处理</h1>
       
       <!-- 解析器选择组件 -->
@@ -32,16 +32,15 @@
       <!-- 元数据选项 -->
       <div class="mb-8" v-if="hasDataSource || selectedProvider">
         <h2 class="text-xl font-bold mb-4">元数据选项</h2>
-        <n-checkbox-group v-model:value="selectedMetadata">
-          <div class="flex flex-wrap gap-4">
-            <n-checkbox
+        <van-checkbox-group v-model="selectedMetadata" direction="horizontal">
+            <van-checkbox
               v-for="opt in metadataOptions"
               :key="opt.key"
-              :value="opt.key"
-              :label="opt.label"
-            />
-          </div>
-        </n-checkbox-group>
+              :name="opt.key"
+            >
+              {{ opt.label }}
+            </van-checkbox>
+          </van-checkbox-group>
       </div>
 
       <!-- 操作按钮 -->
@@ -49,7 +48,7 @@
         <h2 class="text-xl font-bold mb-6">操作</h2>
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div class="flex flex-wrap gap-3">
-            <n-button
+            <van-button
               type="success"
               size="large"
               @click="previewFile(selectedMetadata)"
@@ -57,8 +56,8 @@
               :disabled="!canProcess"
             >
               {{ isProcessing ? '处理中...' : '预览' }}
-            </n-button>
-            <n-button
+            </van-button>
+            <van-button
               type="primary"
               size="large"
               @click="processFile(selectedMetadata)"
@@ -66,85 +65,40 @@
               :disabled="!canProcess"
             >
               {{ isProcessing ? '处理中...' : '生成 Beancount' }}
-            </n-button>
+            </van-button>
           </div>
           <div class="flex flex-wrap gap-3">
-            <n-button
-              size="large"
-              @click="goToRuleConfig"
-            >
-              <template #icon>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </template>
-              规则配置
-            </n-button>
-            <n-button
-              type="warning"
-              size="large"
-              @click="testRules"
-              :disabled="!canProcess"
-            >
-              <template #icon>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </template>
-              测试规则
-            </n-button>
+            <van-button size="large" @click="goToRuleConfig">规则配置</van-button>
+            <van-button type="warning" size="large" @click="testRules" :disabled="!canProcess">测试规则</van-button>
           </div>
         </div>
       </div>
 
       <!-- 错误信息 -->
-      <n-alert
-        v-if="error"
-        type="error"
-        title="错误"
-        class="mb-8"
-        closable
-        @close="clearError"
-      >
+      <van-notice-bar v-if="error" type="danger" left-icon="warning-o" class="mb-8">
         {{ error }}
-      </n-alert>
+      </van-notice-bar>
 
       <!-- 结果展示组件 - 只在没有测试规则结果时显示 -->
       <ResultDisplay v-if="!ruleTestResult" :processing-result="processingResult" />
 
       <!-- 测试规则结果 - 只在有测试规则结果时显示 -->
-      <n-card v-if="ruleTestResult" title="测试规则结果" class="mb-6">
-        <template #header-extra>
-          <n-button quaternary circle @click="clearRuleTestResult">
-            <template #icon>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </template>
-          </n-button>
-        </template>
-        <div class="relative">
-          <n-code :code="ruleTestResult.data" language="text" :show-line-numbers="false" />
-          <div class="absolute top-2 right-2">
-            <n-button size="small" @click="copyToClipboard(ruleTestResult.data)">
-              <template #icon>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </template>
-              复制
-            </n-button>
+      <div v-if="ruleTestResult" class="card-wrap mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">测试规则结果</h3>
+          <div class="flex gap-2">
+            <van-button size="small" plain @click="clearRuleTestResult">关闭</van-button>
+            <van-button size="small" @click="copyToClipboard(ruleTestResult.data)">复制</van-button>
           </div>
         </div>
-      </n-card>
-    </n-card>
+        <pre class="p-4 bg-gray-1 rounded text-sm overflow-auto">{{ ruleTestResult.data }}</pre>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router';
-import { NCard, NButton, NCheckbox, NCheckboxGroup, NAlert, NCode } from 'naive-ui';
 import { useDataSourceConfig } from '../composables/useDataSourceConfig';
 import FileUploadSection from '../components/FileUploadSection.vue';
 import ProviderSelector from '../components/ProviderSelector.vue';
@@ -255,4 +209,13 @@ onMounted(() => {
     router.replace({ path: '/bill-processing', query: {} });
   }
 });
-</script> 
+</script>
+
+<style scoped>
+.card-wrap {
+  background: var(--van-cell-group-background, #fff);
+  border-radius: var(--van-radius-lg, 12px);
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+</style> 

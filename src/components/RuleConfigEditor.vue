@@ -18,26 +18,16 @@
         ></textarea>
       </div>
       
-      <div class="flex gap-4">
-        <button 
-          @click="saveConfig"
-          class="inline-flex items-center px-10 py-4 text-lg font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-lg transition-all duration-200"
-        >
-          保存配置
-        </button>
-        <button 
-          @click="resetConfig"
-          class="inline-flex items-center px-10 py-4 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-2xl shadow-lg transition-all duration-200"
-        >
-          重置
-        </button>
+      <div class="flex flex-wrap gap-2">
+        <van-button type="primary" @click="saveConfig">保存配置</van-button>
+        <van-button @click="resetConfig">重置</van-button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue'
 
 interface DataSource {
   id: string;

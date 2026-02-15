@@ -1,99 +1,109 @@
 <template>
-  <n-upload
-    :file-list="fileList"
-    :accept="'.csv,.xls,.xlsx'"
-    :max="1"
-    @change="handleFileChange"
-    @remove="handleRemove"
-    :show-file-list="false"
-  >
-    <n-upload-dragger>
-      <div class="flex flex-col items-center py-8">
-        <svg class="w-16 h-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
-        <p class="text-lg font-medium mb-2">点击或拖拽文件到此处上传</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          支持的文件格式: CSV, XLS, XLSX
-        </p>
+  <div>
+    <van-uploader
+      :file-list="fileList"
+      :max-count="1"
+      accept=".csv,.xls,.xlsx"
+      :after-read="afterRead"
+      @delete="handleRemove"
+    >
+      <div class="upload-area">
+        <van-icon name="upgrade" size="48" color="#c8c9cc" />
+        <p class="upload-text">点击或拖拽文件到此处上传</p>
+        <p class="upload-hint">支持 CSV, XLS, XLSX</p>
       </div>
-    </n-upload-dragger>
-  </n-upload>
-  
-  <n-card v-if="selectedFile" class="mt-4">
-    <div class="flex items-center justify-between">
-      <div class="flex-1">
-        <p class="text-sm font-medium mb-1">
-          <svg class="w-4 h-4 inline mr-1 align-middle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          {{ selectedFile.name }}
-        </p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">
-          大小: {{ formatFileSize(selectedFile.size) }}
-        </p>
+    </van-uploader>
+
+    <div v-if="selectedFile" class="file-card">
+      <div class="file-info">
+        <p class="file-name">{{ selectedFile.name }}</p>
+        <p class="file-size">大小: {{ formatFileSize(selectedFile.size) }}</p>
       </div>
-      <n-button quaternary circle @click="clearFile" type="error">
-        <template #icon>
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </template>
-      </n-button>
+      <van-button size="small" type="danger" plain round icon="cross" @click="clearFile" />
     </div>
-  </n-card>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { NUpload, NUploadDragger, NCard, NButton, type UploadFileInfo } from 'naive-ui';
+import { computed } from 'vue'
 
 interface Props {
-  selectedFile: File | null;
-  detectedProvider: string | null;
+  selectedFile: File | null
+  detectedProvider: string | null
 }
 
 interface Emits {
-  (e: 'file-selected', file: File | null): void;
+  (e: 'file-selected', file: File | null): void
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
 
-const fileList = computed(() => {
-  if (props.selectedFile) {
-    return [{
-      id: '1',
-      name: props.selectedFile.name,
-      status: 'finished' as const,
-      file: props.selectedFile,
-    }];
-  }
-  return [];
-});
+// 不把已选文件放进 uploader 的 file-list，用下方 file-card 单独展示，避免重复预览
+const fileList = computed(() => [])
 
-const handleFileChange = (options: { fileList: UploadFileInfo[] }) => {
-  const file = options.fileList[0]?.file;
-  if (file) {
-    emit('file-selected', file as File);
-  } else {
-    emit('file-selected', null);
-  }
-};
+const afterRead = (item: { file: File } | { file: File }[]) => {
+  const file = Array.isArray(item) ? item[0]?.file : item?.file
+  if (file) emit('file-selected', file)
+}
 
 const handleRemove = () => {
-  emit('file-selected', null);
-};
+  emit('file-selected', null)
+}
 
 const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
 
 const clearFile = () => {
-  emit('file-selected', null);
-};
-</script> 
+  emit('file-selected', null)
+}
+</script>
+
+<style scoped>
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: var(--van-gray-1, #f7f8fa);
+  border-radius: var(--van-radius-md, 10px);
+  border: 1px dashed var(--van-gray-4, #dcdee0);
+}
+.upload-text {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 12px 0 4px;
+  color: #323233;
+}
+.upload-hint {
+  font-size: 12px;
+  color: #969799;
+}
+.file-card {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--van-cell-group-background, #fff);
+  border-radius: var(--van-radius-md, 10px);
+  border: 1px solid var(--van-gray-2, #ebedf0);
+}
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 4px;
+  color: #323233;
+}
+.file-size {
+  font-size: 12px;
+  color: #969799;
+  margin: 0;
+}
+</style>

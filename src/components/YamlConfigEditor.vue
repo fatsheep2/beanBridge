@@ -1,22 +1,10 @@
 <template>
   <div class="yaml-config-editor">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
       <h3 class="text-lg font-semibold">YAML 配置编辑器</h3>
-      <div class="flex gap-3">
-        <button
-          @click="formatYaml"
-          class="inline-flex items-center px-7 py-3.5 text-base font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-xl shadow-lg transition-all duration-200"
-        >
-          <span class="material-icons text-lg mr-2">format_align_left</span>
-          格式化
-        </button>
-        <button
-          @click="validateYaml"
-          class="inline-flex items-center px-7 py-3.5 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg transition-all duration-200"
-        >
-          <span class="material-icons text-lg mr-2">check_circle</span>
-          验证
-        </button>
+      <div class="flex gap-2">
+        <van-button @click="formatYaml">格式化</van-button>
+        <van-button type="primary" @click="validateYaml">验证</van-button>
       </div>
     </div>
 
@@ -46,7 +34,7 @@
     <div class="relative">
       <textarea
         v-model="yamlContent"
-        class="w-full h-96 p-4 font-mono text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none"
+        class="yaml-textarea w-full h-96 p-4 font-mono text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         placeholder="请输入 YAML 配置..."
         @input="onInput"
       ></textarea>
@@ -59,7 +47,7 @@
     </div>
 
     <!-- 行号提示 -->
-    <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+    <div class="yaml-footer mt-2 text-xs">
       行数: {{ lineCount }} | 字符数: {{ yamlContent.length }}
     </div>
   </div>

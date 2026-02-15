@@ -1,4 +1,5 @@
 import './assets/main.css'
+import './assets/vant-theme.css'
 // import './assets/fontawesome.css'
 
 import { createApp } from 'vue'

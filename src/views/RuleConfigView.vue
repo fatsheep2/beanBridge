@@ -3,13 +3,7 @@
     <div class="bg-white shadow-2xl rounded-2xl border border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 p-10">
       <div class="flex items-center justify-between mb-8">
         <h1 class="text-3xl font-extrabold">规则配置</h1>
-        <router-link 
-          to="/"
-          class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold shadow-md"
-        >
-          <span class="material-icons mr-3">arrow_back</span>
-          返回首页
-        </router-link>
+        <van-button @click="router.push('/')">返回首页</van-button>
       </div>
 
       <!-- Provider选择 -->
@@ -30,28 +24,10 @@
             <h3 class="text-xl font-semibold">{{ currentConfig.name }}</h3>
             <p class="text-gray-600 dark:text-gray-300">{{ currentConfig.description }}</p>
           </div>
-          <div class="flex gap-4">
-            <button
-              @click="showHistoryModal = true"
-              class="inline-flex items-center px-8 py-4 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-2xl shadow-lg transition-all duration-200"
-            >
-              <span class="material-icons mr-2">history</span>
-              历史记录
-            </button>
-            <button
-              @click="exportConfig"
-              class="inline-flex items-center px-8 py-4 text-lg font-bold text-white bg-green-600 hover:bg-green-700 rounded-2xl shadow-lg transition-all duration-200"
-            >
-              <span class="material-icons mr-2">download</span>
-              导出配置
-            </button>
-            <button
-              @click="importConfig"
-              class="inline-flex items-center px-8 py-4 text-lg font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-2xl shadow-lg transition-all duration-200"
-            >
-              <span class="material-icons mr-2">upload</span>
-              导入配置
-            </button>
+          <div class="flex flex-wrap gap-2">
+            <van-button @click="showHistoryModal = true">历史记录</van-button>
+            <van-button type="primary" @click="exportConfig">导出配置</van-button>
+            <van-button plain type="primary" @click="importConfig">导入配置</van-button>
           </div>
         </div>
 
@@ -232,21 +208,9 @@
         <div>
           <div class="flex items-center justify-between mb-4">
             <h4 class="text-lg font-semibold">规则列表</h4>
-            <div class="flex space-x-2">
-              <button
-                @click="addRule"
-                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                <span class="material-icons mr-2">add</span>
-                添加规则
-              </button>
-              <button
-                @click="debugRules"
-                class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-              >
-                <span class="material-icons mr-2">bug_report</span>
-                调试规则
-              </button>
+            <div class="flex flex-wrap gap-2">
+              <van-button type="primary" @click="addRule">添加规则</van-button>
+              <van-button @click="debugRules">调试规则</van-button>
             </div>
           </div>
 
@@ -284,13 +248,9 @@
                     <option value="name">按名称</option>
                     <option value="created">按创建时间</option>
                   </select>
-                  <button
-                    @click="toggleSortOrder"
-                    class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    :title="sortOrder === 'asc' ? '升序' : '降序'"
-                  >
-                    <span class="material-icons text-sm">{{ sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
-                  </button>
+                  <van-button size="small" plain round :title="sortOrder === 'asc' ? '升序' : '降序'" @click="toggleSortOrder">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </van-button>
                 </div>
               </div>
             </div>
@@ -303,21 +263,9 @@
               class="relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 hover:border-blue-300 dark:hover:border-blue-600"
             >
               <!-- 删除按钮 - 固定在右上角 -->
-              <div class="absolute top-3 right-3 flex space-x-1 z-10">
-                <button
-                  @click="editRule(rule)"
-                  class="text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                  title="编辑规则"
-                >
-                  <span class="material-icons text-lg">edit</span>
-                </button>
-                <button
-                  @click="deleteRule(rule.id)"
-                  class="text-red-600 hover:text-red-800 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  title="删除规则"
-                >
-                  <span class="material-icons text-lg">delete</span>
-                </button>
+              <div class="absolute top-3 right-3 flex gap-1 z-10">
+                <van-button size="small" plain title="编辑规则" @click="editRule(rule)">编辑</van-button>
+                <van-button size="small" type="danger" plain title="删除规则" @click="deleteRule(rule.id)">删</van-button>
               </div>
 
               <!-- 规则内容 -->
@@ -464,13 +412,7 @@
       <div v-else-if="!currentConfig" class="text-center py-12">
         <i class="material-icons text-4xl text-yellow-400 mb-4">warning</i>
         <p class="text-gray-600 dark:text-gray-300 mb-4">该解析器还没有配置，是否从预设配置创建？</p>
-        <button
-          @click="createFromPreset"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          <span class="material-icons mr-2">add</span>
-          从预设创建配置
-        </button>
+        <van-button type="primary" @click="createFromPreset">从预设创建配置</van-button>
       </div>
     </div>
 
@@ -491,19 +433,14 @@
       <div class="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-2xl font-bold">历史记录</h3>
-          <button
-            @click="showHistoryModal = false"
-            class="text-gray-400 hover:text-gray-600 dark:text-gray-500 text-2xl"
-          >
-            <span class="material-icons">close</span>
-          </button>
+          <van-button size="small" plain @click="showHistoryModal = false">关闭</van-button>
         </div>
 
         <div class="space-y-2">
           <div
             v-for="history in providerHistory"
             :key="history.id"
-            class="border-2 border-gray-100 dark:border-gray-800 rounded-xl p-4 hover:bg-gray-100 dark:hover:bg-gray-900 cursor-pointer font-semibold"
+            class="border-2 border-gray-100 dark:border-gray-800 rounded-xl p-4 hover:bg-gray-100 dark:hover:bg-gray-900 cursor-pointer"
             @click="applyHistory(history.id)"
           >
             <div class="flex items-center justify-between">
@@ -511,19 +448,9 @@
                 <h4 class="font-medium">{{ history.name }}</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-300">{{ formatDate(history.createdAt) }}</p>
               </div>
-              <div class="flex space-x-2">
-                <button
-                  class="px-4 py-2 bg-blue-600 text-white rounded-lg text-base hover:bg-blue-700 font-semibold"
-                >
-                  应用
-                </button>
-                <button
-                  @click.stop="deleteHistory(history.id)"
-                  class="px-4 py-2 bg-red-600 text-white rounded-lg text-base hover:bg-red-700 font-semibold"
-                  title="删除历史记录"
-                >
-                  <span class="material-icons text-sm">delete</span>
-                </button>
+              <div class="flex gap-2">
+                <van-button size="small" type="primary" @click.stop="applyHistory(history.id)">应用</van-button>
+                <van-button size="small" type="danger" plain @click.stop="deleteHistory(history.id)">删除</van-button>
               </div>
             </div>
           </div>
@@ -538,9 +465,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { ProviderType } from '../types/provider';
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ProviderType } from '../types/provider'
 import type { RuleConfig, Rule, ConfigHistory } from '../types/rule-config';
 import { providers, getProviderFieldMappings } from '../data/providers';
 import { ruleConfigService } from '../services/rule-config-service';
