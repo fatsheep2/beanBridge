@@ -1,0 +1,114 @@
+; 由 BeanBridge 自动生成
+; 生成时间: 2025-07-01T06:56:48.151Z
+
+2019-09-24 * "同性好友" "/"
+    payTime: "2019-09-24 10:10:11"
+    amount: "0.35"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  0.35 CNY
+    Income:Other  -0.35 CNY
+
+2019-09-26 * "云膳过桥米线(传奇广场店)" "总共消费:28.16"
+    payTime: "2019-09-26 12:45:27"
+    amount: "28.16"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -28.16 CNY
+    Expenses:FIXME  28.16 CNY
+
+2020-11-27 * "用户A" "收款方备注:二维码收款"
+    payTime: "2020-11-27 19:29:00"
+    amount: "23"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  23 CNY
+    Income:Other  -23 CNY
+
+2021-01-17 * "某餐厅" "收款方备注:二维码收款"
+    payTime: "2021-01-17 18:03:35"
+    amount: "12"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -12 CNY
+    Expenses:FIXME  12 CNY
+
+2021-01-22 * "房东" "转账备注:微信转账"
+    payTime: "2021-01-22 12:34:56"
+    amount: "500"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -500 CNY
+    Expenses:FIXME  500 CNY
+
+2021-07-18 * "打开拼多多，点击底部"多多视频"" "/"
+    payTime: "2021-07-18 10:48:09"
+    amount: "0.07"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  0.07 CNY
+    Income:Other  -0.07 CNY
+
+2021-10-19 * "哈哈" "亲属卡"
+    payTime: "2021-10-19 16:08:00"
+    amount: "2243.46"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -2243.46 CNY
+    Expenses:FIXME  2243.46 CNY
+
+2021-12-15 * "某餐厅" "测试 T+1"
+    payTime: "2021-12-15 00:06:35"
+    amount: "12"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -12 CNY
+    Expenses:FIXME  12 CNY
+
+2021-12-15 * "某餐厅" "测试 T-1"
+    payTime: "2021-12-15 23:51:35"
+    amount: "12"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -12 CNY
+    Expenses:FIXME  12 CNY
+
+2022-07-18 * "测试时间戳，点击底部"多多视频"" "/"
+    payTime: "2022-07-18 10:48:09"
+    amount: "0.07"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  0.07 CNY
+    Income:Other  -0.07 CNY
+
+2022-09-24 * "YingDev" "/"
+    payTime: "2022-09-24 02:24:20"
+    amount: "36.99"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -36.99 CNY
+    Expenses:FIXME  36.99 CNY
+
+2023-06-23 * "赞赏作者的收款_20230623" "/"
+    payTime: "2023-06-23 11:01:51"
+    amount: "5"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  5 CNY
+    Income:Other  -5 CNY
+
+2023-07-09 * "美团平台商户" "美团订单-12345"
+    payTime: "2023-07-09 13:25:22"
+    amount: "9.9"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -9.9 CNY
+    Expenses:Life:Food:Meal:午餐  9.9 CNY
+
+2023-07-09 * "美团平台商户" "美团订单-54321"
+    payTime: "2023-07-09 13:30:22"
+    amount: "50"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -50 CNY
+    Expenses:Life:Food:Meal:午餐  50 CNY
+
+2024-06-07 * "腾讯公益慈善基金会" "焕新乐园"
+    payTime: "2024-06-07 23:40:27"
+    amount: "0.01"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -0.01 CNY
+    Expenses:FIXME  0.01 CNY
+
+2024-06-07 * "测试" "ignore-invalid-tx-types"
+    payTime: "2024-06-07 23:40:27"
+    amount: "0.01"
+    currency: "CNY"
+    Assets:Flow:EBank:WxPay:微信支付  -0.01 CNY
+    Expenses:FIXME  0.01 CNY

@@ -1,0 +1,56 @@
+{
+  "provider": "ethereum",
+  "name": "以太坊基础配置",
+  "description": "以太坊区块链交易记录的基础配置模板",
+  "config": {
+    "defaultMinusAccount": "Assets:Crypto:Wallet",
+    "defaultPlusAccount": "Expenses:Crypto",
+    "defaultCurrency": "ETH",
+    "rules": [
+      {
+        "name": "ETH转账",
+        "description": "ETH转账交易",
+        "chain": "ETH",
+        "token": "ETH",
+        "transactionType": "transfer",
+        "targetAccount": "Assets:Crypto:ETH",
+        "methodAccount": "Assets:Crypto:ETH",
+        "priority": 1
+      },
+      {
+        "name": "USDT转账",
+        "description": "USDT转账交易",
+        "token": "USDT",
+        "transactionType": "transfer",
+        "targetAccount": "Assets:Crypto:USDT",
+        "methodAccount": "Assets:Crypto:Wallet",
+        "priority": 2
+      },
+      {
+        "name": "USDC转账",
+        "description": "USDC转账交易",
+        "token": "USDC",
+        "transactionType": "transfer",
+        "targetAccount": "Assets:Crypto:USDC",
+        "methodAccount": "Assets:Crypto:Wallet",
+        "priority": 3
+      },
+      {
+        "name": "Gas费用",
+        "description": "Gas费用支出",
+        "transactionType": "gas",
+        "targetAccount": "Expenses:Crypto:Gas",
+        "methodAccount": "Assets:Crypto:Wallet",
+        "priority": 4
+      },
+      {
+        "name": "代币兑换",
+        "description": "代币兑换交易",
+        "transactionType": "swap",
+        "targetAccount": "Expenses:Crypto:Swap",
+        "methodAccount": "Assets:Crypto:Wallet",
+        "priority": 5
+      }
+    ]
+  }
+} 
