@@ -261,6 +261,20 @@ jobs:
           
           echo "has_changes value: $(echo '${{ steps.changes.outputs.has_changes }}')"
 
+      - name: Debug changes output
+        if: always()
+        working-directory: beanBridge
+        run: |
+          echo "=== Debug: Changes output ==="
+          echo "has_changes from step: ${{ steps.changes.outputs.has_changes }}"
+          echo "Checking if PR step will run..."
+          if [ "${{ steps.changes.outputs.has_changes }}" = "true" ]; then
+            echo "✓ PR step will run"
+          else
+            echo "✗ PR step will be skipped (has_changes=false)"
+            echo "This means no changes were detected in public/wasm/ or public/example/"
+          fi
+
       - name: Commit and push to fixed sync branch
         if: steps.changes.outputs.has_changes == 'true'
         working-directory: beanBridge
@@ -326,8 +340,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Creating or updating PR ==="
+          echo "has_changes: ${{ steps.changes.outputs.has_changes }}"
           SYNC_BRANCH="chore/sync-deg-wasm-examples"
           PREVIEW_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/chore/sync-deg-wasm-examples/"
+          
+          # 验证 changelog.md 存在
+          if [ ! -f "changelog.md" ]; then
+            echo "✗ changelog.md not found!"
+            exit 1
+          fi
           
           # 准备 PR body
           {
@@ -352,6 +373,8 @@ jobs:
           
           if [ -z "$PR_NUM" ]; then
             echo "No matching PR found (head=$SYNC_BRANCH, base=main)"
+            echo "All open PRs:"
+            gh pr list --state open --json number,headRefName,baseRefName || true
           else
             echo "Found matching PR #$PR_NUM"
           fi
@@ -372,10 +395,14 @@ jobs:
             echo "✓ Comment added to PR #$PR_NUM"
           else
             echo "No existing PR found, creating new PR..."
+            echo "PR body preview:"
+            head -20 pr_body.md || true
             gh pr create --title "chore(sync-deg): update WASM and example from DEG" --body-file pr_body.md --base main --head "$SYNC_BRANCH" || {
               echo "✗ Failed to create PR"
               echo "Error details:"
               gh pr list --base main --head "$SYNC_BRANCH" --state all || true
+              echo "Current branch status:"
+              git status || true
               exit 1
             }
             echo "✓ PR created successfully"
