@@ -498,10 +498,6 @@ jobs:
           echo "=== Creating or updating PR ==="
           echo "has_changes: ${{ steps.changes.outputs.has_changes }}"
           SYNC_BRANCH="chore/sync-deg-wasm-examples"
-          # 动态生成预览 URL：将分支名中的斜杠替换为横杠，与部署 workflow 保持一致
-          # 部署 workflow 会将 chore/sync-deg-wasm-examples -> chore-sync-deg-wasm-examples
-          BRANCH_NAME_FOR_URL=$(echo "$SYNC_BRANCH" | sed 's/\//-/g')
-          PREVIEW_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/$BRANCH_NAME_FOR_URL/"
           
           # 验证 changelog.md 存在
           if [ ! -f "changelog.md" ]; then
@@ -510,14 +506,14 @@ jobs:
           fi
           
           # 准备 PR body
+          # 注意：预览地址会由 deploy-branch-preview.yml 自动添加，无需手动写入
           {
             echo "自动从 [double-entry-generator](https://github.com/deb-sig/double-entry-generator) 同步 WASM 与示例配置。"
             echo ""
             cat changelog.md
             echo ""
             echo "---"
-            echo "**预览地址（部署约 1–2 分钟后生效）**"
-            echo "$PREVIEW_URL"
+            echo "**预览地址**：预览部署会在 PR 创建后自动触发，部署完成后会在 PR 中添加预览链接。"
             echo ""
             echo "仅当上游有变更时此分支会更新，可与 main 对比后按需合并。"
           } > pr_body.md
@@ -565,8 +561,7 @@ jobs:
               echo ""
               cat changelog.md
               echo ""
-              echo "**预览地址（部署约 1–2 分钟后生效）**"
-              echo "$PREVIEW_URL"
+              echo "**预览地址**：预览部署会自动触发，部署完成后会在 PR 中添加预览链接。"
             } > comment.md
             gh pr comment "$PR_NUM" --body-file comment.md || {
               echo "⚠ Failed to add comment to PR #$PR_NUM"
