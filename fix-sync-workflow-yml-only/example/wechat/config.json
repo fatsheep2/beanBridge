@@ -1,0 +1,200 @@
+{
+  "provider": "wechat",
+  "name": "微信支付基础配置",
+  "description": "微信支付交易记录的基础配置模板",
+  "config": {
+    "defaultMinusAccount": "Assets:FIXME",
+    "defaultPlusAccount": "Expenses:FIXME",
+    "defaultCommissionAccount": "Expenses:Commission:FIXME",
+    "defaultCurrency": "CNY",
+    "rules": [
+      {
+        "name": "微信红包收入",
+        "description": "微信红包收入归类为红包收入",
+        "type": "收入",
+        "method": "/",
+        "item": "/",
+        "targetAccount": "Income:Wechat:RedPacket",
+        "priority": 1
+      },
+      {
+        "name": "转入零钱通",
+        "description": "转入零钱通操作",
+        "txType": "转入零钱通",
+        "peer": "/",
+        "item": "/",
+        "targetAccount": "Assets:Digital:Wechat:MiniFund",
+        "priority": 2
+      },
+      {
+        "name": "零钱提现",
+        "description": "零钱提现操作",
+        "txType": "零钱提现",
+        "targetAccount": "Assets:Digital:Wechat:Cash",
+        "commissionAccount": "Expenses:Wechat:Commission",
+        "priority": 3
+      },
+      {
+        "name": "零钱充值",
+        "description": "零钱充值操作",
+        "txType": "零钱充值",
+        "targetAccount": "Assets:Digital:Wechat:Cash",
+        "priority": 4
+      },
+      {
+        "name": "零钱通转出到零钱",
+        "description": "零钱通转出到零钱",
+        "txType": "零钱通转出-到零钱",
+        "targetAccount": "Assets:Digital:Wechat:Cash",
+        "priority": 5
+      },
+      {
+        "name": "零钱通转出到工商银行",
+        "description": "零钱通转出到工商银行",
+        "txType": "零钱通转出-到工商银行(9876)",
+        "targetAccount": "Assets:Bank:CN:ICBC:Savings",
+        "priority": 6
+      },
+      {
+        "name": "赞赏码支出",
+        "description": "赞赏码支出",
+        "type": "支出",
+        "txType": "赞赏码",
+        "targetAccount": "Expenses:Wechat:Sponsor",
+        "priority": 7
+      },
+      {
+        "name": "餐饮午餐",
+        "description": "11:00-15:00的餐饮消费归类为午餐",
+        "peer": "云膳过桥米线,餐厅",
+        "sep": ",",
+        "time": "11:00-15:00",
+        "targetAccount": "Expenses:Food:Meal:Lunch",
+        "priority": 8
+      },
+      {
+        "name": "餐饮晚餐",
+        "description": "16:30-21:30的餐饮消费归类为晚餐",
+        "peer": "云膳过桥米线,餐厅",
+        "sep": ",",
+        "time": "16:30-21:30",
+        "targetAccount": "Expenses:Food:Meal:Dinner",
+        "priority": 9
+      },
+      {
+        "name": "餐饮夜宵1",
+        "description": "23:55-00:10的餐饮消费归类为夜宵",
+        "peer": "餐厅",
+        "time": "23:55-00:10",
+        "targetAccount": "Expenses:Food:Meal:MidNight",
+        "priority": 10
+      },
+      {
+        "name": "餐饮夜宵2",
+        "description": "23:50-00:05的餐饮消费归类为夜宵",
+        "peer": "餐厅",
+        "time": "23:50-00:05",
+        "targetAccount": "Expenses:Food:Meal:MidNight",
+        "priority": 11
+      },
+      {
+        "name": "美团小额消费",
+        "description": "美团平台小额消费归类为饮料",
+        "peer": "美团平台商户",
+        "type": "支出",
+        "minPrice": 0,
+        "maxPrice": 9.99,
+        "targetAccount": "Expenses:Food:Drink",
+        "priority": 12
+      },
+      {
+        "name": "美团大额消费",
+        "description": "美团平台大额消费归类为餐饮",
+        "peer": "美团平台商户",
+        "type": "支出",
+        "minPrice": 10,
+        "targetAccount": "Expenses:Food:Meal",
+        "priority": 13
+      },
+      {
+        "name": "房东租金",
+        "description": "房东相关支出归类为房租",
+        "peer": "房东",
+        "type": "支出",
+        "targetAccount": "Expenses:Housing:Rent",
+        "priority": 14
+      },
+      {
+        "name": "用户收入",
+        "description": "用户相关收入归类为服务收入",
+        "peer": "用户",
+        "type": "收入",
+        "targetAccount": "Income:Service",
+        "tags": ["income", "service"],
+        "priority": 15
+      },
+      {
+        "name": "理财通",
+        "description": "理财通相关操作",
+        "peer": "理财通",
+        "type": "/",
+        "targetAccount": "Assets:Trade:Tencent:LiCaiTong",
+        "priority": 16
+      },
+      {
+        "name": "建设银行信用卡还款",
+        "description": "建设银行信用卡还款",
+        "peer": "建设银行",
+        "txType": "信用卡还款",
+        "targetAccount": "Liabilities:Bank:CN:CCB",
+        "priority": 17
+      },
+      {
+        "name": "零钱支付方式",
+        "description": "使用零钱支付时，资金账户为零钱",
+        "method": "零钱",
+        "fullMatch": true,
+        "methodAccount": "Assets:Digital:Wechat:Cash",
+        "priority": 18
+      },
+      {
+        "name": "零钱通支付方式",
+        "description": "使用零钱通支付时，资金账户为零钱通",
+        "method": "零钱通",
+        "fullMatch": true,
+        "methodAccount": "Assets:Digital:Wechat:MiniFund",
+        "priority": 19
+      },
+      {
+        "name": "工商银行支付方式",
+        "description": "使用工商银行支付时，资金账户为工商银行",
+        "method": "工商银行",
+        "methodAccount": "Assets:Bank:CN:ICBC:Savings",
+        "priority": 20
+      },
+      {
+        "name": "中国银行支付方式",
+        "description": "使用中国银行支付时，资金账户为中国银行",
+        "method": "中国银行",
+        "methodAccount": "Assets:Bank:CN:BOC:Savings",
+        "priority": 21
+      },
+      {
+        "name": "测试时间戳",
+        "description": "特定时间戳范围的消费归类为旅行",
+        "peer": "测试时间戳",
+        "timestamp_range": "1658112487-1658112490",
+        "targetAccount": "Expenses:Travel",
+        "priority": 22
+      },
+      {
+        "name": "分分捐",
+        "description": "分分捐支出归类为慈善捐赠",
+        "type": "支出",
+        "txType": "分分捐",
+        "targetAccount": "Expenses:Charity:Donation",
+        "priority": 23
+      }
+    ]
+  }
+} 
