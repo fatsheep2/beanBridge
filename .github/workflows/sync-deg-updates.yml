@@ -30,13 +30,43 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           SYNC_BRANCH="chore/sync-deg-wasm-examples"
+          
+          echo "=== Checking sync branch ==="
           git fetch origin main "$SYNC_BRANCH" 2>/dev/null || true
+          
           if git show-ref --verify --quiet "refs/remotes/origin/$SYNC_BRANCH"; then
+            echo "Branch $SYNC_BRANCH exists, checking out..."
             git checkout "$SYNC_BRANCH"
-            git merge --no-edit origin/main || true
+            
+            # 检查是否有未解决的冲突
+            if [ -n "$(git ls-files -u)" ]; then
+              echo "⚠ Unmerged files detected, resolving conflicts..."
+              # 对于 workflow 文件，优先使用 main 的版本（因为 workflow 更新应该在 main）
+              git checkout --theirs .github/workflows/sync-deg-updates.yml 2>/dev/null || true
+              git add .github/workflows/sync-deg-updates.yml || true
+              # 对于其他文件，使用 sync branch 的版本
+              git checkout --ours public/ 2>/dev/null || true
+              git add public/ || true
+            fi
+            
+            echo "=== Merging origin/main ==="
+            # 使用策略合并，优先使用 main 的 workflow，sync branch 的 public 文件
+            git merge --no-edit origin/main -X theirs -X ours || {
+              echo "⚠ Merge conflict detected, resolving..."
+              # 如果还有冲突，使用策略解决
+              git checkout --theirs .github/workflows/ 2>/dev/null || true
+              git checkout --ours public/ 2>/dev/null || true
+              git add .github/workflows/ public/ 2>/dev/null || true
+              # 完成 merge
+              git commit --no-edit || git merge --abort || true
+            }
           else
+            echo "Branch $SYNC_BRANCH does not exist, creating from main..."
             git checkout -b "$SYNC_BRANCH" origin/main
           fi
+          
+          echo "✓ Sync branch ready: $SYNC_BRANCH"
+          git status
 
       - name: Checkout double-entry-generator
         uses: actions/checkout@v4
