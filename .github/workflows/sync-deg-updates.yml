@@ -235,31 +235,120 @@ jobs:
           echo "Current status:"
           git status --short || true
           
-          echo "=== Staging files ==="
-          git add public/wasm/ public/example/ || {
-            echo "⚠ Failed to stage files, checking if directories exist..."
-            ls -la public/ || echo "public/ directory not found"
-            ls -la public/wasm/ 2>/dev/null || echo "public/wasm/ directory not found"
-            ls -la public/example/ 2>/dev/null || echo "public/example/ directory not found"
-          }
-          
-          echo "=== Checking staged changes ==="
-          if git diff --staged --quiet; then
+          # 先检查文件是否存在
+          echo "=== Checking if files exist ==="
+          if [ ! -d "public/wasm" ] || [ ! -d "public/example" ]; then
+            echo "✗ public/wasm/ or public/example/ directory not found"
             echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "✗ No changes detected (staged diff is empty)"
-            echo "Unstaged changes:"
-            git diff --name-only || true
-            echo "Untracked files:"
-            git ls-files --others --exclude-standard || true
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "✓ Changes detected"
-            echo "Staged changes:"
-            git diff --staged --stat || true
-            git status
+            exit 0
           fi
           
-          echo "has_changes value: $(echo '${{ steps.changes.outputs.has_changes }}')"
+          # 列出当前工作目录中的所有文件
+          echo "=== Current working directory files ==="
+          echo "--- public/wasm/ files ---"
+          find public/wasm/ -type f -exec ls -lh {} \; 2>/dev/null || echo "No files found"
+          echo ""
+          echo "--- public/example/ files ---"
+          find public/example/ -type f -exec ls -lh {} \; 2>/dev/null || echo "No files found"
+          echo ""
+          
+          # 检查文件是否被 git 跟踪
+          echo "=== Checking git tracking status ==="
+          WASM_TRACKED=$(git ls-files public/wasm/ 2>/dev/null | wc -l || echo "0")
+          EXAMPLE_TRACKED=$(git ls-files public/example/ 2>/dev/null | wc -l || echo "0")
+          echo "Tracked files in public/wasm/: $WASM_TRACKED"
+          echo "Tracked files in public/example/: $EXAMPLE_TRACKED"
+          
+          # 列出未跟踪的文件
+          echo "=== Untracked files ==="
+          UNTRACKED=$(git ls-files --others --exclude-standard public/wasm/ public/example/ 2>/dev/null || echo "")
+          if [ -n "$UNTRACKED" ]; then
+            echo "Found untracked files:"
+            echo "$UNTRACKED"
+          else
+            echo "No untracked files"
+          fi
+          echo ""
+          
+          # 强制添加所有文件（包括未跟踪的）
+          echo "=== Staging files (force add) ==="
+          git add -f public/wasm/ public/example/ || {
+            echo "⚠ Failed to stage files"
+            ls -la public/ || echo "public/ directory not found"
+            exit 1
+          }
+          
+          # 关键改进：与 main 分支比较，而不是与 sync branch 的 HEAD 比较
+          # 因为我们的目标是同步到 main，所以应该看相对于 main 是否有变化
+          echo "=== Comparing with origin/main (this is what matters) ==="
+          
+          # 检查与 main 分支的差异（包括新文件和修改的文件）
+          MAIN_DIFF_COUNT=0
+          MAIN_NEW_FILES=()
+          MAIN_MODIFIED_FILES=()
+          
+          # 检查所有文件是否在 main 中存在或不同
+          for file in $(find public/wasm/ public/example/ -type f 2>/dev/null); do
+            if ! git cat-file -e "origin/main:$file" 2>/dev/null; then
+              # 文件在 main 中不存在，是新文件
+              MAIN_NEW_FILES+=("$file")
+              MAIN_DIFF_COUNT=$((MAIN_DIFF_COUNT + 1))
+              echo "New file (not in main): $file"
+            else
+              # 文件在 main 中存在，检查内容是否不同
+              if ! git diff --quiet "origin/main:$file" "$file" 2>/dev/null; then
+                MAIN_MODIFIED_FILES+=("$file")
+                MAIN_DIFF_COUNT=$((MAIN_DIFF_COUNT + 1))
+                echo "Modified file (different from main): $file"
+              fi
+            fi
+          done
+          
+          echo ""
+          echo "=== Summary: Changes vs main ==="
+          echo "New files: ${#MAIN_NEW_FILES[@]}"
+          echo "Modified files: ${#MAIN_MODIFIED_FILES[@]}"
+          echo "Total changes: $MAIN_DIFF_COUNT"
+          echo ""
+          
+          # 也检查与当前 HEAD（sync branch）的差异，用于调试
+          echo "=== Debug: Comparing with current HEAD (sync branch) ==="
+          STAGED_COUNT=$(git diff --staged --name-only | wc -l || echo "0")
+          echo "Staged changes vs HEAD: $STAGED_COUNT files"
+          if [ "$STAGED_COUNT" -gt 0 ]; then
+            echo "Staged changes:"
+            git diff --staged --name-status || true
+          fi
+          echo ""
+          
+          # 最终判断：如果与 main 有差异，则认为有变化
+          if [ "$MAIN_DIFF_COUNT" -gt 0 ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "✓ Changes detected vs main ($MAIN_DIFF_COUNT files)"
+            echo ""
+            if [ ${#MAIN_NEW_FILES[@]} -gt 0 ]; then
+              echo "New files:"
+              printf '  %s\n' "${MAIN_NEW_FILES[@]}"
+            fi
+            if [ ${#MAIN_MODIFIED_FILES[@]} -gt 0 ]; then
+              echo "Modified files:"
+              printf '  %s\n' "${MAIN_MODIFIED_FILES[@]}"
+            fi
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "✗ No changes detected vs main"
+            echo "All files in public/wasm/ and public/example/ are identical to origin/main"
+            echo ""
+            echo "=== Debug info ==="
+            echo "This might mean:"
+            echo "1. Sync branch already contains these files (synced previously)"
+            echo "2. Main branch already has these files"
+            echo "3. Files are identical to main"
+          fi
+          
+          echo ""
+          echo "=== Final result ==="
+          echo "has_changes value: ${{ steps.changes.outputs.has_changes }}"
 
       - name: Debug changes output
         if: always()
@@ -336,9 +425,10 @@ jobs:
 
       - name: Create or update Pull Request
         if: steps.changes.outputs.has_changes == 'true'
+        id: create_pr
         working-directory: beanBridge
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "=== Creating or updating PR ==="
           echo "has_changes: ${{ steps.changes.outputs.has_changes }}"
@@ -364,24 +454,44 @@ jobs:
             echo "仅当上游有变更时此分支会更新，可与 main 对比后按需合并。"
           } > pr_body.md
           
+          # 首先列出所有 open 的 PR 用于调试
+          echo "=== Debug: All open PRs ==="
+          ALL_PR_RESULT=$(gh pr list --state open --json number,headRefName,baseRefName,title 2>&1 || echo "Error: $?")
+          echo "$ALL_PR_RESULT"
+          echo ""
+          
           # 检查是否存在 PR（精确匹配：base=main, head=chore/sync-deg-wasm-examples）
-          echo "Checking for existing PR from $SYNC_BRANCH to main..."
-          PR_RESULT=$(gh pr list --base main --head "$SYNC_BRANCH" --state open --json number,headRefName,baseRefName 2>&1)
-          echo "PR list result: $PR_RESULT"
+          echo "=== Checking for existing PR ==="
+          echo "Target: head=$SYNC_BRANCH, base=main"
+          
+          # 使用更严格的查询：只查询从 sync branch 到 main 的 open PR
+          PR_RESULT=$(gh pr list --base main --head "$SYNC_BRANCH" --state open --json number,headRefName,baseRefName,title 2>&1 || echo "[]")
+          echo "PR list command result:"
+          echo "$PR_RESULT"
+          echo ""
+          
+          # 如果结果不是有效的 JSON 数组，设置为空数组
+          if ! echo "$PR_RESULT" | jq -e . >/dev/null 2>&1; then
+            echo "⚠ PR_RESULT is not valid JSON, treating as empty"
+            PR_RESULT="[]"
+          fi
           
           # 精确匹配：确保 headRefName 和 baseRefName 都正确
           PR_NUM=$(echo "$PR_RESULT" | jq -r --arg head "$SYNC_BRANCH" --arg base "main" '.[] | select(.headRefName == $head and .baseRefName == $base) | .number' 2>/dev/null | head -1)
           
-          if [ -z "$PR_NUM" ]; then
-            echo "No matching PR found (head=$SYNC_BRANCH, base=main)"
-            echo "All open PRs:"
-            gh pr list --state open --json number,headRefName,baseRefName || true
+          echo "=== PR Detection Result ==="
+          if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ] && [ "$PR_NUM" != "" ]; then
+            echo "✓ Found matching PR #$PR_NUM"
+            echo "PR details:"
+            echo "$PR_RESULT" | jq -r --arg num "$PR_NUM" '.[] | select(.number == ($num | tonumber)) | "  Number: \(.number)\n  Head: \(.headRefName)\n  Base: \(.baseRefName)\n  Title: \(.title)"'
           else
-            echo "Found matching PR #$PR_NUM"
+            echo "✗ No matching PR found (head=$SYNC_BRANCH, base=main)"
+            echo "This means we need to create a new PR."
           fi
+          echo ""
           
           if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ] && [ "$PR_NUM" != "" ]; then
-            echo "✓ PR #$PR_NUM exists, adding comment..."
+            echo "=== Updating existing PR #$PR_NUM ==="
             {
               echo "🔄 **本次同步变更**"
               echo ""
@@ -391,19 +501,41 @@ jobs:
               echo "$PREVIEW_URL"
             } > comment.md
             gh pr comment "$PR_NUM" --body-file comment.md || {
-              echo "⚠ Failed to add comment to PR #$PR_NUM, but continuing..."
+              echo "⚠ Failed to add comment to PR #$PR_NUM"
+              echo "Error details:"
+              gh pr view "$PR_NUM" --json number,headRefName,baseRefName,state,title || true
+              exit 1
             }
             echo "✓ Comment added to PR #$PR_NUM"
           else
-            echo "No existing PR found, creating new PR..."
-            echo "PR body preview:"
+            echo "=== Creating new PR ==="
+            echo "PR body preview (first 20 lines):"
             head -20 pr_body.md || true
+            echo ""
+            
+            # 验证分支是否存在
+            echo "Verifying branch exists..."
+            if git show-ref --verify --quiet "refs/heads/$SYNC_BRANCH"; then
+              echo "✓ Branch $SYNC_BRANCH exists locally"
+            else
+              echo "✗ Branch $SYNC_BRANCH does not exist locally"
+              git branch -a | grep "$SYNC_BRANCH" || echo "Branch not found in any remote"
+            fi
+            
+            # 创建 PR
             gh pr create --title "chore(sync-deg): update WASM and example from DEG" --body-file pr_body.md --base main --head "$SYNC_BRANCH" || {
               echo "✗ Failed to create PR"
-              echo "Error details:"
-              gh pr list --base main --head "$SYNC_BRANCH" --state all || true
+              echo ""
+              echo "=== Error Diagnosis ==="
+              echo "Checking if PR already exists (all states)..."
+              gh pr list --base main --head "$SYNC_BRANCH" --state all --json number,headRefName,baseRefName,state,title || true
+              echo ""
               echo "Current branch status:"
               git status || true
+              echo ""
+              echo "Branch info:"
+              git branch --show-current || echo "N/A"
+              git log --oneline -5 || true
               exit 1
             }
             echo "✓ PR created successfully"
@@ -412,6 +544,8 @@ jobs:
       - name: Workflow Summary (for debugging)
         if: always()
         working-directory: beanBridge
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "=========================================="
           echo "WORKFLOW SUMMARY - COPY THIS FOR DEBUGGING"
@@ -464,6 +598,20 @@ jobs:
           echo "Check for changes: ${{ steps.changes.outcome }}"
           echo "Commit and push: ${{ steps.commit.outcome || 'N/A' }}"
           echo "Generate changelog: ${{ steps.changelog.outcome || 'N/A' }}"
+          echo "Create or update PR: ${{ steps.create_pr.outcome || 'N/A' }}"
+          echo ""
+          echo "=== Branch Verification ==="
+          SYNC_BRANCH="chore/sync-deg-wasm-examples"
+          if git show-ref --verify --quiet "refs/heads/$SYNC_BRANCH"; then
+            echo "✓ Branch $SYNC_BRANCH exists locally"
+            echo "Latest commit:"
+            git log -1 --oneline "$SYNC_BRANCH" || echo "N/A"
+          else
+            echo "✗ Branch $SYNC_BRANCH does not exist locally"
+          fi
+          echo ""
+          echo "=== Remote Branch Status ==="
+          git ls-remote --heads origin "$SYNC_BRANCH" || echo "Branch not found on remote"
           echo ""
           echo "=========================================="
           echo "END OF SUMMARY"
