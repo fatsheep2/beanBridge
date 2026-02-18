@@ -469,8 +469,22 @@ jobs:
           echo "" >> changelog.md
           echo "### WASM 与 example 目录" >> changelog.md
           echo '```' >> changelog.md
-          ls -la public/wasm/ 2>/dev/null || true
-          ls -la public/example/ 2>/dev/null || true
+          echo "--- public/wasm/ ---" >> changelog.md
+          if [ -d "public/wasm" ]; then
+            ls -lah public/wasm/ >> changelog.md 2>&1 || echo "无法列出目录内容" >> changelog.md
+          else
+            echo "目录不存在" >> changelog.md
+          fi
+          echo "" >> changelog.md
+          echo "--- public/example/ ---" >> changelog.md
+          if [ -d "public/example" ]; then
+            ls -lah public/example/ >> changelog.md 2>&1 || echo "无法列出目录内容" >> changelog.md
+            echo "" >> changelog.md
+            echo "子目录详情:" >> changelog.md
+            find public/example/ -type f -exec ls -lh {} \; >> changelog.md 2>&1 || true
+          else
+            echo "目录不存在" >> changelog.md
+          fi
           echo '```' >> changelog.md
           cat changelog.md
 
