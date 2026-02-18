@@ -304,8 +304,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "=== Creating or updating PR ==="
           SYNC_BRANCH="chore/sync-deg-wasm-examples"
           PREVIEW_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/chore/sync-deg-wasm-examples/"
+          
+          # 准备 PR body
           {
             echo "自动从 [double-entry-generator](https://github.com/deb-sig/double-entry-generator) 同步 WASM 与示例配置。"
             echo ""
@@ -317,8 +320,16 @@ jobs:
             echo ""
             echo "仅当上游有变更时此分支会更新，可与 main 对比后按需合并。"
           } > pr_body.md
-          if PR_NUM=$(gh pr list --base main --head "$SYNC_BRANCH" --state open --json number -q '.[0].number' 2>/dev/null); then
-            echo "PR #$PR_NUM 已存在，添加本次同步说明评论"
+          
+          # 检查是否存在 PR
+          echo "Checking for existing PR..."
+          PR_RESULT=$(gh pr list --base main --head "$SYNC_BRANCH" --state open --json number 2>&1)
+          echo "PR list result: $PR_RESULT"
+          
+          PR_NUM=$(echo "$PR_RESULT" | jq -r '.[0].number // empty' 2>/dev/null || echo "")
+          
+          if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ] && [ "$PR_NUM" != "" ]; then
+            echo "✓ PR #$PR_NUM exists, adding comment..."
             {
               echo "🔄 **本次同步变更**"
               echo ""
@@ -327,7 +338,17 @@ jobs:
               echo "**预览地址（部署约 1–2 分钟后生效）**"
               echo "$PREVIEW_URL"
             } > comment.md
-            gh pr comment "$PR_NUM" --body-file comment.md
+            gh pr comment "$PR_NUM" --body-file comment.md || {
+              echo "⚠ Failed to add comment to PR #$PR_NUM, but continuing..."
+            }
+            echo "✓ Comment added to PR #$PR_NUM"
           else
-            gh pr create --title "chore(sync-deg): update WASM and example from DEG" --body-file pr_body.md --base main --head "$SYNC_BRANCH"
+            echo "No existing PR found, creating new PR..."
+            gh pr create --title "chore(sync-deg): update WASM and example from DEG" --body-file pr_body.md --base main --head "$SYNC_BRANCH" || {
+              echo "✗ Failed to create PR"
+              echo "Error details:"
+              gh pr list --base main --head "$SYNC_BRANCH" --state all || true
+              exit 1
+            }
+            echo "✓ PR created successfully"
           fi
