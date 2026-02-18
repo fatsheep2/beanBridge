@@ -276,6 +276,7 @@ jobs:
           fi
 
       - name: Commit and push to fixed sync branch
+        id: commit
         if: steps.changes.outputs.has_changes == 'true'
         working-directory: beanBridge
         run: |
@@ -407,3 +408,63 @@ jobs:
             }
             echo "✓ PR created successfully"
           fi
+
+      - name: Workflow Summary (for debugging)
+        if: always()
+        working-directory: beanBridge
+        run: |
+          echo "=========================================="
+          echo "WORKFLOW SUMMARY - COPY THIS FOR DEBUGGING"
+          echo "=========================================="
+          echo ""
+          echo "=== Changes Detection ==="
+          echo "has_changes: ${{ steps.changes.outputs.has_changes }}"
+          echo ""
+          echo "=== Current Branch ==="
+          git branch --show-current || echo "N/A"
+          echo ""
+          echo "=== Git Status ==="
+          git status || echo "N/A"
+          echo ""
+          echo "=== Staged Files ==="
+          git diff --staged --name-status || echo "No staged files"
+          echo ""
+          echo "=== Public Directory Contents ==="
+          echo "--- public/wasm/ ---"
+          ls -lh public/wasm/ 2>/dev/null || echo "Directory not found"
+          echo ""
+          echo "--- public/example/ ---"
+          ls -la public/example/ 2>/dev/null | head -20 || echo "Directory not found"
+          echo ""
+          echo "=== PR Detection ==="
+          SYNC_BRANCH="chore/sync-deg-wasm-examples"
+          PR_RESULT=$(gh pr list --base main --head "$SYNC_BRANCH" --state open --json number,headRefName,baseRefName,title 2>&1 || echo "Error: $?")
+          echo "PR list command result:"
+          echo "$PR_RESULT"
+          echo ""
+          PR_NUM=$(echo "$PR_RESULT" | jq -r --arg head "$SYNC_BRANCH" --arg base "main" '.[] | select(.headRefName == $head and .baseRefName == $base) | .number' 2>/dev/null | head -1)
+          if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ] && [ "$PR_NUM" != "" ]; then
+            echo "Matching PR found: #$PR_NUM"
+          else
+            echo "No matching PR found (head=$SYNC_BRANCH, base=main)"
+          fi
+          echo ""
+          echo "=== All Open PRs ==="
+          gh pr list --state open --json number,headRefName,baseRefName,title 2>&1 || echo "Error listing PRs"
+          echo ""
+          echo "=== Changelog File ==="
+          if [ -f "changelog.md" ]; then
+            echo "changelog.md exists, first 30 lines:"
+            head -30 changelog.md || echo "Error reading changelog.md"
+          else
+            echo "changelog.md NOT FOUND"
+          fi
+          echo ""
+          echo "=== Step Execution Status ==="
+          echo "Check for changes: ${{ steps.changes.outcome }}"
+          echo "Commit and push: ${{ steps.commit.outcome || 'N/A' }}"
+          echo "Generate changelog: ${{ steps.changelog.outcome || 'N/A' }}"
+          echo ""
+          echo "=========================================="
+          echo "END OF SUMMARY"
+          echo "=========================================="
