@@ -130,7 +130,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           SYNC_BRANCH="chore/sync-deg-wasm-examples"
-          PREVIEW_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/chore/sync-deg-wasm-examples/"
+          # 动态生成预览 URL：将分支名中的斜杠替换为横杠，与部署 workflow 保持一致
+          # 部署 workflow 会将 chore/sync-deg-wasm-examples -> chore-sync-deg-wasm-examples
+          BRANCH_NAME_FOR_URL=$(echo "$SYNC_BRANCH" | sed 's/\//-/g')
+          PREVIEW_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/$BRANCH_NAME_FOR_URL/"
           {
             echo "自动从 [double-entry-generator](https://github.com/deb-sig/double-entry-generator) 同步 WASM 与示例配置。"
             echo ""
