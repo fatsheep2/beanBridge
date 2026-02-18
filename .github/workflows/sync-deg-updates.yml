@@ -230,15 +230,36 @@ jobs:
         id: changes
         working-directory: beanBridge
         run: |
-          git add public/wasm/ public/example/
+          echo "=== Checking for changes ==="
+          echo "Current branch: $(git branch --show-current)"
+          echo "Current status:"
+          git status --short || true
+          
+          echo "=== Staging files ==="
+          git add public/wasm/ public/example/ || {
+            echo "⚠ Failed to stage files, checking if directories exist..."
+            ls -la public/ || echo "public/ directory not found"
+            ls -la public/wasm/ 2>/dev/null || echo "public/wasm/ directory not found"
+            ls -la public/example/ 2>/dev/null || echo "public/example/ directory not found"
+          }
+          
+          echo "=== Checking staged changes ==="
           if git diff --staged --quiet; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "No changes detected"
+            echo "✗ No changes detected (staged diff is empty)"
+            echo "Unstaged changes:"
+            git diff --name-only || true
+            echo "Untracked files:"
+            git ls-files --others --exclude-standard || true
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "Changes detected"
+            echo "✓ Changes detected"
+            echo "Staged changes:"
+            git diff --staged --stat || true
             git status
           fi
+          
+          echo "has_changes value: $(echo '${{ steps.changes.outputs.has_changes }}')"
 
       - name: Commit and push to fixed sync branch
         if: steps.changes.outputs.has_changes == 'true'
