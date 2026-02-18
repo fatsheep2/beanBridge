@@ -50,14 +50,29 @@ jobs:
         with:
           go-version: '1.24'
 
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('double-entry-generator/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+        continue-on-error: true
+
+      - name: Download Go dependencies
+        working-directory: double-entry-generator
+        run: |
+          go mod download
+          go mod verify
+
       - name: Build WASM
         working-directory: double-entry-generator
         run: |
-          make build-wasm || true
-          # DEG Makefile 里 cp wasm_exec.js 在 Go 1.24 toolchain 路径下会失败，这里用 GOROOT 兜底
-          if [ ! -f wasm-dist/wasm_exec.js ]; then
-            cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" wasm-dist/
-          fi
+          # Go 1.24 中 wasm_exec.js 在 lib/wasm/，修复 Makefile 中的路径
+          sed -i.bak 's|misc/wasm/wasm_exec.js|lib/wasm/wasm_exec.js|g' Makefile || true
+          make build-wasm
           ls -lh wasm-dist/
 
       - name: Copy WASM files
