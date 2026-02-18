@@ -48,20 +48,137 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
+
+      - name: Verify double-entry-generator checkout
+        run: |
+          echo "=== Checking double-entry-generator directory ==="
+          ls -la double-entry-generator/ | head -10
+          echo "=== Checking for go.sum ==="
+          if [ -f "double-entry-generator/go.sum" ]; then
+            echo "✓ go.sum found at: double-entry-generator/go.sum"
+            ls -lh double-entry-generator/go.sum
+          else
+            echo "✗ go.sum NOT found in double-entry-generator/"
+            find . -name "go.sum" -type f 2>/dev/null || echo "No go.sum found anywhere"
+            exit 1
+          fi
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('double-entry-generator/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go dependencies
+        working-directory: double-entry-generator
+        run: |
+          echo "=== Downloading Go dependencies ==="
+          go version
+          go env GOROOT
+          go env GOPATH
+          go mod download
+          go mod verify
+          echo "✓ Dependencies downloaded successfully"
 
       - name: Build WASM
         working-directory: double-entry-generator
         run: |
+          echo "=== Building WASM ==="
+          echo "Current directory: $(pwd)"
+          echo "Go version: $(go version)"
+          echo "GOROOT: $(go env GOROOT)"
+          
+          # 检查 wasm_exec.js 的正确路径
+          GOROOT=$(go env GOROOT)
+          echo "=== Checking wasm_exec.js location ==="
+          if [ -f "$GOROOT/lib/wasm/wasm_exec.js" ]; then
+            echo "✓ Found wasm_exec.js at: $GOROOT/lib/wasm/wasm_exec.js"
+            ls -lh "$GOROOT/lib/wasm/wasm_exec.js"
+          elif [ -f "$GOROOT/misc/wasm/wasm_exec.js" ]; then
+            echo "⚠ Found wasm_exec.js at: $GOROOT/misc/wasm/wasm_exec.js (old location)"
+            ls -lh "$GOROOT/misc/wasm/wasm_exec.js"
+          else
+            echo "✗ wasm_exec.js NOT found in GOROOT"
+            echo "Searching for wasm_exec.js..."
+            find "$GOROOT" -name "wasm_exec.js" 2>/dev/null || echo "Not found"
+            exit 1
+          fi
+          
+          # Go 1.24 中 wasm_exec.js 在 lib/wasm/，修复 Makefile 中的路径
+          echo "=== Patching Makefile ==="
+          if grep -q "misc/wasm/wasm_exec.js" Makefile; then
+            echo "Found misc/wasm/wasm_exec.js in Makefile, patching..."
+            sed -i.bak 's|misc/wasm/wasm_exec.js|lib/wasm/wasm_exec.js|g' Makefile
+            echo "✓ Makefile patched"
+            grep "wasm_exec.js" Makefile || true
+          else
+            echo "Makefile already uses correct path or pattern not found"
+          fi
+          
+          echo "=== Running make build-wasm ==="
           make build-wasm
+          
+          echo "=== Verifying build output ==="
+          if [ ! -d "wasm-dist" ]; then
+            echo "✗ wasm-dist directory not created"
+            exit 1
+          fi
+          
+          echo "=== Build output files ==="
           ls -lh wasm-dist/
+          
+          if [ ! -f "wasm-dist/double-entry-generator.wasm" ]; then
+            echo "✗ double-entry-generator.wasm not found"
+            exit 1
+          fi
+          
+          if [ ! -f "wasm-dist/wasm_exec.js" ]; then
+            echo "✗ wasm_exec.js not found in wasm-dist, copying from GOROOT"
+            GOROOT=$(go env GOROOT)
+            if [ -f "$GOROOT/lib/wasm/wasm_exec.js" ]; then
+              cp "$GOROOT/lib/wasm/wasm_exec.js" wasm-dist/
+              echo "✓ Copied wasm_exec.js from $GOROOT/lib/wasm/"
+            else
+              echo "✗ Cannot find wasm_exec.js to copy"
+              exit 1
+            fi
+          fi
+          
+          echo "✓ WASM build completed successfully"
 
       - name: Copy WASM files
         run: |
+          echo "=== Copying WASM files ==="
           mkdir -p beanBridge/public/wasm
+          
+          if [ ! -f "double-entry-generator/wasm-dist/double-entry-generator.wasm" ]; then
+            echo "✗ Source WASM file not found"
+            exit 1
+          fi
+          
+          if [ ! -f "double-entry-generator/wasm-dist/wasm_exec.js" ]; then
+            echo "✗ Source wasm_exec.js not found"
+            exit 1
+          fi
+          
           cp double-entry-generator/wasm-dist/double-entry-generator.wasm beanBridge/public/wasm/
           cp double-entry-generator/wasm-dist/wasm_exec.js beanBridge/public/wasm/
+          
+          echo "=== Copied files ==="
           ls -lh beanBridge/public/wasm/
+          
+          # 验证文件大小（WASM 文件应该 > 0）
+          WASM_SIZE=$(stat -f%z beanBridge/public/wasm/double-entry-generator.wasm 2>/dev/null || stat -c%s beanBridge/public/wasm/double-entry-generator.wasm 2>/dev/null || echo "0")
+          if [ "$WASM_SIZE" -eq 0 ]; then
+            echo "✗ WASM file is empty"
+            exit 1
+          fi
+          echo "✓ WASM file size: $WASM_SIZE bytes"
 
       - name: Sync example configs
         run: |
