@@ -50,8 +50,9 @@ jobs:
           else
             BRANCH_NAME=${GITHUB_REF#refs/heads/}
           fi
-          # 清理分支名，移除特殊字符，保留斜杠用于层级
-          CLEAN_BRANCH=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9\/-]/-/g')
+          # 清理分支名，将斜杠替换为横杠以避免 GitHub Pages 路径问题
+          # 例如：chore/sync-deg-wasm-examples -> chore-sync-deg-wasm-examples
+          CLEAN_BRANCH=$(echo "$BRANCH_NAME" | sed 's/\//-/g' | sed 's/[^a-zA-Z0-9-]/-/g')
           echo "name=$CLEAN_BRANCH" >> $GITHUB_OUTPUT
           echo "original=$BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "Branch name: $BRANCH_NAME -> $CLEAN_BRANCH"
