@@ -321,12 +321,19 @@ jobs:
             echo "仅当上游有变更时此分支会更新，可与 main 对比后按需合并。"
           } > pr_body.md
           
-          # 检查是否存在 PR
-          echo "Checking for existing PR..."
-          PR_RESULT=$(gh pr list --base main --head "$SYNC_BRANCH" --state open --json number 2>&1)
+          # 检查是否存在 PR（精确匹配：base=main, head=chore/sync-deg-wasm-examples）
+          echo "Checking for existing PR from $SYNC_BRANCH to main..."
+          PR_RESULT=$(gh pr list --base main --head "$SYNC_BRANCH" --state open --json number,headRefName,baseRefName 2>&1)
           echo "PR list result: $PR_RESULT"
           
-          PR_NUM=$(echo "$PR_RESULT" | jq -r '.[0].number // empty' 2>/dev/null || echo "")
+          # 精确匹配：确保 headRefName 和 baseRefName 都正确
+          PR_NUM=$(echo "$PR_RESULT" | jq -r --arg head "$SYNC_BRANCH" --arg base "main" '.[] | select(.headRefName == $head and .baseRefName == $base) | .number' 2>/dev/null | head -1)
+          
+          if [ -z "$PR_NUM" ]; then
+            echo "No matching PR found (head=$SYNC_BRANCH, base=main)"
+          else
+            echo "Found matching PR #$PR_NUM"
+          fi
           
           if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ] && [ "$PR_NUM" != "" ]; then
             echo "✓ PR #$PR_NUM exists, adding comment..."
